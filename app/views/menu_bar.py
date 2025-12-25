@@ -19,4 +19,4 @@ class MenuBar(QObject):
         # Open media
         self.open_media = QAction("Open Media")
         file_menu.addAction(self.open_media)
-        self.open_media.triggered.connect(self.main_window.open_file_dialog)
+        self.open_media.triggered.connect(self.main_window.open_file)
