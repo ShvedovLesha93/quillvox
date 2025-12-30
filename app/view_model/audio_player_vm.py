@@ -9,8 +9,10 @@ class PlayerViewModel(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)
-    current_time_text_changed = Signal(str)
-    total_time_text_changed = Signal(str)
+    str_speed_changed = Signal(str)
+    str_current_time_changed = Signal(str)
+    str_total_time_changed = Signal(str)
+    str_volume_changed = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -50,7 +52,7 @@ class PlayerViewModel(QObject):
             self.player.play()
 
     def seek_to(self, pos: int):
-        self.player.setPosition(pos)
+        self._on_position_changed(pos)
 
     def _on_qt_state_changed(self, qt_state):
         if qt_state == QMediaPlayer.PlaybackState.PlayingState:
@@ -67,13 +69,23 @@ class PlayerViewModel(QObject):
         self._state = state
         self.playback_state_changed.emit(state)
 
+    def set_volume(self, value: int) -> None:
+        volume = value / 100.0
+        self.audio_output.setVolume(volume)
+        self.str_volume_changed.emit(f"{value}%")
+
+    def set_speed(self, value: int) -> None:
+        speed = value / 100.0
+        self.player.setPlaybackRate(speed)
+        self.str_speed_changed.emit(f"{speed:.2f}x")
+
     def _on_duration_changed(self, duration: int):
         self.duration_changed.emit(duration)
-        self.total_time_text_changed.emit(self._format_time(duration))
+        self.str_total_time_changed.emit(self._format_time(duration))
 
     def _on_position_changed(self, pos: int):
         self.position_changed.emit(pos)
-        self.current_time_text_changed.emit(self._format_time(pos))
+        self.str_current_time_changed.emit(self._format_time(pos))
 
     @staticmethod
     def _format_time(ms: int) -> str:
