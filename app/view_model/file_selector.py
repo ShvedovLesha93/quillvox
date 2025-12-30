@@ -1,14 +1,20 @@
+from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject
 from pathlib import Path
 
 from app.models.file_data import SupportedFormats
 
+if TYPE_CHECKING:
+    from app.view_model.audio_player_vm import AudioPlayerVM
+
 
 class FileSelectorVM(QObject):
 
-    def __init__(self):
+    def __init__(self, audio_player_vm: "AudioPlayerVM"):
         super().__init__()
+        self.audio_player_vm = audio_player_vm
         self.formats = SupportedFormats()
+
         self.audio_formats = self.formats.audio
         self.video_formats = self.formats.video
         self._last_directory = Path.home()
@@ -38,6 +44,7 @@ class FileSelectorVM(QObject):
 
         if status:
             self.last_dir = file.parent
+            self.audio_player_vm.load(file)
             print(msg)
 
     @property

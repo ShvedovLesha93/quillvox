@@ -5,10 +5,11 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from app.constants import PlaybackState
 
 
-class PlayerViewModel(QObject):
+class AudioPlayerVM(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)
+    file_loaded = Signal()
     str_speed_changed = Signal(str)
     str_current_time_changed = Signal(str)
     str_total_time_changed = Signal(str)
@@ -31,6 +32,7 @@ class PlayerViewModel(QObject):
 
     def load(self, audio: Path):
         self.player.setSource(QUrl.fromLocalFile(audio))
+        self.file_loaded.emit()
 
     def toggle_play(self):
         if self._state == PlaybackState.PLAYING:
