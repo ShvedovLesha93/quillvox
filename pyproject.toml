@@ -8,3 +8,8 @@ dependencies = [
     "faster-whisper>=1.2.1",
     "pyside6>=6.10.1",
 ]
+
+[dependency-groups]
+dev = [
+    "watchdog>=6.0.0",
+]
