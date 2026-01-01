@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 
 
 @dataclass
@@ -18,3 +19,8 @@ class SupportedFormats:
             "*.m4v",
         ]
     )
+
+
+@dataclass
+class MediaFile:
+    path: Path | None = None
