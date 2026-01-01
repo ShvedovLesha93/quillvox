@@ -1,22 +1,29 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject
 from pathlib import Path
 
-from app.models.file_data import SupportedFormats
 
 if TYPE_CHECKING:
+    from app.models.main_model import MainModel
     from app.view_model.audio_player_vm import AudioPlayerVM
 
 
 class FileSelectorVM(QObject):
 
-    def __init__(self, audio_player_vm: "AudioPlayerVM"):
+    def __init__(
+        self,
+        main_model: MainModel,
+        audio_player_vm: AudioPlayerVM,
+    ):
         super().__init__()
+        self.main_model = main_model
         self.audio_player_vm = audio_player_vm
-        self.formats = SupportedFormats()
+        self.media_file_model = self.main_model.media_file
+        self.file_formats = self.main_model.file_formats
 
-        self.audio_formats = self.formats.audio
-        self.video_formats = self.formats.video
+        self.audio_formats = self.file_formats.audio
+        self.video_formats = self.file_formats.video
         self._last_directory = Path.home()
         self._last_filter = ""
 
@@ -43,6 +50,7 @@ class FileSelectorVM(QObject):
         status, msg = self._validate(file)
 
         if status:
+            self.media_file_model.path = file
             self.last_dir = file.parent
             self.audio_player_vm.load(file)
             print(msg)
@@ -53,7 +61,7 @@ class FileSelectorVM(QObject):
 
     @last_dir.setter
     def last_dir(self, path: Path):
-        self._last_directory = path.parent
+        self._last_directory = path
 
     @property
     def last_filter(self) -> str:

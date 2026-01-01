@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 from PySide6.QtWidgets import (
@@ -12,17 +13,15 @@ from app.views.audio_player import AudioPlayer
 from app.views.menu_bar import MenuBar
 
 if TYPE_CHECKING:
-    from app.view_model.file_selector import FileSelectorVM
-    from app.view_model.audio_player_vm import AudioPlayerVM
+    from app.view_model.main_vm import MainViewModel
 
 
 class MainWindow(QMainWindow):
-    def __init__(
-        self, file_selector_vm: "FileSelectorVM", audio_player_vm: "AudioPlayerVM"
-    ) -> None:
+    def __init__(self, main_vm: MainViewModel) -> None:
         super().__init__()
-        self.f_selector_vm = file_selector_vm
-        self.audio_player_vm = audio_player_vm
+        self.main_vm = main_vm
+        self.file_selector_vm = self.main_vm.file_selector_vm
+        self.audio_player_vm = self.main_vm.audio_player_vm
 
         self.menu_bar = MenuBar(self)
         self.audio_player = AudioPlayer(self.audio_player_vm)
@@ -45,16 +44,16 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.audio_player)
 
     def open_file(self):
-        filter = self.f_selector_vm.filter
-        last_filter = self.f_selector_vm.last_filter
-        last_dir = self.f_selector_vm.last_dir
+        filter = self.file_selector_vm.filter
+        last_filter = self.file_selector_vm.last_filter
+        last_dir = self.file_selector_vm.last_dir
 
         file, last_filter = self._open_file_dialog(
             filter=filter, last_filter=last_filter, last_dir=str(last_dir)
         )
         if file and last_filter:
-            self.f_selector_vm.on_file_selected(file)
-            self.f_selector_vm.last_filter = last_filter
+            self.file_selector_vm.on_file_selected(file)
+            self.file_selector_vm.last_filter = last_filter
 
     def _open_file_dialog(
         self, filter: str, last_filter: str, last_dir: str
