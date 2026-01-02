@@ -1,11 +1,14 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from app.models.main_model import MainModel
+from app.utils.logging_config import configure_logging
 from app.view_model.main_vm import MainViewModel
 from app.views.main_window import MainWindow
 
 
-if __name__ == "__main__":
+def main():
+    configure_logging()
+
     app = QApplication([])
     app.setStyle("Fusion")
 
@@ -17,3 +20,7 @@ if __name__ == "__main__":
 
     view.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

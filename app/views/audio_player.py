@@ -134,9 +134,9 @@ class AudioPlayer(QWidget):
         self.vm.file_loaded.connect(lambda: self.play_btn.setEnabled(True))
 
     def _on_speed_reset_btn_clicked(self) -> None:
-        self.vm.set_speed(100)
-        self.speed_value_label.setText("1.00x")
         self.speed_slider.setValue(100)
+        self.vm.reset_speed()
+        self.speed_value_label.setText("1.00x")
 
     def _on_playback_state(self, state: PlaybackState) -> None:
         if state == PlaybackState.PLAYING:

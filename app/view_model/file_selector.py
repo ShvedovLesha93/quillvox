@@ -8,6 +8,10 @@ if TYPE_CHECKING:
     from app.models.main_model import MainModel
     from app.view_model.audio_player_vm import AudioPlayerVM
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class FileSelectorVM(QObject):
 
@@ -53,7 +57,12 @@ class FileSelectorVM(QObject):
             self.media_file_model.path = file
             self.last_dir = file.parent
             self.audio_player_vm.load(file)
-            print(msg)
+
+            logger.info("Audio file opened: %s", repr(file.name))
+            logger.debug("Media file stored in memory: %s", file)
+
+        else:
+            logger.error(msg)
 
     @property
     def last_dir(self) -> Path:
