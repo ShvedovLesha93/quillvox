@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
+from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (
     QGridLayout,
+    QSizePolicy,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -14,6 +16,49 @@ from app.constants import PlaybackState
 
 if TYPE_CHECKING:
     from app.view_model.audio_player_vm import AudioPlayerVM
+
+
+class TruncatingLabel(QLabel):
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.full_text = ""
+
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+    def setText(self, text: str) -> None:
+        self.full_text = text
+        self._update_text()
+
+    def _update_text(self) -> None:
+        if not self.full_text:
+            super().setText("")
+            self.setToolTip("")
+            return
+
+        fm = QFontMetrics(self.font())
+        available_width = self.width()
+
+        if available_width <= 0:
+            return
+
+        # Check if full text fits
+        if fm.horizontalAdvance(self.full_text) <= available_width:
+            super().setText(self.full_text)
+            self.setToolTip("")
+
+        else:
+            # Calculate elided text
+            elided = fm.elidedText(
+                self.full_text, Qt.TextElideMode.ElideRight, available_width
+            )
+            super().setText(elided)
+
+            # Set tooltip to show full text when truncated
+            self.setToolTip(self.full_text)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._update_text()
 
 
 class AudioPlayer(QWidget):
@@ -36,6 +81,11 @@ class AudioPlayer(QWidget):
         control_layout.setColumnStretch(2, 0)
         control_layout.setColumnStretch(3, 0)
         control_layout.setColumnStretch(4, 1)
+
+        # File name
+        self.file_name = TruncatingLabel(self)
+
+        self.file_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Playback buttons
         self.play_btn = QPushButton("Play")
@@ -93,6 +143,7 @@ class AudioPlayer(QWidget):
         control_layout.addWidget(self.speed_reset_btn, 1, 3)
 
         layout.addStretch()
+        layout.addWidget(self.file_name)
         layout.addLayout(btn_layout)
         layout.addLayout(timeline_layout)
         layout.addLayout(control_layout)
@@ -131,7 +182,11 @@ class AudioPlayer(QWidget):
         self.vm.str_speed_changed.connect(self.speed_value_label.setText)
 
         self.vm.playback_state_changed.connect(self._on_playback_state)
-        self.vm.file_loaded.connect(lambda: self.play_btn.setEnabled(True))
+        self.vm.file_loaded.connect(self._on_file_loaded)
+
+    def _on_file_loaded(self, name: str) -> None:
+        self.file_name.setText(name)
+        self.play_btn.setEnabled(True)
 
     def _on_speed_reset_btn_clicked(self) -> None:
         self.speed_slider.setValue(100)

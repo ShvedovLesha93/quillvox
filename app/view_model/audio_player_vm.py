@@ -13,7 +13,7 @@ class AudioPlayerVM(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)
-    file_loaded = Signal()
+    file_loaded = Signal(str)
     str_speed_changed = Signal(str)
     str_current_time_changed = Signal(str)
     str_total_time_changed = Signal(str)
@@ -36,7 +36,7 @@ class AudioPlayerVM(QObject):
 
     def load(self, audio: Path):
         self.player.setSource(QUrl.fromLocalFile(audio))
-        self.file_loaded.emit()
+        self.file_loaded.emit(audio.stem)
 
     def toggle_play(self):
         is_playing = self._state != PlaybackState.PLAYING
