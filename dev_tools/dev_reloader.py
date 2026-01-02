@@ -8,16 +8,39 @@ import argparse
 
 
 class EventHandler(FileSystemEventHandler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.last_restart = 0
+        self.debounce_seconds = 1.0
 
     def on_modified(self, event) -> None:
-        if not event.is_directory and event.src_path.endswith(".py"):  # pyright: ignore
-            print("[Watcher] File changed → restarting script...")
+        if event.is_directory:
+            return
 
-            if hasattr(self, "process"):
-                self.process.terminate()
-                self.process.wait()
+        path = Path(event.src_path)  # pyright: ignore
 
-            self.process = subprocess.Popen(self.command)
+        # Filter temporary files
+        if path.name.startswith(".") or path.name.startswith("~"):
+            return
+
+        if path.suffix != ".py":
+            return
+
+        if "__pycache__" in path.parts:
+            return
+
+        # Debounce restarting
+        now = time.time()
+        if now - self.last_restart < self.debounce_seconds:
+            return
+
+        print("[Watcher] File changed → restarting script...")
+
+        if hasattr(self, "process"):
+            self.process.terminate()
+            self.process.wait()
+
+        self.process = subprocess.Popen(self.command)
 
     def run(self, module: str) -> None:
         self.command = [
@@ -44,7 +67,7 @@ if __name__ == "__main__":
     event_handler.run(args.module)
 
     observer = Observer()
-    observer.schedule(event_handler, ".", recursive=True)
+    observer.schedule(event_handler, "app", recursive=True)
     observer.start()
     print("\n[Watcher] To stop the program, press Control-C")
     print("----------------------------------------------\n")
