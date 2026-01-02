@@ -4,6 +4,10 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 from app.constants import PlaybackState
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class AudioPlayerVM(QObject):
     playback_state_changed = Signal(PlaybackState)
@@ -35,23 +39,34 @@ class AudioPlayerVM(QObject):
         self.file_loaded.emit()
 
     def toggle_play(self):
-        if self._state == PlaybackState.PLAYING:
-            self.player.pause()
-        else:
+        is_playing = self._state != PlaybackState.PLAYING
+
+        if is_playing:
             self.player.play()
+        else:
+            self.player.pause()
+
+        logger.info("Playback: %s", "playing" if is_playing else "paused")
 
     def stop(self):
         self.player.stop()
         self.player.setPosition(0)
 
+        logger.info("Playback: stopped")
+
     def begin_seek(self):
         self._was_playing = self._state == PlaybackState.PLAYING
         self.player.pause()
+
+        logger.info("Playback: seek started")
 
     def end_seek(self, pos: int):
         self.player.setPosition(pos)
         if self._was_playing:
             self.player.play()
+
+        logger.info("Playback: seek finished")
+        logger.debug("Current position: %s", pos)
 
     def seek_to(self, pos: int):
         self._on_position_changed(pos)
@@ -80,6 +95,11 @@ class AudioPlayerVM(QObject):
         speed = value / 100.0
         self.player.setPlaybackRate(speed)
         self.str_speed_changed.emit(f"{speed:.2f}x")
+
+    def reset_speed(self) -> None:
+        self.player.setPlaybackRate(1)
+
+        logger.info("Playback: speed reset")
 
     def _on_duration_changed(self, duration: int):
         self.duration_changed.emit(duration)
