@@ -1,5 +1,5 @@
-# logging_config.py
 import logging
+from logging.handlers import RotatingFileHandler
 from rich.logging import RichHandler
 
 
@@ -16,7 +16,12 @@ def configure_logging() -> None:
     console.setFormatter(logging.Formatter("[%(module)s] %(message)s"))
     root.addHandler(console)
 
-    file = logging.FileHandler("app.log", encoding="utf-8")
+    file = RotatingFileHandler(
+        "app.log",
+        encoding="utf-8",
+        maxBytes=5 * 1024 * 1024,
+        backupCount=3,
+    )
     file.setLevel(logging.INFO)
     file.setFormatter(
         logging.Formatter("%(asctime)s - [%(module)s] - %(levelname)s - %(message)s")
