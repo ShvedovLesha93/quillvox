@@ -1,5 +1,4 @@
 from __future__ import annotations
-from pathlib import Path
 from typing import TYPE_CHECKING
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -48,16 +47,14 @@ class MainWindow(QMainWindow):
         last_filter = self.file_selector_vm.last_filter
         last_dir = self.file_selector_vm.last_dir
 
-        file, last_filter = self._open_file_dialog(
+        opened_file = self._open_file_dialog(
             filter=filter, last_filter=last_filter, last_dir=str(last_dir)
         )
-        if file and last_filter:
-            self.file_selector_vm.on_file_selected(file)
-            self.file_selector_vm.last_filter = last_filter
+        self.file_selector_vm.on_file_selected(opened_file)
 
     def _open_file_dialog(
         self, filter: str, last_filter: str, last_dir: str
-    ) -> tuple[Path, str]:
+    ) -> tuple[str, str] | None:
         file_dialog = QFileDialog()
         file, filter = file_dialog.getOpenFileName(
             self,
@@ -66,5 +63,7 @@ class MainWindow(QMainWindow):
             selectedFilter=last_filter,
             dir=last_dir,
         )
-
-        return Path(file), filter
+        if file:
+            return file, filter
+        else:
+            return None
