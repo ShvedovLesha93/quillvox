@@ -50,19 +50,28 @@ class FileSelectorVM(QObject):
 
         return True, ""
 
-    def on_file_selected(self, file: Path):
-        status, msg = self._validate(file)
+    def on_file_selected(self, opened_file: tuple[str, str] | None):
+        if opened_file:
+            file, filter = opened_file
+            file_path = Path(file)
 
-        if status:
-            self.media_file_model.path = file
-            self.last_dir = file.parent
-            self.audio_player_vm.load(file)
+            status, msg = self._validate(file_path)
 
-            logger.info("Audio file opened: %s", repr(file.name))
-            logger.debug("Media file stored in memory: %s", file)
+            if status:
+                self.media_file_model.path = file_path
+                self.last_dir = file_path.parent
+                self.last_filter = filter
+                self.audio_player_vm.load(file_path)
+
+                logger.info("Audio file opened: %s", file_path.name)
+                logger.info("Last directory: %s", self.last_dir)
+                logger.debug("Media file stored in memory: %s", file_path)
+
+            else:
+                logger.error(msg)
 
         else:
-            logger.error(msg)
+            logger.info("No selected file")
 
     @property
     def last_dir(self) -> Path:
