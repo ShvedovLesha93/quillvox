@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import (
-    QGridLayout,
     QSizePolicy,
     QWidget,
     QVBoxLayout,
@@ -71,19 +70,16 @@ class AudioPlayer(QWidget):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         btn_layout = QHBoxLayout()
         timeline_layout = QHBoxLayout()
-        control_layout = QGridLayout()
 
-        control_layout.setColumnStretch(0, 0)
-        control_layout.setColumnStretch(1, 0)
-        control_layout.setColumnStretch(2, 0)
-        control_layout.setColumnStretch(3, 0)
-        control_layout.setColumnStretch(4, 1)
+        control_layout = QHBoxLayout()
 
         # File name
         self.file_name = TruncatingLabel(self)
+        self.file_name.setText("No file opened")
 
         self.file_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -121,9 +117,9 @@ class AudioPlayer(QWidget):
         self.volume_value_label = QLabel("50%")
         self.volume_value_label.setMinimumWidth(30)
 
-        control_layout.addWidget(self.volume_label, 0, 0)
-        control_layout.addWidget(self.volume_slider, 0, 1)
-        control_layout.addWidget(self.volume_value_label, 0, 2)
+        control_layout.addWidget(self.volume_label)
+        control_layout.addWidget(self.volume_slider)
+        control_layout.addWidget(self.volume_value_label)
 
         # Speed control
         self.speed_label = QLabel("Speed:")
@@ -137,12 +133,13 @@ class AudioPlayer(QWidget):
         self.speed_reset_btn.setMaximumWidth(60)
 
         # Add speed components to layout
-        control_layout.addWidget(self.speed_label, 1, 0)
-        control_layout.addWidget(self.speed_slider, 1, 1)
-        control_layout.addWidget(self.speed_value_label, 1, 2)
-        control_layout.addWidget(self.speed_reset_btn, 1, 3)
+        control_layout.addWidget(self.speed_label)
+        control_layout.addWidget(self.speed_slider)
+        control_layout.addWidget(self.speed_value_label)
+        control_layout.addWidget(self.speed_reset_btn)
+        control_layout.addStretch()
 
-        layout.addStretch()
+        # layout.addStretch()
         layout.addWidget(self.file_name)
         layout.addLayout(btn_layout)
         layout.addLayout(timeline_layout)

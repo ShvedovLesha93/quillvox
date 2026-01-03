@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (
 
 from app.views.audio_player import AudioPlayer
 from app.views.menu_bar import MenuBar
+from app.views.transcript_controls import TranscriptControls
+from app.views.transcript_view import TranscriptView
 
 if TYPE_CHECKING:
     from app.view_model.main_vm import MainViewModel
@@ -23,6 +25,8 @@ class MainWindow(QMainWindow):
         self.audio_player_vm = self.main_vm.audio_player_vm
 
         self.menu_bar = MenuBar(self)
+        self.transcript_view = TranscriptView()
+        self.transcript_controls = TranscriptControls()
         self.audio_player = AudioPlayer(self.audio_player_vm)
 
         self._setup_ui()
@@ -40,6 +44,8 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         central_widget.setLayout(layout)
 
+        layout.addWidget(self.transcript_controls)
+        layout.addWidget(self.transcript_view)
         layout.addWidget(self.audio_player)
 
     def open_file(self):
