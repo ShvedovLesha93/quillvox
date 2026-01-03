@@ -89,10 +89,10 @@ class AudioPlayer(QWidget):
         self.stop_btn = QPushButton("Stop")
         self.stop_btn.setEnabled(False)
 
-        btn_layout.addStretch()
         btn_layout.addWidget(self.play_btn)
         btn_layout.addWidget(self.stop_btn)
-        btn_layout.addStretch()
+
+        timeline_layout.addLayout(btn_layout)
 
         # Timeline slider
         self.timeline_slider = QSlider(Qt.Orientation.Horizontal)
@@ -139,9 +139,7 @@ class AudioPlayer(QWidget):
         control_layout.addWidget(self.speed_reset_btn)
         control_layout.addStretch()
 
-        # layout.addStretch()
         layout.addWidget(self.file_name)
-        layout.addLayout(btn_layout)
         layout.addLayout(timeline_layout)
         layout.addLayout(control_layout)
 
