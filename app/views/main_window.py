@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
@@ -12,6 +13,7 @@ from app.views.audio_player import AudioPlayer
 from app.views.menu_bar import MenuBar
 from app.views.transcript_controls import TranscriptControls
 from app.views.transcript_view import TranscriptView
+from app.user_message import user_msg, MessageLevel
 
 if TYPE_CHECKING:
     from app.view_model.main_vm import MainViewModel
@@ -28,9 +30,14 @@ class MainWindow(QMainWindow):
         self.transcript_view = TranscriptView()
         self.transcript_controls = TranscriptControls()
         self.audio_player = AudioPlayer(self.audio_player_vm)
+        # self.user_msg = user_msg
 
         self._setup_ui()
         self._setup_status_bar()
+        self._connect_signals()
+
+    def _connect_signals(self) -> None:
+        user_msg.message.connect(self.set_status_message)
 
     def _setup_status_bar(self):
         status_bar = self.statusBar()
@@ -47,6 +54,24 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.transcript_controls)
         layout.addWidget(self.transcript_view)
         layout.addWidget(self.audio_player)
+
+    def set_status_message(self, level: MessageLevel, message: str):
+        palette = self.status_message.palette()
+
+        if level == MessageLevel.ERROR:
+            palette.setColor(QPalette.ColorRole.WindowText, QColor("red"))
+            self.status_message.setText(f"Error: {message}")
+        elif level == MessageLevel.WARNING:
+            palette.setColor(QPalette.ColorRole.WindowText, QColor("orange"))
+            self.status_message.setText(f"Warning: {message}")
+        else:  # INFO
+            palette.setColor(
+                QPalette.ColorRole.WindowText,
+                self.palette().color(QPalette.ColorRole.WindowText),
+            )
+            self.status_message.setText(message)
+
+        self.status_message.setPalette(palette)
 
     def open_file(self):
         filter = self.file_selector_vm.filter
