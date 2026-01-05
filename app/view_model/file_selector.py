@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject
 from pathlib import Path
 
+from app.user_message import user_msg
+
 
 if TYPE_CHECKING:
     from app.models.main_model import MainModel
@@ -67,11 +69,15 @@ class FileSelectorVM(QObject):
                 logger.info("Last directory: %s", self.last_dir)
                 logger.debug("Media file stored in memory: %s", file_path)
 
+                user_msg.info(f"File '{file_path.name}' has been opened")
+
             else:
                 logger.error(msg)
+                user_msg.error(msg)
 
         else:
             logger.info("No selected file")
+            user_msg.warning("No selected file")
 
     @property
     def last_dir(self) -> Path:
