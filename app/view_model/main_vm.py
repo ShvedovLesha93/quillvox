@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from app.view_model.audio_player_vm import AudioPlayerVM
 from app.view_model.file_selector import FileSelectorVM
+from app.view_model.settings_vm import SettingsVM
+from app.translator import language_manager
 
 if TYPE_CHECKING:
     from app.models.main_model import MainModel
@@ -15,3 +17,12 @@ class MainViewModel:
             main_model=self.main_model,
             audio_player_vm=self.audio_player_vm,
         )
+        self.settings_vm = SettingsVM()
+
+        self._connect_signals()
+
+    def _connect_signals(self) -> None:
+        self.settings_vm.language_changed.connect(self.change_app_language)
+
+    def change_app_language(self, lang_code: str) -> None:
+        language_manager.set_language(lang_code)
