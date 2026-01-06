@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from app.views.audio_player import AudioPlayer
 from app.views.menu_bar import MenuBar
+from app.views.settings.settings import Settings
 from app.views.transcript_controls import TranscriptControls
 from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
@@ -25,12 +26,13 @@ class MainWindow(QMainWindow):
         self.main_vm = main_vm
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
+        self.settings_vm = self.main_vm.settings_vm
 
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView()
         self.transcript_controls = TranscriptControls()
         self.audio_player = AudioPlayer(self.audio_player_vm)
-        # self.user_msg = user_msg
+        self.settings = Settings(self, self.settings_vm)
 
         self._setup_ui()
         self._setup_status_bar()
@@ -39,7 +41,7 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
 
-    def _setup_status_bar(self):
+    def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
         self.status_message = QLabel("Ready")
         status_bar.addWidget(self.status_message)
@@ -55,7 +57,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.transcript_view)
         layout.addWidget(self.audio_player)
 
-    def set_status_message(self, level: MessageLevel, message: str):
+    def set_status_message(self, level: MessageLevel, message: str) -> None:
         palette = self.status_message.palette()
 
         if level == MessageLevel.ERROR:
@@ -73,7 +75,7 @@ class MainWindow(QMainWindow):
 
         self.status_message.setPalette(palette)
 
-    def open_file(self):
+    def open_file(self) -> None:
         filter = self.file_selector_vm.filter
         last_filter = self.file_selector_vm.last_filter
         last_dir = self.file_selector_vm.last_dir
@@ -82,6 +84,13 @@ class MainWindow(QMainWindow):
             filter=filter, last_filter=last_filter, last_dir=str(last_dir)
         )
         self.file_selector_vm.on_file_selected(opened_file)
+
+    def open_settings(self) -> None:
+        if not self.settings.isVisible():
+            self.settings.show()
+        else:
+            self.settings.raise_()
+            self.settings.activateWindow()
 
     def _open_file_dialog(
         self, filter: str, last_filter: str, last_dir: str

@@ -1,6 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from app.models.main_model import MainModel
+from app.translator import language_manager
 from app.utils.logging_config import configure_logging
 from app.view_model.main_vm import MainViewModel
 from app.views.main_window import MainWindow
@@ -8,6 +9,8 @@ from app.views.main_window import MainWindow
 
 def main():
     configure_logging()
+
+    language_manager.set_language("en")
 
     app = QApplication([])
     app.setStyle("Fusion")
