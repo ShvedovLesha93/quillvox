@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from app.views.settings.general_settings import GeneralSettings
 from app.views.settings.stt_settings import STTSettings
+from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsVM
@@ -79,6 +80,9 @@ class Settings(QWidget):
         self.stt_settings = STTSettings(self.settings_vm)
         self._setup_ui()
 
+        self.retranslate()
+        language_manager.language_changed.connect(self.retranslate)
+
     def _setup_ui(self):
         # Central widget
         main_layout = QVBoxLayout(self)
@@ -98,9 +102,7 @@ class Settings(QWidget):
 
         # Category buttons
         self.general_btn = SettingsCategory()
-        self.general_btn.setText("General")
         self.stt_btn = SettingsCategory()
-        self.stt_btn.setText("Transcription")
 
         self.categories_btn = (self.general_btn, self.stt_btn)
 
@@ -124,7 +126,7 @@ class Settings(QWidget):
         btn_layout = QHBoxLayout()
         btn_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.btn_save = QPushButton("Save")
+        self.btn_save = QPushButton()
         self.btn_save.setEnabled(False)
         self.btn_save.setSizePolicy(
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
@@ -157,6 +159,11 @@ class Settings(QWidget):
         # Set initial state
         self.general_btn.setChecked(True)
         self.content_stack.setCurrentIndex(0)
+
+    def retranslate(self) -> None:
+        self.general_btn.setText(_("General"))
+        self.stt_btn.setText(_("Transcription"))
+        self.btn_save.setText(_("Save"))
 
     def switch_page(self, index):
         # Uncheck all buttons
