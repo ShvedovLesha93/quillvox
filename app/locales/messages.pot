@@ -1,0 +1,115 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-08 19:23+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: app\views\audio_player.py:150
+msgid "No file opened"
+msgstr ""
+
+#: app\views\audio_player.py:151
+msgid "Stop"
+msgstr ""
+
+#: app\views\audio_player.py:152
+msgid "Volume:"
+msgstr ""
+
+#: app\views\audio_player.py:153
+msgid "Speed:"
+msgstr ""
+
+#: app\views\audio_player.py:202
+msgid "Pause"
+msgstr ""
+
+#: app\views\audio_player.py:206 app\views\audio_player.py:209
+msgid "Play"
+msgstr ""
+
+#: app\views\main_window.py:103
+msgid "Open media file"
+msgstr ""
+
+#: app\views\menu_bar.py:35
+msgid "File"
+msgstr ""
+
+#: app\views\menu_bar.py:36
+msgid "Open Media"
+msgstr ""
+
+#: app\views\menu_bar.py:37
+msgid "Settings"
+msgstr ""
+
+#: app\views\transcript_controls.py:22
+msgid "Transcribe"
+msgstr ""
+
+#: app\view_model\file_selector.py:47
+msgid "Audio Files"
+msgstr ""
+
+#: app\view_model\file_selector.py:48
+msgid "Video Files"
+msgstr ""
+
+#: app\view_model\file_selector.py:49
+msgid "All Media Files"
+msgstr ""
+
+#: app\view_model\file_selector.py:58
+msgid "File not found"
+msgstr ""
+
+#: app\view_model\file_selector.py:80
+#, python-brace-format
+msgid "File '{file}' has been opened"
+msgstr ""
+
+#: app\view_model\file_selector.py:89
+msgid "No selected file"
+msgstr ""
+
+#: app\view_model\settings_vm.py:30
+msgid "English"
+msgstr ""
+
+#: app\view_model\settings_vm.py:31
+msgid "Russian"
+msgstr ""
+
+#: app\views\settings\general_settings.py:74 app\views\settings\settings.py:164
+msgid "General"
+msgstr ""
+
+#: app\views\settings\general_settings.py:75
+msgid "Language"
+msgstr ""
+
+#: app\views\settings\general_settings.py:76
+msgid "Theme"
+msgstr ""
+
+#: app\views\settings\settings.py:165 app\views\settings\stt_settings.py:59
+msgid "Transcription"
+msgstr ""
+
+#: app\views\settings\settings.py:166
+msgid "Save"
+msgstr ""

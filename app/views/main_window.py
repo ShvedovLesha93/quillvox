@@ -19,6 +19,8 @@ from app.user_message import user_msg, MessageLevel
 if TYPE_CHECKING:
     from app.view_model.main_vm import MainViewModel
 
+from app.translator import _
+
 
 class MainWindow(QMainWindow):
     def __init__(self, main_vm: MainViewModel) -> None:
@@ -43,7 +45,7 @@ class MainWindow(QMainWindow):
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
-        self.status_message = QLabel("Ready")
+        self.status_message = QLabel()
         status_bar.addWidget(self.status_message)
 
     def _setup_ui(self) -> None:
@@ -98,7 +100,7 @@ class MainWindow(QMainWindow):
         file_dialog = QFileDialog()
         file, filter = file_dialog.getOpenFileName(
             self,
-            caption="Open media file",
+            caption=_("Open media file"),
             filter=filter,
             selectedFilter=last_filter,
             dir=last_dir,

@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 from app.constants import PlaybackState
+from app.translator import language_manager, _
+
 
 if TYPE_CHECKING:
     from app.view_model.audio_player_vm import AudioPlayerVM
@@ -68,6 +70,9 @@ class AudioPlayer(QWidget):
         self._setup_ui()
         self._bind_vm()
 
+        self.retranslate()
+        language_manager.language_changed.connect(self.retranslate)
+
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -79,14 +84,12 @@ class AudioPlayer(QWidget):
 
         # File name
         self.file_name = TruncatingLabel(self)
-        self.file_name.setText("No file opened")
-
         self.file_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Playback buttons
-        self.play_btn = QPushButton("Play")
+        self.play_btn = QPushButton()
         self.play_btn.setEnabled(False)
-        self.stop_btn = QPushButton("Stop")
+        self.stop_btn = QPushButton()
         self.stop_btn.setEnabled(False)
 
         btn_layout.addWidget(self.play_btn)
@@ -109,7 +112,7 @@ class AudioPlayer(QWidget):
         # Playback controls
 
         # Volume control
-        self.volume_label = QLabel("Volume:")
+        self.volume_label = QLabel()
         self.volume_slider = QSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setRange(0, 100)
         self.volume_slider.setValue(50)
@@ -122,7 +125,7 @@ class AudioPlayer(QWidget):
         control_layout.addWidget(self.volume_value_label)
 
         # Speed control
-        self.speed_label = QLabel("Speed:")
+        self.speed_label = QLabel()
         self.speed_slider = QSlider(Qt.Orientation.Horizontal)
         self.speed_slider.setRange(25, 200)  # 0.25x to 2.0x speed
         self.speed_slider.setValue(100)  # Default speed 1.0x
@@ -142,6 +145,13 @@ class AudioPlayer(QWidget):
         layout.addWidget(self.file_name)
         layout.addLayout(timeline_layout)
         layout.addLayout(control_layout)
+
+    def retranslate(self) -> None:
+        self.file_name.setText(_("No file opened"))
+        self.play_btn.setText(_("Play"))
+        self.stop_btn.setText(_("Stop"))
+        self.volume_label.setText(_("Volume:"))
+        self.speed_label.setText(_("Speed:"))
 
     def _bind_vm(self) -> None:
         # =========== UI → ViewModel ============
@@ -190,14 +200,14 @@ class AudioPlayer(QWidget):
 
     def _on_playback_state(self, state: PlaybackState) -> None:
         if state == PlaybackState.PLAYING:
-            self.play_btn.setText("Pause")
+            self.play_btn.setText(_("Pause"))
             self.stop_btn.setEnabled(True)
 
         elif state == PlaybackState.PAUSED:
-            self.play_btn.setText("Play")
+            self.play_btn.setText(_("Play"))
 
         else:
-            self.play_btn.setText("Play")
+            self.play_btn.setText(_("Play"))
             self.stop_btn.setEnabled(state != PlaybackState.STOPPED)
 
 

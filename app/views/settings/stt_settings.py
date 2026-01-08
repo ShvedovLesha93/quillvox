@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.views.ui_utils.title import Title
+from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsVM
@@ -25,6 +26,9 @@ class STTSettings(QWidget):
         self._setup_ui()
         self._bind_vm()
 
+        self.retranslate()
+        language_manager.language_changed.connect(self.retranslate)
+
     def _setup_ui(self) -> None:
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(0, 0, 0, 0)
@@ -36,9 +40,8 @@ class STTSettings(QWidget):
         form_layout = QFormLayout()
 
         # Title
-        title = Title(self)
-        title.setTitle("Transcription")
-        main_layout.addWidget(title)
+        self.title = Title(self)
+        main_layout.addWidget(self.title)
 
         main_layout.addLayout(form_layout)
 
@@ -51,6 +54,9 @@ class STTSettings(QWidget):
         scroll.setWidget(content_widget)
 
         outer_layout.addWidget(scroll)
+
+    def retranslate(self) -> None:
+        self.title.setTitle(_("Transcription"))
 
     def _bind_vm(self) -> None:
         pass

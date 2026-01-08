@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject
 from pathlib import Path
 
+from app.translator import language_manager, _
 from app.user_message import user_msg
 
 
@@ -32,23 +33,29 @@ class FileSelectorVM(QObject):
         self.video_formats = self.file_formats.video
         self._last_directory = Path.home()
         self._last_filter = ""
+        self.filter = ""
 
-    @property
-    def filter(self) -> str:
+        self.retranslate()
+        language_manager.language_changed.connect(self.retranslate)
+
+    def generate_filter(self):
         def fmt(label: str, formats: list[str]) -> str:
             return f"{label} ({' '.join(formats)})"
 
-        return ";;".join(
+        self.filter = ";;".join(
             [
-                fmt("Audio Files", self.audio_formats),
-                fmt("Video Files", self.video_formats),
-                fmt("All Media Files", self.audio_formats + self.video_formats),
+                fmt(_("Audio Files"), self.audio_formats),
+                fmt(_("Video Files"), self.video_formats),
+                fmt(_("All Media Files"), self.audio_formats + self.video_formats),
             ]
         )
 
+    def retranslate(self) -> None:
+        self.generate_filter()
+
     def _validate(self, path: Path) -> tuple[bool, str]:
         if not path.exists():
-            return False, "File not found"
+            return False, _("File not found")
 
         return True, ""
 
@@ -69,7 +76,9 @@ class FileSelectorVM(QObject):
                 logger.info("Last directory: %s", self.last_dir)
                 logger.debug("Media file stored in memory: %s", file_path)
 
-                user_msg.info(f"File '{file_path.name}' has been opened")
+                user_msg.info(
+                    _("File '{file}' has been opened").format(file=file_path.name)
+                )
 
             else:
                 logger.error(msg)
@@ -77,7 +86,7 @@ class FileSelectorVM(QObject):
 
         else:
             logger.info("No selected file")
-            user_msg.warning("No selected file")
+            user_msg.warning(_("No selected file"))
 
     @property
     def last_dir(self) -> Path:

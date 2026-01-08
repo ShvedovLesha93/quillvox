@@ -12,9 +12,11 @@ from PySide6.QtWidgets import (
 )
 
 from app.views.ui_utils.title import Title
+from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsVM
+    from app.view_model.settings_vm import Language
 
 
 class GeneralSettings(QWidget):
@@ -24,6 +26,9 @@ class GeneralSettings(QWidget):
 
         self._setup_ui()
         self._bind_vm()
+
+        self.retranslate()
+        language_manager.language_changed.connect(self.retranslate)
 
     def _setup_ui(self) -> None:
         outer_layout = QVBoxLayout(self)
@@ -36,23 +41,22 @@ class GeneralSettings(QWidget):
         form_layout = QFormLayout()
 
         # Title
-        title = Title(self)
-        title.setTitle("General")
-        main_layout.addWidget(title)
+        self.title = Title(self)
+        main_layout.addWidget(self.title)
 
         main_layout.addLayout(form_layout)
 
         # Language
-        lang_label = QLabel("Language")
+        self.lang_label = QLabel()
 
         self.lang_combo = QComboBox()
-        form_layout.addRow(lang_label, self.lang_combo)
+        form_layout.addRow(self.lang_label, self.lang_combo)
 
         # Theme
-        theme_label = QLabel("Theme")
+        self.theme_label = QLabel()
         theme_combo = QComboBox()
 
-        form_layout.addRow(theme_label, theme_combo)
+        form_layout.addRow(self.theme_label, theme_combo)
 
         main_layout.addStretch()
 
@@ -66,6 +70,12 @@ class GeneralSettings(QWidget):
 
         outer_layout.addWidget(scroll)
 
+    def retranslate(self) -> None:
+        self.title.setTitle(_("General"))
+        self.lang_label.setText(_("Language"))
+        self.theme_label.setText(_("Theme"))
+        self.add_languages(self.vm.languages)
+
     def _bind_vm(self) -> None:
         # =========== UI → ViewModel ============
         self.lang_combo.currentIndexChanged.connect(
@@ -73,11 +83,26 @@ class GeneralSettings(QWidget):
         )
 
         # =========== ViewModel → UI ===========
-        self.add_languages(self.vm.languages())
+        # self.add_languages(self.vm.languages())
 
-    def add_languages(self, data: list[tuple[str, str]]) -> None:
-        for code, label in data:
-            self.lang_combo.addItem(label, userData=code)
+    def add_languages(self, data: list[Language]) -> None:
+        current_code = self.vm.current_language
+
+        self.lang_combo.blockSignals(True)
+        self.lang_combo.clear()
+
+        for lang in data:
+            self.lang_combo.addItem(
+                f"{lang.translated} ({lang.native})",
+                userData=lang.code,
+            )
+
+        if current_code is not None:
+            index = self.lang_combo.findData(current_code)
+            if index != -1:
+                self.lang_combo.setCurrentIndex(index)
+
+        self.lang_combo.blockSignals(False)
 
 
 # ============ TEST ============
@@ -89,6 +114,7 @@ if __name__ == "__main__":
     app.setStyle("Fusion")
 
     settings_vm = SettingsVM()
+    settings_vm.language_changed.connect(language_manager.set_language)
 
     view = GeneralSettings(settings_vm=settings_vm)
     view.move(1020, 320)
