@@ -17,7 +17,7 @@ class AudioPlayerVM(QObject):
     str_speed_changed = Signal(str)
     str_current_time_changed = Signal(str)
     str_total_time_changed = Signal(str)
-    str_volume_changed = Signal(str)
+    int_volume_changed = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -28,6 +28,7 @@ class AudioPlayerVM(QObject):
 
         self._state = PlaybackState.STOPPED
         self._was_playing = False
+        self.is_muted = False
 
         # Qt → VM
         self.player.durationChanged.connect(self._on_duration_changed)
@@ -87,9 +88,14 @@ class AudioPlayerVM(QObject):
         self.playback_state_changed.emit(state)
 
     def set_volume(self, value: int) -> None:
+        if value > 0:
+            self.is_muted = False
+        else:
+            self.is_muted = True
+
         volume = value / 100.0
         self.audio_output.setVolume(volume)
-        self.str_volume_changed.emit(f"{value}%")
+        self.int_volume_changed.emit(value)
 
     def set_speed(self, value: int) -> None:
         speed = value / 100.0

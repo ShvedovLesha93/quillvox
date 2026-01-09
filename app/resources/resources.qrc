@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/icons">
+        <file>icons/pause.svg</file>
+        <file>icons/play_arrow.svg</file>
+        <file>icons/replay.svg</file>
+        <file>icons/speed.svg</file>
+        <file>icons/stop.svg</file>
+        <file>icons/volume_off.svg</file>
+        <file>icons/volume_up.svg</file>
+    </qresource>
+</RCC>
