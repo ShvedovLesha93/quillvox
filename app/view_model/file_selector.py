@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 from pathlib import Path
 
 from app.translator import language_manager, _
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class FileSelectorVM(QObject):
+    file_opened = Signal()
 
     def __init__(
         self,
@@ -71,6 +72,7 @@ class FileSelectorVM(QObject):
                 self.last_dir = file_path.parent
                 self.last_filter = filter
                 self.audio_player_vm.load(file_path)
+                self.file_opened.emit()
 
                 logger.info("Audio file opened: %s", file_path.name)
                 logger.info("Last directory: %s", self.last_dir)
