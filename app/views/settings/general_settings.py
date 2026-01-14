@@ -11,12 +11,13 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
+from app import theme_manager
 from app.views.ui_utils.title import Title
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsVM
-    from app.view_model.settings_vm import Language
+    from app.view_model.settings_vm import Language, Theme
 
 
 class GeneralSettings(QWidget):
@@ -54,9 +55,9 @@ class GeneralSettings(QWidget):
 
         # Theme
         self.theme_label = QLabel()
-        theme_combo = QComboBox()
+        self.theme_combo = QComboBox()
 
-        form_layout.addRow(self.theme_label, theme_combo)
+        form_layout.addRow(self.theme_label, self.theme_combo)
 
         main_layout.addStretch()
 
@@ -75,15 +76,28 @@ class GeneralSettings(QWidget):
         self.lang_label.setText(_("Language"))
         self.theme_label.setText(_("Theme"))
         self.add_languages(self.vm.languages)
+        self.add_themes(self.vm.themes)
 
     def _bind_vm(self) -> None:
         # =========== UI → ViewModel ============
         self.lang_combo.currentIndexChanged.connect(
             lambda _: self.vm.set_language(self.lang_combo.currentData())
         )
+        self.theme_combo.currentIndexChanged.connect(
+            lambda _: self.vm.set_theme(self.theme_combo.currentData())
+        )
 
-        # =========== ViewModel → UI ===========
-        # self.add_languages(self.vm.languages())
+    def add_themes(self, data: list[Theme]) -> None:
+        current_theme = self.vm.current_theme
+
+        self.theme_combo.blockSignals(True)
+        self.theme_combo.clear()
+
+        for theme in data:
+            self.theme_combo.addItem(theme.translated, theme.data)
+
+        self.set_current_item(self.theme_combo, current_theme)
+        self.theme_combo.blockSignals(False)
 
     def add_languages(self, data: list[Language]) -> None:
         current_code = self.vm.current_language
@@ -104,16 +118,26 @@ class GeneralSettings(QWidget):
 
         self.lang_combo.blockSignals(False)
 
+    # TODO: Fix it. 2026-01-13 06:55
+    def set_current_item(self, combo: QComboBox, data) -> None:
+        index = combo.findData(data)
+        if index != -1:
+            combo.setCurrentIndex(index)
+
 
 # ============ TEST ============
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
     from app.view_model.settings_vm import SettingsVM
+    from app.theme_manager import ThemeManager
+    from app.constants import ThemeMode
 
     app = QApplication([])
     app.setStyle("Fusion")
 
-    settings_vm = SettingsVM()
+    theme_manager = ThemeManager(app, initial_theme=ThemeMode.SYSTEM)
+
+    settings_vm = SettingsVM(theme_manager)
     settings_vm.language_changed.connect(language_manager.set_language)
 
     view = GeneralSettings(settings_vm=settings_vm)

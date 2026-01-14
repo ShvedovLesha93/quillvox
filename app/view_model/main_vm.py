@@ -1,23 +1,30 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
 from app.view_model.audio_player_vm import AudioPlayerVM
 from app.view_model.file_selector import FileSelectorVM
 from app.view_model.settings_vm import SettingsVM
 from app.translator import language_manager
 
 if TYPE_CHECKING:
+    from app.theme_manager import ThemeManager
+    from PySide6.QtWidgets import QApplication
     from app.models.main_model import MainModel
 
 
 class MainViewModel:
-    def __init__(self, main_model: MainModel):
+    def __init__(
+        self, app: QApplication, main_model: MainModel, theme_manager: ThemeManager
+    ):
+        self.app = app
         self.main_model = main_model
+        self.theme_manager = theme_manager
         self.audio_player_vm = AudioPlayerVM()
         self.file_selector_vm = FileSelectorVM(
             main_model=self.main_model,
             audio_player_vm=self.audio_player_vm,
         )
-        self.settings_vm = SettingsVM()
+        self.settings_vm = SettingsVM(self.theme_manager)
 
         self._connect_signals()
 
