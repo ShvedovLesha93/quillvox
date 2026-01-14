@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from PySide6.QtCore import QEvent
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -17,14 +18,24 @@ from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
 
 if TYPE_CHECKING:
+    from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
+    from PySide6.QtWidgets import QApplication
 
 from app.translator import _
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class MainWindow(QMainWindow):
-    def __init__(self, main_vm: MainViewModel) -> None:
+    def __init__(
+        self, app: QApplication, theme_manager: ThemeManager, main_vm: MainViewModel
+    ) -> None:
         super().__init__()
+        self.app = app
+        self.theme_manager = theme_manager
         self.main_vm = main_vm
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
@@ -34,7 +45,13 @@ class MainWindow(QMainWindow):
         self.transcript_view = TranscriptView()
         self.transcript_controls = TranscriptControls()
         self.audio_player = AudioPlayer(self.audio_player_vm)
-        self.settings = Settings(self, self.settings_vm)
+        self.settings = Settings(
+            settings_vm=self.settings_vm,
+            theme_manager=self.theme_manager,
+            main_window=self,
+        )
+
+        self._first_palette_change = True  # Flag for first event
 
         self._setup_ui()
         self._setup_status_bar()

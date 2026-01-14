@@ -11,49 +11,70 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
+from app.constants import ThemeMode
+from app.view_model import settings_vm
 from app.views.settings.general_settings import GeneralSettings
 from app.views.settings.stt_settings import STTSettings
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
+    from app.theme_manager import ThemeManager
     from app.view_model.settings_vm import SettingsVM
     from app.views.main_window import MainWindow
 
 
 class SettingsCategory(QPushButton):
-    def __init__(self, parent=None):
+    def __init__(
+        self, parent: QWidget | None = None, theme_manager: ThemeManager | None = None
+    ) -> None:
         super().__init__(parent)
+        self.theme_manager = theme_manager
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.setCheckable(True)
+
+        if self.theme_manager:
+            self.theme_manager.theme_changed.connect(self.update_theme)
+            self.update_theme(self.theme_manager.applied_theme)
+
+    def set_highlighted(self, highlighted: bool):
+        self.setProperty("highlighted", highlighted)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    def update_theme(self, theme: ThemeMode) -> None:
+        if theme == ThemeMode.DARK:
+            self.dark_theme()
+        else:
+            self.light_theme()
+
+    def dark_theme(self) -> None:
         self.setStyleSheet(
             """
             QPushButton {
                 font: bold;
                 text-align: left;
                 padding: 10px 10px;
-                border: 2px solid transparent;
-                background-color: #404040;
-                color: #FFFFFF;
+                border: 2px solid #272727;
+                background-color: #272727;
+                color: #ffffff;
                 font-size: 14px;
                 border-radius: 8px;
                 margin: 2px 5px;
             }
 
             QPushButton:hover {
-                background-color: #5A5A5A;
+                background-color: #424242;
+                border: 2px solid #424242;
             }
 
             QPushButton:pressed {
-                background-color: #707070;
+                background-color: #565656;
+                border: 2px solid #565656;
             }
 
             QPushButton:checked {
-                background-color: #B4B4B4;
-                color: #1A1A1A;
-            }
-
-            QPushButton:checked:hover {
-                background-color: #C8C8C8;
+                background-color: #424242;
+                border: 2px solid #424242;
             }
 
             QPushButton[highlighted="true"] {
@@ -62,19 +83,56 @@ class SettingsCategory(QPushButton):
             """
         )
 
-    def set_highlighted(self, highlighted: bool):
-        self.setProperty("highlighted", highlighted)
-        self.style().unpolish(self)
-        self.style().polish(self)
+    def light_theme(self) -> None:
+        self.setStyleSheet(
+            """
+            QPushButton {
+                font: bold;
+                text-align: left;
+                padding: 10px 10px;
+                border: 2px solid #e6e6e6;
+                background-color: #f2f2f2;
+                color: #1a1a1a;
+                font-size: 14px;
+                border-radius: 8px;
+                margin: 2px 5px;
+            }
+
+            QPushButton:hover {
+                background-color: #e5e5e5;
+            }
+
+            QPushButton:pressed {
+                border: 2px solid #cecece;
+                background-color: #cecece;
+            }
+
+            QPushButton:checked {
+                border: 2px solid #dadada;
+                background-color: #dadada;
+                color: #000000;
+            }
+
+            QPushButton[highlighted="true"] {
+                border: 2px solid #ffa500;
+            }
+            """
+        )
 
 
 class Settings(QWidget):
     restore_settings_request = Signal()
     save_settings_request = Signal()
 
-    def __init__(self, main_window: MainWindow, settings_vm: SettingsVM):
+    def __init__(
+        self,
+        settings_vm: SettingsVM,
+        theme_manager: ThemeManager,
+        main_window: MainWindow | None = None,
+    ):
         super().__init__()
         self.main_window = main_window
+        self.theme_manager = theme_manager
         self.settings_vm = settings_vm
         self.general_settings = GeneralSettings(self.settings_vm)
         self.stt_settings = STTSettings(self.settings_vm)
@@ -83,7 +141,12 @@ class Settings(QWidget):
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
 
+        self.theme_manager.theme_changed.connect(self.update_theme)
+
+        self.update_theme(self.theme_manager.applied_theme)
+
     def _setup_ui(self):
+        self.resize(500, 200)
         # Central widget
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -101,8 +164,8 @@ class Settings(QWidget):
         sidebar_layout.setSpacing(0)
 
         # Category buttons
-        self.general_btn = SettingsCategory()
-        self.stt_btn = SettingsCategory()
+        self.general_btn = SettingsCategory(self, theme_manager=self.theme_manager)
+        self.stt_btn = SettingsCategory(self, theme_manager=self.theme_manager)
 
         self.categories_btn = (self.general_btn, self.stt_btn)
 
@@ -136,29 +199,35 @@ class Settings(QWidget):
         btn_layout.addWidget(self.btn_save)
 
         # Vertical separator
-        v_separator = QFrame()
-        v_separator.setFrameShape(QFrame.Shape.VLine)
-        v_separator.setFixedWidth(2)
-        v_separator.setStyleSheet("background-color: #404040; border: none")
+        self.v_separator = QFrame()
+        self.v_separator.setFrameShape(QFrame.Shape.VLine)
+        self.v_separator.setFixedWidth(2)
 
         # Gorizontal separator
-        h_separator = QFrame()
-        h_separator.setFrameShape(QFrame.Shape.HLine)
-        h_separator.setFixedHeight(2)
-        h_separator.setStyleSheet("background-color: #404040; border: none")
+        self.h_separator = QFrame()
+        self.h_separator.setFrameShape(QFrame.Shape.HLine)
+        self.h_separator.setFixedHeight(2)
 
         # Add to main layout
         layout.addWidget(sidebar)
-        layout.addWidget(v_separator)
+        layout.addWidget(self.v_separator)
         layout.addWidget(self.content_stack)
 
         main_layout.addLayout(layout)
-        main_layout.addWidget(h_separator)
+        main_layout.addWidget(self.h_separator)
         main_layout.addLayout(btn_layout)
 
         # Set initial state
         self.general_btn.setChecked(True)
         self.content_stack.setCurrentIndex(0)
+
+    def update_theme(self, theme: ThemeMode) -> None:
+        if theme == ThemeMode.DARK:
+            self.v_separator.setStyleSheet("background-color: #404040; border: none")
+            self.h_separator.setStyleSheet("background-color: #404040; border: none")
+        else:
+            self.v_separator.setStyleSheet("background-color: #b7b6b6; border: none")
+            self.h_separator.setStyleSheet("background-color: #b6b6b6; border: none")
 
     def retranslate(self) -> None:
         self.general_btn.setText(_("General"))
@@ -186,3 +255,25 @@ class Settings(QWidget):
             geom = self.frameGeometry()
             geom.moveCenter(main_center)
             self.move(geom.topLeft())
+
+
+# ============ TEST ============
+if __name__ == "__main__":
+    from PySide6.QtWidgets import QApplication
+    from app.view_model.settings_vm import SettingsVM
+    from app.theme_manager import ThemeManager
+
+    app = QApplication([])
+    app.setStyle("Fusion")
+
+    theme_manager = ThemeManager(app, initial_theme=ThemeMode.LIGHT)
+
+    settings_vm = SettingsVM(theme_manager)
+
+    view = Settings(settings_vm=settings_vm, theme_manager=theme_manager)
+
+    view.resize(500, 200)
+    view.move(1020, 320)
+
+    view.show()
+    app.exec()

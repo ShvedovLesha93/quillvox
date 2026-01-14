@@ -7,3 +7,9 @@ class PlaybackState(Enum):
     PAUSED = auto()
     SEEKING = auto()
     END_SEEKING = auto()
+
+
+class ThemeMode(Enum):
+    LIGHT = 0
+    DARK = 1
+    SYSTEM = 2
