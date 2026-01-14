@@ -1,10 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from app.models.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerVM
 from app.view_model.file_selector import FileSelectorVM
 from app.view_model.settings_vm import SettingsVM
 from app.translator import language_manager
+from app.view_model.stt_vm import STTViewModel
+from app.view_model.transcript_vm import TranscriptVM
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
@@ -25,6 +28,8 @@ class MainViewModel:
             audio_player_vm=self.audio_player_vm,
         )
         self.settings_vm = SettingsVM(self.theme_manager)
+        self.stt_vm = STTViewModel(stt_config=STTConfig(), main_model=self.main_model)
+        self.transcript_vm = TranscriptVM(self.stt_vm)
 
         self._connect_signals()
 

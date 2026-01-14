@@ -42,8 +42,10 @@ class MainWindow(QMainWindow):
         self.settings_vm = self.main_vm.settings_vm
 
         self.menu_bar = MenuBar(self)
-        self.transcript_view = TranscriptView()
-        self.transcript_controls = TranscriptControls()
+        self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
+        self.transcript_controls = TranscriptControls(
+            stt_vm=self.main_vm.stt_vm, file_selector_vm=self.main_vm.file_selector_vm
+        )
         self.audio_player = AudioPlayer(self.audio_player_vm)
         self.settings = Settings(
             settings_vm=self.settings_vm,
