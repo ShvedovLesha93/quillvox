@@ -50,7 +50,7 @@ class STTConfig:
     model: Parameter[str, ModelValue] = field(
         default_factory=lambda: Parameter(
             label="Model",
-            current="large",
+            current="base",
             values={
                 "tiny": ModelValue(label="Tiny"),
                 "base": ModelValue(label="Base"),
