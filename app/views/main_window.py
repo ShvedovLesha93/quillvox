@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from PySide6.QtCore import QEvent
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -61,6 +60,8 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
+        self.main_vm.stt_vm.process_active.connect(self.on_transcription_started)
+        self.main_vm.stt_vm.finished.connect(self.on_transcription_finished)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -95,6 +96,16 @@ class MainWindow(QMainWindow):
             self.status_message.setText(message)
 
         self.status_message.setPalette(palette)
+
+    def on_transcription_started(self) -> None:
+        self.transcript_controls.transcribe_btn.setEnabled(False)
+        self.transcript_controls.transcribe_btn.start_spinner()
+        self.menu_bar.open_media.setEnabled(False)
+
+    def on_transcription_finished(self) -> None:
+        self.transcript_controls.transcribe_btn.setEnabled(True)
+        self.transcript_controls.transcribe_btn.stop_spinner()
+        self.menu_bar.open_media.setEnabled(True)
 
     def open_file(self) -> None:
         filter = self.file_selector_vm.filter

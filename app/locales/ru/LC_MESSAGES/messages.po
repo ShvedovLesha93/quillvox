@@ -18,25 +18,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.8\n"
 
-#: app\views\audio_player.py:150
+#: app\views\audio_player.py:160
 msgid "No file opened"
 msgstr "Файл не открыт"
-
-#: app\views\audio_player.py:206 app\views\audio_player.py:209
-msgid "Play"
-msgstr "Воспроизвести"
-
-#: app\views\audio_player.py:151
-msgid "Stop"
-msgstr "Стоп"
-
-#: app\views\audio_player.py:152
-msgid "Volume:"
-msgstr "Громкость:"
-
-#: app\views\audio_player.py:153
-msgid "Speed:"
-msgstr "Скорость:"
 
 #: app\views\menu_bar.py:35
 msgid "File"
@@ -50,71 +34,108 @@ msgstr "Открыть медиа"
 msgid "Settings"
 msgstr "Настройки"
 
-#: app\views\transcript_controls.py:22
+#: app\views\transcript_controls.py:76
 msgid "Transcribe"
 msgstr "Транскрибировать"
 
-#: app\views\settings\general_settings.py:74
-#: app\views\settings\settings.py:164
+#: app\views\settings\general_settings.py:75
+#: app\views\settings\settings.py:233
 msgid "General"
 msgstr "Общие"
 
-#: app\views\settings\general_settings.py:75
+#: app\views\settings\general_settings.py:76
 msgid "Language"
 msgstr "Язык"
 
-#: app\views\settings\general_settings.py:76
+#: app\views\settings\general_settings.py:77
 msgid "Theme"
 msgstr "Тема"
 
-#: app\views\settings\settings.py:165 app\views\settings\stt_settings.py:59
+#: app\views\settings\settings.py:234 app\views\settings\stt_settings.py:59
 msgid "Transcription"
 msgstr "Транскрипция"
 
-#: app\views\settings\settings.py:166
+#: app\views\settings\settings.py:235
 msgid "Save"
 msgstr "Сохранить"
 
-#: app\view_model\settings_vm.py:30
+#: app\view_model\settings_vm.py:49
 msgid "English"
 msgstr "Английский"
 
-#: app\view_model\settings_vm.py:31
+#: app\view_model\settings_vm.py:50
 msgid "Russian"
 msgstr "Русский"
 
-#: app\view_model\file_selector.py:47
+#: app\view_model\file_selector.py:48
 msgid "Audio Files"
 msgstr "Аудио файлы"
 
-#: app\view_model\file_selector.py:48
+#: app\view_model\file_selector.py:49
 msgid "Video Files"
 msgstr "Видео файлы"
 
-#: app\view_model\file_selector.py:49
+#: app\view_model\file_selector.py:50
 msgid "All Media Files"
 msgstr "Все медиафайлы"
 
-#: app\view_model\file_selector.py:58
+#: app\view_model\file_selector.py:59
 msgid "File not found"
 msgstr "Файл не найден"
 
-#: app\view_model\file_selector.py:80
+#: app\view_model\file_selector.py:82
 #, python-brace-format
 msgid "File '{file}' has been opened"
 msgstr "Файл '{file}' открыт"
 
-#: app\view_model\file_selector.py:89
+#: app\view_model\file_selector.py:91
 msgid "No selected file"
 msgstr "Файл не выбран"
 
-#: app\views\main_window.py:103
+#: app\views\main_window.py:133
 msgid "Open media file"
 msgstr "Открыть медиафайл"
 
-#: app\views\audio_player.py:202
-msgid "Pause"
-msgstr "Пауза"
+#: app\stt_worker.py:58
+#, python-brace-format
+msgid "\"{model_name}\" model has been loaded"
+msgstr "Модель \"{model_name}\" загружена"
+
+#: app\view_model\settings_vm.py:53
+msgid "Dark"
+msgstr "Темная"
+
+#: app\view_model\settings_vm.py:54
+msgid "Light"
+msgstr "Светлая"
+
+#: app\view_model\settings_vm.py:55
+msgid "System"
+msgstr "Система"
+
+#: app\stt_worker.py:82
+#, python-brace-format
+msgid "Transcription completed in {duration}"
+msgstr "Транскрипция выполнена за {duration}"
+
+#, python-brace-format
+#~ msgid "\"Transcription completed. Time taken: {duration}\""
+#~ msgstr ""
+
+#~ msgid "Play"
+#~ msgstr "Воспроизвести"
+
+#~ msgid "Stop"
+#~ msgstr "Стоп"
+
+#~ msgid "Volume:"
+#~ msgstr "Громкость:"
+
+#~ msgid "Speed:"
+#~ msgstr "Скорость:"
+
+#~ msgid "Pause"
+#~ msgstr "Пауза"
 
 #, python-brace-format
 #~ msgid "Error: {msg}"

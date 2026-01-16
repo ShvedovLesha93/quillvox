@@ -1,15 +1,15 @@
 from __future__ import annotations
 from dataclasses import asdict
-import logging
-from multiprocessing import Event, Process, Queue
-from queue import Empty
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QObject, QTimer, Signal
-
-from app.models.stt_transcript import STTSegment
+from PySide6.QtCore import QObject, QThread, Signal, Slot
+from app.stt_worker import Level, STTWorker
+from app.user_message import user_msg
 from app.stt_run_config import STTRunConfig
-from app.stt_worker import stt_worker
+from app.models.stt_transcript import STTSegment
+from app.translator import _
+
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from faster_whisper.transcribe import Segment
     from app.models.stt_config import STTConfig
     from app.models.main_model import MainModel
+    from app.stt_worker import WorkerMessage
 
 
 class STTViewModel(QObject):
@@ -29,71 +30,68 @@ class STTViewModel(QObject):
         self.main_model = main_model
         self.transcript = self.main_model.stt_transcript
         self.stt_config = stt_config
-        self.process: Process | None = None
+
+        self._thread: QThread | None = None
+        self._worker: STTWorker | None = None
 
     def run_stt(self) -> None:
-        if self.process is not None and self.process.is_alive():
-            logger.warning("STT Process is already running")
+        if self._thread and self._thread.isRunning():
+            logger.warning("STT thread already running")
             return
+
+        self.transcript.segments.clear()
 
         cfg = self.build_run_config()
 
-        self.result_queue = Queue()
-        self.message_queue = Queue()
-        self.terminate_event = Event()
-        self.is_working = Event()
+        self._thread = QThread()
+        self._worker = STTWorker(cfg)
 
-        self.process = Process(
-            target=stt_worker,
-            args=(
-                cfg,
-                self.result_queue,
-                self.message_queue,
-                self.terminate_event,
-                self.is_working,
-            ),
+        self._worker.moveToThread(self._thread)
+
+        # lifecycle
+        self._thread.started.connect(self._worker.run)
+        self._worker.finished.connect(self._thread.quit)
+        self._worker.finished.connect(self._worker.deleteLater)
+        self._thread.finished.connect(self._thread.deleteLater)
+        self._thread.finished.connect(self._cleanup_thread)
+
+        # data
+        self._worker.segment_ready.connect(self._on_segment)
+        self._worker.message.connect(self.send_message)
+        self._worker.error_message.connect(logger.info)
+
+        # ui
+        self._thread.finished.connect(self._on_finished)
+
+        self._thread.start()
+        self.process_active.emit()
+
+    @Slot(object)
+    def send_message(self, msg: WorkerMessage) -> None:
+        if msg.params:
+            text = _(msg.message).format(**msg.params)
+        else:
+            text = _(msg.message)
+
+        if msg.level == Level.INFO:
+            user_msg.info(text)
+
+    def _on_segment(self, seg: Segment):
+        self.transcript.segments.append(
+            STTSegment(
+                id=seg.id,
+                start=seg.start,
+                end=seg.end,
+                text=seg.text,
+            )
         )
-        self.process.start()
+        self.segment_sent.emit(seg.text)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self._check_result)
-        self.timer.start(500)
-        self.process_active.emit()  # Emit signal to show process is still active
+    def _on_finished(self):
+        logger.info("STT thread completed")
+        logger.debug("Created transcript: %d segments", len(self.transcript.segments))
 
-    def _check_result(self):
-        # Check if process is still running
-        if not self.process.is_alive():
-            self.timer.stop()
-            self.process.join()
-            self.finished.emit()
-            logger.info("STT process completed")
-            logger.debug("Created transcript: %s", asdict(self.transcript))
-            return
-
-        # Process results
-        try:
-            while True:
-                seg: Segment = self.result_queue.get_nowait()
-                self.transcript.segments.append(
-                    STTSegment(
-                        id=seg.id,
-                        start=seg.start,
-                        end=seg.end,
-                        text=seg.text,
-                    )
-                )
-                self.segment_sent.emit(seg.text)
-                print(seg)
-        except Empty:
-            pass
-
-        # Process messages
-        try:
-            while True:
-                message = self.message_queue.get_nowait()
-                print(message)
-        except Empty:
-            pass
+        self.finished.emit()
 
     def build_run_config(self) -> STTRunConfig:
         file = self.main_model.media_file.path
@@ -116,3 +114,7 @@ class STTViewModel(QObject):
             return result
         else:
             raise FileNotFoundError
+
+    def _cleanup_thread(self) -> None:
+        self._thread = None
+        self._worker = None
