@@ -13,7 +13,8 @@ class TranscriptVM(QObject):
     def __init__(self, stt_vm: STTViewModel):
         super().__init__()
         self.vm = stt_vm
-        self.vm.segment_sent.connect(self.add_text)
+        self.buf_text = []
+        self.vm.segment_sent.connect(self.get_segment)
 
-    def add_text(self, segment: str):
+    def get_segment(self, segment: str) -> None:
         self.segment_str.emit(segment)

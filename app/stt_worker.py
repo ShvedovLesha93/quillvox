@@ -1,116 +1,110 @@
 from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
 from enum import Enum
-from multiprocessing import Queue
-from typing import TYPE_CHECKING
+from gettext import gettext as _  # It is used for parsing only, not for translation
+import time
+from typing import Any, Mapping
+
 from faster_whisper import WhisperModel
-from gettext import gettext as get_
+from PySide6.QtCore import QObject, Signal
+
+from app.stt_run_config import STTRunConfig
+
+logger = logging.getLogger(__name__)
 
 
-class MessageLevel(Enum):
+class Level(Enum):
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
 
 
-if TYPE_CHECKING:
-    from app.stt_run_config import STTRunConfig
+@dataclass(frozen=True, slots=True)
+class WorkerMessage:
+    level: Level
+    message: str
+    params: Mapping[str, Any] | None = None
 
 
-def stt_worker(
-    cfg: STTRunConfig,
-    result_queue: Queue,
-    message_queue: Queue,
-    terminate_event,
-    is_working,
-):
-    is_working.set()
+class STTWorker(QObject):
+    segment_ready = Signal(object)  # Segment
+    error_message = Signal(str)
+    message = Signal(object)
+    finished = Signal()
 
-    model_name = cfg.model
-    device = cfg.device
-    batch_size = cfg.batch_size
-    compute_type = cfg.compute_type
-    language = cfg.language
-    audio = cfg.audio
-    print("Configs:")
+    def __init__(self, cfg: STTRunConfig):
+        super().__init__()
+        self.cfg = cfg
+        self._abort = False
 
-    cfgp = (
-        model_name,
-        device,
-        batch_size,
-        compute_type,
-        language,
-        audio,
-    )
-    print(cfgp)
+    def run(self):
+        model: WhisperModel | None = None
+        try:
+            model_name = self.cfg.model
+            device = self.cfg.device
+            batch_size = self.cfg.batch_size
+            compute_type = self.cfg.compute_type
+            language = self.cfg.language
+            audio = self.cfg.audio
 
-    if language == "auto":
-        language = None
-
-    try:
-
-        # Load transcription model
-        if terminate_event.is_set():
-            return  # Exit early if termination requested
-
-        message_queue.put(
-            (
-                MessageLevel.INFO,
-                get_('Loading "{model_name}" model...'),
-                {"model_name": model_name},
+            model = WhisperModel(
+                model_size_or_path=model_name, device=device, compute_type=compute_type
             )
-        )
-        model = WhisperModel(
-            model_size_or_path=model_name, device=device, compute_type=compute_type
-        )
 
-        message_queue.put(
-            (
-                MessageLevel.INFO,
-                get_('"{model_name}" model has been loaded.').format(
-                    model_name=model_name
-                ),
+            self.message.emit(
+                WorkerMessage(
+                    level=Level.INFO,
+                    message=_('"{model_name}" model has been loaded'),
+                    params={"model_name": model_name},
+                )
             )
-        )
 
-        if terminate_event.is_set():
-            return
+            start = time.perf_counter()
 
-        # Transcribe (this may take long)
-        message_queue.put((MessageLevel.INFO, get_("Starting transcription...")))
-
-        segments, info = model.transcribe(
-            audio=audio,
-            language="ru",
-            # log_progress=True,
-        )
-
-        for seg in segments:
-            result_queue.put(seg)
-
-        message_queue.put(
-            (MessageLevel.INFO, get_("Transcription completed successfully!"))
-        )
-
-    except FileNotFoundError as e:
-        error_msg = f"Audio file not found: {str(e)}"
-        message_queue.put(
-            (MessageLevel.ERROR, get_("Error: {msg}").format(msg=error_msg))
-        )
-
-    # except torch.cuda.OutOfMemoryError:
-    #     error_msg = "GPU out of memory. Try using CPU or a smaller model."
-    #     message_queue.put((logmsg.ERROR, get_("Error: {msg}").format(msg=error_msg)))
-
-    except Exception as e:
-        message_queue.put(
-            (
-                MessageLevel.ERROR,
-                get_("Error occurred during transcription: {e}").format(e=e),
+            segments, info = model.transcribe(
+                audio=audio,
+                language="ru",
+                # log_progress=True,
             )
-        )
 
-    finally:
-        is_working.clear()
-    #     # Clean up GPU memory
-    #     if device == "cuda":
-    #         torch.cuda.empty_cache()
+            for seg in segments:
+                if self._abort:
+                    break
+                self.segment_ready.emit(seg)
+
+            end = time.perf_counter()
+            duration = self.format_duration(end - start)
+
+            self.message.emit(
+                WorkerMessage(
+                    level=Level.INFO,
+                    message=_("Transcription completed in {duration}"),
+                    params={"duration": duration},
+                )
+            )
+        except Exception as e:
+            self.error_message.emit(str(e))
+
+        finally:
+            if model is not None:
+                del model
+
+            import gc
+
+            gc.collect()
+
+            self.finished.emit()
+
+    @staticmethod
+    def format_duration(seconds: float) -> str:
+        total_seconds = int(seconds)
+
+        minutes, sec = divmod(total_seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+
+        return f"{hours:02d}:{minutes:02d}:{sec:02d}"
+
+    def stop(self):
+        self._abort = True

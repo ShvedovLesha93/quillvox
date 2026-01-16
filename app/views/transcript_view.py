@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QVBoxLayout, QWidget
 
 from app.view_model.transcript_vm import TranscriptVM
 
@@ -14,8 +14,8 @@ class TranscriptView(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.text_edit = QTextEdit()
+        self.text_edit = QPlainTextEdit()
         layout.addWidget(self.text_edit)
 
     def _bing_vm(self) -> None:
-        self.vm.segment_str.connect(self.text_edit.append)
+        self.vm.segment_str.connect(self.text_edit.appendPlainText)

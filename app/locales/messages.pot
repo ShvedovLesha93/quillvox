@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-08 19:23+0300\n"
+"POT-Creation-Date: 2026-01-16 11:58+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,31 +17,21 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: app\views\audio_player.py:150
+#: app\stt_worker.py:58
+#, python-brace-format
+msgid "\"{model_name}\" model has been loaded"
+msgstr ""
+
+#: app\stt_worker.py:82
+#, python-brace-format
+msgid "Transcription completed in {duration}"
+msgstr ""
+
+#: app\views\audio_player.py:160
 msgid "No file opened"
 msgstr ""
 
-#: app\views\audio_player.py:151
-msgid "Stop"
-msgstr ""
-
-#: app\views\audio_player.py:152
-msgid "Volume:"
-msgstr ""
-
-#: app\views\audio_player.py:153
-msgid "Speed:"
-msgstr ""
-
-#: app\views\audio_player.py:202
-msgid "Pause"
-msgstr ""
-
-#: app\views\audio_player.py:206 app\views\audio_player.py:209
-msgid "Play"
-msgstr ""
-
-#: app\views\main_window.py:103
+#: app\views\main_window.py:133
 msgid "Open media file"
 msgstr ""
 
@@ -57,59 +47,71 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: app\views\transcript_controls.py:22
+#: app\views\transcript_controls.py:76
 msgid "Transcribe"
 msgstr ""
 
-#: app\view_model\file_selector.py:47
+#: app\view_model\file_selector.py:48
 msgid "Audio Files"
 msgstr ""
 
-#: app\view_model\file_selector.py:48
+#: app\view_model\file_selector.py:49
 msgid "Video Files"
 msgstr ""
 
-#: app\view_model\file_selector.py:49
+#: app\view_model\file_selector.py:50
 msgid "All Media Files"
 msgstr ""
 
-#: app\view_model\file_selector.py:58
+#: app\view_model\file_selector.py:59
 msgid "File not found"
 msgstr ""
 
-#: app\view_model\file_selector.py:80
+#: app\view_model\file_selector.py:82
 #, python-brace-format
 msgid "File '{file}' has been opened"
 msgstr ""
 
-#: app\view_model\file_selector.py:89
+#: app\view_model\file_selector.py:91
 msgid "No selected file"
 msgstr ""
 
-#: app\view_model\settings_vm.py:30
+#: app\view_model\settings_vm.py:49
 msgid "English"
 msgstr ""
 
-#: app\view_model\settings_vm.py:31
+#: app\view_model\settings_vm.py:50
 msgid "Russian"
 msgstr ""
 
-#: app\views\settings\general_settings.py:74 app\views\settings\settings.py:164
+#: app\view_model\settings_vm.py:53
+msgid "Dark"
+msgstr ""
+
+#: app\view_model\settings_vm.py:54
+msgid "Light"
+msgstr ""
+
+#: app\view_model\settings_vm.py:55
+msgid "System"
+msgstr ""
+
+#: app\views\settings\general_settings.py:75 app\views\settings\settings.py:233
 msgid "General"
 msgstr ""
 
-#: app\views\settings\general_settings.py:75
+#: app\views\settings\general_settings.py:76
 msgid "Language"
 msgstr ""
 
-#: app\views\settings\general_settings.py:76
+#: app\views\settings\general_settings.py:77
 msgid "Theme"
 msgstr ""
 
-#: app\views\settings\settings.py:165 app\views\settings\stt_settings.py:59
+#: app\views\settings\settings.py:234 app\views\settings\stt_settings.py:59
 msgid "Transcription"
 msgstr ""
 
-#: app\views\settings\settings.py:166
+#: app\views\settings\settings.py:235
 msgid "Save"
 msgstr ""
