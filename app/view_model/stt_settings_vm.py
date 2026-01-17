@@ -20,7 +20,7 @@ class STTConfigView:
     params: dict
 
 
-class STTSettingsVM(QObject):
+class STTSettingsViewModel(QObject):
     language_changed = Signal(str)
 
     def __init__(self, stt_config: STTConfig) -> None:

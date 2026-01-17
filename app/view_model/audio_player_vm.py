@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AudioPlayerVM(QObject):
+class AudioPlayerViewModel(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)

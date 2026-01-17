@@ -13,13 +13,13 @@ from PySide6.QtWidgets import (
 
 from app.constants import ThemeMode
 from app.view_model import settings_vm
-from app.views.settings.general_settings import GeneralSettings
-from app.views.settings.stt_settings import STTSettings
+from app.views.settings.general_settings_view import GeneralSettings
+from app.views.settings.stt_settings_view import STTSettings
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
-    from app.view_model.settings_vm import SettingsVM
+    from app.view_model.settings_vm import SettingsViewModel
     from app.views.main_window import MainWindow
 
 
@@ -126,7 +126,7 @@ class Settings(QWidget):
 
     def __init__(
         self,
-        settings_vm: SettingsVM,
+        settings_vm: SettingsViewModel,
         theme_manager: ThemeManager,
         main_window: MainWindow | None = None,
     ):
@@ -260,7 +260,7 @@ class Settings(QWidget):
 # ============ TEST ============
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
-    from app.view_model.settings_vm import SettingsVM
+    from app.view_model.settings_vm import SettingsViewModel
     from app.theme_manager import ThemeManager
 
     app = QApplication([])
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     theme_manager = ThemeManager(app, initial_theme=ThemeMode.LIGHT)
 
-    settings_vm = SettingsVM(theme_manager)
+    settings_vm = SettingsViewModel(theme_manager)
 
     view = Settings(settings_vm=settings_vm, theme_manager=theme_manager)
 

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from app.stt_worker import WorkerMessage
 
 
-class STTViewModel(QObject):
+class STTRunnerViewModel(QObject):
     segment_sent = Signal(str)
     finished = Signal()
     process_active = Signal()

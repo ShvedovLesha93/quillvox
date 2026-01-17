@@ -15,11 +15,11 @@ from app.views.ui_utils.title import Title
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
-    from app.view_model.settings_vm import SettingsVM
+    from app.view_model.settings_vm import SettingsViewModel
 
 
 class STTSettings(QWidget):
-    def __init__(self, settings_vm: SettingsVM):
+    def __init__(self, settings_vm: SettingsViewModel):
         super().__init__()
         self.vm = settings_vm
 

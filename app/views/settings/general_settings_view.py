@@ -16,12 +16,12 @@ from app.views.ui_utils.title import Title
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
-    from app.view_model.settings_vm import SettingsVM
+    from app.view_model.settings_vm import SettingsViewModel
     from app.view_model.settings_vm import Language, Theme
 
 
 class GeneralSettings(QWidget):
-    def __init__(self, settings_vm: SettingsVM):
+    def __init__(self, settings_vm: SettingsViewModel):
         super().__init__()
         self.vm = settings_vm
 
@@ -128,7 +128,7 @@ class GeneralSettings(QWidget):
 # ============ TEST ============
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
-    from app.view_model.settings_vm import SettingsVM
+    from app.view_model.settings_vm import SettingsViewModel
     from app.theme_manager import ThemeManager
     from app.constants import ThemeMode
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     theme_manager = ThemeManager(app, initial_theme=ThemeMode.SYSTEM)
 
-    settings_vm = SettingsVM(theme_manager)
+    settings_vm = SettingsViewModel(theme_manager)
     settings_vm.language_changed.connect(language_manager.set_language)
 
     view = GeneralSettings(settings_vm=settings_vm)

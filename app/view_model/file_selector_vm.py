@@ -9,20 +9,20 @@ from app.user_message import user_msg
 
 if TYPE_CHECKING:
     from app.models.main_model import MainModel
-    from app.view_model.audio_player_vm import AudioPlayerVM
+    from app.view_model.audio_player_vm import AudioPlayerViewModel
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class FileSelectorVM(QObject):
+class FileSelectorViewModel(QObject):
     file_opened = Signal()
 
     def __init__(
         self,
         main_model: MainModel,
-        audio_player_vm: AudioPlayerVM,
+        audio_player_vm: AudioPlayerViewModel,
     ):
         super().__init__()
         self.main_model = main_model

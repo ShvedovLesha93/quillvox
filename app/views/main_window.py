@@ -9,10 +9,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.views.audio_player import AudioPlayer
+from app.views.audio_player_view import AudioPlayer
 from app.views.menu_bar import MenuBar
-from app.views.settings.settings import Settings
-from app.views.transcript_controls import TranscriptControls
+from app.views.settings.settings_view import Settings
+from app.views.transcript_controls_view import TranscriptControls
 from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
 
