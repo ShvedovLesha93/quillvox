@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
-    from app.view_model.stt_vm import STTViewModel
+    from app.view_model.stt_runner_vm import STTRunnerViewModel
 
 
-class TranscriptVM(QObject):
+class TranscriptViewModel(QObject):
     segment_str = Signal(str)
 
-    def __init__(self, stt_vm: STTViewModel):
+    def __init__(self, stt_vm: STTRunnerViewModel):
         super().__init__()
         self.vm = stt_vm
         self.buf_text = []

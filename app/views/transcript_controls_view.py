@@ -8,8 +8,8 @@ from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
-    from app.view_model.file_selector import FileSelectorVM
-    from app.view_model.stt_vm import STTViewModel
+    from app.view_model.file_selector_vm import FileSelectorViewModel
+    from app.view_model.stt_runner_vm import STTRunnerViewModel
 
 
 class SpinnerButton(QPushButton):
@@ -48,7 +48,9 @@ class SpinnerButton(QPushButton):
 
 
 class TranscriptControls(QWidget):
-    def __init__(self, stt_vm: STTViewModel, file_selector_vm: FileSelectorVM) -> None:
+    def __init__(
+        self, stt_vm: STTRunnerViewModel, file_selector_vm: FileSelectorViewModel
+    ) -> None:
         super().__init__()
         self.stt_vm = stt_vm
         self.file_selector_vm = file_selector_vm

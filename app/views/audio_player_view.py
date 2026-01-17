@@ -18,7 +18,7 @@ from .ui_utils.icons import IconButton, IconLabel, IconName
 
 
 if TYPE_CHECKING:
-    from app.view_model.audio_player_vm import AudioPlayerVM
+    from app.view_model.audio_player_vm import AudioPlayerViewModel
 
 
 class TruncatingLabel(QLabel):
@@ -65,7 +65,7 @@ class TruncatingLabel(QLabel):
 
 
 class AudioPlayer(QWidget):
-    def __init__(self, audio_player_view_model: "AudioPlayerVM") -> None:
+    def __init__(self, audio_player_view_model: "AudioPlayerViewModel") -> None:
         super().__init__()
         self.vm = audio_player_view_model
         self.volume_before_mute: int
@@ -246,12 +246,12 @@ class AudioPlayer(QWidget):
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
     from pathlib import Path
-    from app.view_model.audio_player_vm import AudioPlayerVM
+    from app.view_model.audio_player_vm import AudioPlayerViewModel
 
     app = QApplication([])
     app.setStyle("Fusion")
 
-    view = AudioPlayer(AudioPlayerVM())
+    view = AudioPlayer(AudioPlayerViewModel())
     view.resize(300, 150)
     view.move(1020, 320)
 
