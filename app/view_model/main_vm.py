@@ -7,6 +7,7 @@ from app.view_model.file_selector_vm import FileSelectorViewModel
 from app.view_model.settings_vm import SettingsViewModel
 from app.translator import language_manager
 from app.view_model.stt_runner_vm import STTRunnerViewModel
+from app.view_model.stt_settings_vm import STTSettingsViewModel
 from app.view_model.transcript_vm import TranscriptViewModel
 
 if TYPE_CHECKING:
@@ -27,9 +28,11 @@ class MainViewModel:
             main_model=self.main_model,
             audio_player_vm=self.audio_player_vm,
         )
+        self.stt_config = STTConfig()
         self.settings_vm = SettingsViewModel(self.theme_manager)
+        self.stt_settings_vm = STTSettingsViewModel(stt_config=self.stt_config)
         self.stt_vm = STTRunnerViewModel(
-            stt_config=STTConfig(), main_model=self.main_model
+            stt_config=self.stt_config, main_model=self.main_model
         )
         self.transcript_vm = TranscriptViewModel(self.stt_vm)
 

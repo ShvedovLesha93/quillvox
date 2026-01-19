@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.view_model import stt_settings_vm
 from app.views.audio_player_view import AudioPlayer
 from app.views.menu_bar import MenuBar
 from app.views.settings.settings_view import Settings
@@ -39,6 +40,7 @@ class MainWindow(QMainWindow):
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
         self.settings_vm = self.main_vm.settings_vm
+        self.stt_settings_vm = self.main_vm.stt_settings_vm
 
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
@@ -48,6 +50,7 @@ class MainWindow(QMainWindow):
         self.audio_player = AudioPlayer(self.audio_player_vm)
         self.settings = Settings(
             settings_vm=self.settings_vm,
+            stt_settings_vm=self.stt_settings_vm,
             theme_manager=self.theme_manager,
             main_window=self,
         )
