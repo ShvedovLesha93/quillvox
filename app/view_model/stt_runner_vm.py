@@ -73,8 +73,11 @@ class STTRunnerViewModel(QObject):
         else:
             text = _(msg.message)
 
-        if msg.level == Level.INFO:
-            user_msg.info(text)
+        match msg.level:
+            case Level.INFO:
+                user_msg.info(text)
+            case Level.ERROR:
+                user_msg.error(text)
 
     def _on_segment(self, seg: Segment):
         self.transcript.segments.append(

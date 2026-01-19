@@ -9,6 +9,7 @@ from typing import Any, Mapping
 
 from faster_whisper import WhisperModel
 from PySide6.QtCore import QObject, Signal
+import torch
 
 from app.stt_run_config import STTRunConfig
 
@@ -48,6 +49,16 @@ class STTWorker(QObject):
             compute_type = self.cfg.compute_type
             language = self.cfg.language
             audio = self.cfg.audio
+
+            if device == "cuda":
+                if not torch.cuda.is_available():
+                    self.message.emit(
+                        WorkerMessage(
+                            level=Level.ERROR,
+                            message=_("CUDA is not installed on your device"),
+                        )
+                    )
+                    return
 
             model = WhisperModel(
                 model_size_or_path=model_name, device=device, compute_type=compute_type
