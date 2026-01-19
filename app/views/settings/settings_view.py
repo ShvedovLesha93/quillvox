@@ -12,15 +12,15 @@ from PySide6.QtWidgets import (
 )
 
 from app.constants import ThemeMode
-from app.view_model import settings_vm
-from app.views.settings.general_settings_view import GeneralSettings
+from app.view_model import general_settings_vm
+from app.views.settings.general_settings_view import GeneralSettingsView
 from app.views.settings.stt_settings_view import STTSettings
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.view_model.stt_settings_vm import STTSettingsViewModel
     from app.theme_manager import ThemeManager
-    from app.view_model.settings_vm import SettingsViewModel
+    from app.view_model.general_settings_vm import GeneralSettingsViewModel
     from app.views.main_window import MainWindow
 
 
@@ -127,7 +127,7 @@ class Settings(QWidget):
 
     def __init__(
         self,
-        settings_vm: SettingsViewModel,
+        general_settings_vm: GeneralSettingsViewModel,
         stt_settings_vm: STTSettingsViewModel,
         theme_manager: ThemeManager,
         main_window: MainWindow | None = None,
@@ -135,9 +135,9 @@ class Settings(QWidget):
         super().__init__()
         self.main_window = main_window
         self.theme_manager = theme_manager
-        self.settings_vm = settings_vm
+        self.general_settings_vm = general_settings_vm
         self.stt_settings_vm = stt_settings_vm
-        self.general_settings = GeneralSettings(self.settings_vm)
+        self.general_settings = GeneralSettingsView(self.general_settings_vm)
         self.stt_settings = STTSettings(self.stt_settings_vm)
         self._setup_ui()
 
@@ -263,7 +263,7 @@ class Settings(QWidget):
 # ============ TEST ============
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
-    from app.view_model.settings_vm import SettingsViewModel
+    from app.view_model.general_settings_vm import GeneralSettingsViewModel
     from app.theme_manager import ThemeManager
     from app.view_model.stt_settings_vm import STTSettingsViewModel
     from app.utils.logging_config import configure_logging
@@ -275,14 +275,14 @@ if __name__ == "__main__":
 
     theme_manager = ThemeManager(app, initial_theme=ThemeMode.LIGHT)
 
-    settings_vm = SettingsViewModel(theme_manager)
+    general_settings_vm = GeneralSettingsViewModel(theme_manager)
     from app.models.stt_config import STTConfig
 
     stt_config = STTConfig()
     stt_settings_vm = STTSettingsViewModel(stt_config)
 
     view = Settings(
-        settings_vm=settings_vm,
+        general_settings_vm=general_settings_vm,
         stt_settings_vm=stt_settings_vm,
         theme_manager=theme_manager,
     )

@@ -28,7 +28,7 @@ class Theme:
     translated: str
 
 
-class SettingsViewModel(QObject):
+class GeneralSettingsViewModel(QObject):
     language_changed = Signal(str)
 
     def __init__(self, theme_manager: ThemeManager) -> None:
