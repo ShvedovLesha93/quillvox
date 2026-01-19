@@ -20,9 +20,9 @@ if TYPE_CHECKING:
 
 
 class STTSettings(QWidget):
-    def __init__(self, settings_vm: STTSettingsViewModel) -> None:
+    def __init__(self, general_settings_vm: STTSettingsViewModel) -> None:
         super().__init__()
-        self.vm = settings_vm
+        self.vm = general_settings_vm
 
         self._setup_ui()
 

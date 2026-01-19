@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         self.main_vm = main_vm
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
-        self.settings_vm = self.main_vm.settings_vm
+        self.general_settings_vm = self.main_vm.general_settings_vm
         self.stt_settings_vm = self.main_vm.stt_settings_vm
 
         self.menu_bar = MenuBar(self)
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         )
         self.audio_player = AudioPlayer(self.audio_player_vm)
         self.settings = Settings(
-            settings_vm=self.settings_vm,
+            general_settings_vm=self.general_settings_vm,
             stt_settings_vm=self.stt_settings_vm,
             theme_manager=self.theme_manager,
             main_window=self,
