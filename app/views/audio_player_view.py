@@ -93,8 +93,14 @@ class AudioPlayer(QWidget):
 
         # Wave visualizer
         self.audio_visualizer_widget = WaveformVisualizer(self)
-        self.audio_visualizer_widget.position_clicked.connect(
-            self._on_visualizer_clicked
+        self.audio_visualizer_widget.seek_started.connect(
+            self._on_visualizer_seek_started
+        )
+        self.audio_visualizer_widget.position_moved.connect(
+            self._on_visualizer_position_moved
+        )
+        self.audio_visualizer_widget.seek_finished.connect(
+            self._on_visualizer_seek_finished
         )
 
         # Playback buttons
@@ -265,6 +271,22 @@ class AudioPlayer(QWidget):
         if self.timeline_slider.maximum() > 0:
             new_value = int(position * self.timeline_slider.maximum())
             self.timeline_slider.setValue(new_value)
+
+    def _on_visualizer_seek_started(self):
+        """Called when user starts dragging on visualizer"""
+        self.vm.begin_seek()
+
+    def _on_visualizer_position_moved(self, position):
+        """Called while user is dragging on visualizer"""
+        if self.timeline_slider.maximum() > 0:
+            new_value = int(position * self.timeline_slider.maximum())
+            self.vm.seek_to(new_value)
+
+    def _on_visualizer_seek_finished(self, position):
+        """Called when user releases drag on visualizer"""
+        if self.timeline_slider.maximum() > 0:
+            new_value = int(position * self.timeline_slider.maximum())
+            self.vm.end_seek(new_value)
 
 
 # ============ TEST ============
