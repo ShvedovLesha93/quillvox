@@ -11,9 +11,11 @@ from PySide6.QtWidgets import (
     QSlider,
 )
 from PySide6.QtCore import Qt
+import librosa
 
 from app.translator import language_manager, _
 from app.constants import PlaybackState
+from app.views.waveform_visualizer_view import WaveformVisualizer
 from .ui_utils.icons import IconButton, IconLabel, IconName
 
 
@@ -89,6 +91,12 @@ class AudioPlayer(QWidget):
         self.file_name = TruncatingLabel(self)
         self.file_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # Wave visualizer
+        self.audio_visualizer_widget = WaveformVisualizer(self)
+        self.audio_visualizer_widget.position_clicked.connect(
+            self._on_visualizer_clicked
+        )
+
         # Playback buttons
         self.play_btn = IconButton(IconName.PLAY_ARROW, 0.8)
         self.play_btn.setEnabled(False)
@@ -148,6 +156,7 @@ class AudioPlayer(QWidget):
         control_layout.addStretch()
 
         layout.addWidget(self.file_name)
+        layout.addWidget(self.audio_visualizer_widget)
         layout.addLayout(timeline_layout)
         layout.addLayout(control_layout)
 
@@ -173,6 +182,7 @@ class AudioPlayer(QWidget):
             lambda: self.vm.end_seek(self.timeline_slider.value())
         )
         self.timeline_slider.sliderMoved.connect(self.vm.seek_to)
+        self.timeline_slider.valueChanged.connect(self._update_visualizer_position)
 
         # Controls
 
@@ -223,6 +233,9 @@ class AudioPlayer(QWidget):
     def _on_file_loaded(self, name: str) -> None:
         self.file_name.setText(name)
         self.play_btn.setEnabled(True)
+        audio_data, sr = self.vm.load_waveform_data()
+        self.audio_visualizer_widget.set_waveform_data(audio_data, sr)
+        # self.audio_visualizer_widget.generate_sample_waveform()
 
     def _on_speed_reset_btn_clicked(self) -> None:
         self.speed_slider.setValue(100)
@@ -240,6 +253,18 @@ class AudioPlayer(QWidget):
         else:
             self.play_btn.set_icon(IconName.PLAY_ARROW)
             self.stop_btn.setEnabled(state != PlaybackState.STOPPED)
+
+    def _update_visualizer_position(self):
+        """Update visualizer position when timeline slider changes"""
+        if self.timeline_slider.maximum() > 0:
+            position = self.timeline_slider.value() / self.timeline_slider.maximum()
+            self.audio_visualizer_widget.set_position(position)
+
+    def _on_visualizer_clicked(self, position):
+        """Handle clicks on the visualizer to seek"""
+        if self.timeline_slider.maximum() > 0:
+            new_value = int(position * self.timeline_slider.maximum())
+            self.timeline_slider.setValue(new_value)
 
 
 # ============ TEST ============
