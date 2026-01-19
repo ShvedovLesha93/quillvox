@@ -101,11 +101,11 @@ class STTRunnerViewModel(QObject):
             file = str(file.absolute())
 
             result = STTRunConfig(
-                model=cfg.model.current,
-                device=cfg.device.current,
-                batch_size=cfg.batch_size.current,
-                compute_type=cfg.compute_type.current,
-                language=cfg.language.current,
+                model=cfg.model,
+                device=cfg.device,
+                batch_size=cfg.batch_size,
+                compute_type=cfg.compute_type,
+                language=cfg.language,
                 audio=file,
             )
 
