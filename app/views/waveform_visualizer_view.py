@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPainter, QPen, QColor, QPainterPath
+from PySide6.QtGui import QPainter, QPen, QColor, QPainterPath, QCursor
 import numpy as np
 
 
@@ -8,19 +8,27 @@ class WaveformVisualizer(QWidget):
     """Widget for visualizing audio waveform with current position indicator"""
 
     position_clicked = Signal(float)  # Emits normalized position (0.0 to 1.0)
+    position_moved = Signal(float)  # Emits normalized position while dragging
+    seek_started = Signal()  # Emitted when user starts dragging
+    seek_finished = Signal(float)  # Emitted when user finishes dragging
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.waveform_data = None
         self.current_position = 0.0  # Position from 0.0 to 1.0
+        self.is_dragging = False
+        self.hover_position = None
+
         self.setMinimumHeight(80)
         self.setMaximumHeight(120)
+        self.setMouseTracking(True)  # Enable hover detection
 
         # Colors
         self.bg_color = QColor(40, 40, 40)
         self.waveform_color = QColor(100, 180, 255)
         self.waveform_played_color = QColor(60, 120, 180)
         self.position_line_color = QColor(255, 100, 100)
+        self.hover_line_color = QColor(255, 100, 100, 100)  # Semi-transparent
         self.center_line_color = QColor(80, 80, 80)
 
     def set_waveform_data(self, audio_data, sample_rate=None):
@@ -59,7 +67,8 @@ class WaveformVisualizer(QWidget):
             position: float from 0.0 to 1.0
         """
         self.current_position = max(0.0, min(1.0, position))
-        self.update()
+        if not self.is_dragging:  # Only update if not dragging
+            self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -89,6 +98,12 @@ class WaveformVisualizer(QWidget):
 
         # Draw waveform
         self._draw_waveform(painter, width, height, center_y, samples_per_pixel)
+
+        # Draw hover position line (when hovering but not dragging)
+        if self.hover_position is not None and not self.is_dragging:
+            hover_x = int(self.hover_position * width)
+            painter.setPen(QPen(self.hover_line_color, 2))
+            painter.drawLine(hover_x, 0, hover_x, height)
 
         # Draw current position line
         pos_x = int(self.current_position * width)
@@ -155,11 +170,52 @@ class WaveformVisualizer(QWidget):
 
         return path
 
+    def _get_position_from_mouse(self, event):
+        """Calculate normalized position from mouse event"""
+        x = event.position().x()
+        return max(0.0, min(1.0, x / self.width()))
+
     def mousePressEvent(self, event):
-        """Handle clicking to seek"""
+        """Handle mouse press to start seeking"""
         if event.button() == Qt.MouseButton.LeftButton:
-            position = event.position().x() / self.width()
-            self.position_clicked.emit(position)
+            self.is_dragging = True
+            position = self._get_position_from_mouse(event)
+            self.current_position = position
+            self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
+            self.seek_started.emit()
+            self.position_moved.emit(position)
+            self.update()
+
+    def mouseMoveEvent(self, event):
+        """Handle mouse move for dragging or hovering"""
+        position = self._get_position_from_mouse(event)
+
+        if self.is_dragging:
+            # Update position while dragging
+            self.current_position = position
+            self.position_moved.emit(position)
+            self.update()
+        else:
+            # Update hover position
+            self.hover_position = position
+            self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            self.update()
+
+    def mouseReleaseEvent(self, event):
+        """Handle mouse release to finish seeking"""
+        if event.button() == Qt.MouseButton.LeftButton and self.is_dragging:
+            self.is_dragging = False
+            position = self._get_position_from_mouse(event)
+            self.current_position = position
+            self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            self.seek_finished.emit(position)
+            self.update()
+
+    def leaveEvent(self, event):
+        """Handle mouse leaving the widget"""
+        self.hover_position = None
+        self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
+        self.update()
 
     def generate_sample_waveform(self, duration_seconds=10, sample_rate=44100):
         """Generate a sample waveform for testing"""
@@ -174,49 +230,3 @@ class WaveformVisualizer(QWidget):
         envelope = np.exp(-t / duration_seconds * 2)
         waveform = waveform * envelope
         self.set_waveform_data(waveform, sample_rate)
-
-
-# Integration code for your AudioPlayer class:
-#
-# In _setup_ui(), replace:
-#     self.audio_visualizer_widget = QLabel("Here will be wave visualizer")
-#
-# With:
-#     self.audio_visualizer_widget = WaveformVisualizer(self)
-#     self.audio_visualizer_widget.position_clicked.connect(self._on_visualizer_clicked)
-#
-# In _bind_vm() or wherever you handle timeline updates, add:
-#     self.timeline_slider.valueChanged.connect(self._update_visualizer_position)
-#
-# Add these methods to AudioPlayer:
-#
-#     def _update_visualizer_position(self):
-#         """Update visualizer position when timeline slider changes"""
-#         if self.timeline_slider.maximum() > 0:
-#             position = self.timeline_slider.value() / self.timeline_slider.maximum()
-#             self.audio_visualizer_widget.set_position(position)
-#
-#     def _on_visualizer_clicked(self, position):
-#         """Handle clicks on the visualizer to seek"""
-#         if self.timeline_slider.maximum() > 0:
-#             new_value = int(position * self.timeline_slider.maximum())
-#             self.timeline_slider.setValue(new_value)
-#
-#     def load_audio_file(self, file_path):
-#         """When loading an audio file, extract waveform data"""
-#         # Your existing audio loading code here
-#         # ...
-#
-#         # After loading, extract waveform data:
-#         # If using librosa:
-#         # import librosa
-#         # audio_data, sr = librosa.load(file_path, sr=None, mono=True)
-#         # self.audio_visualizer_widget.set_waveform_data(audio_data, sr)
-#
-#         # If using scipy:
-#         # from scipy.io import wavfile
-#         # sr, audio_data = wavfile.read(file_path)
-#         # self.audio_visualizer_widget.set_waveform_data(audio_data, sr)
-#
-#         # For testing without real audio:
-#         # self.audio_visualizer_widget.generate_sample_waveform()
