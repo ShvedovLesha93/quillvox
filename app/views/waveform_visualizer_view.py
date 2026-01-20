@@ -1,8 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QScrollBar
 import numpy as np
+
+if TYPE_CHECKING:
+    from pyqtgraph import GraphicsScene
 
 
 class WaveformVisualizer(QWidget):
@@ -16,6 +21,7 @@ class WaveformVisualizer(QWidget):
         super().__init__(parent)
         self.waveform_data = None
         self.x_data = None
+        self.original_length = 0
         self.current_position = 0.0
         self.is_dragging = False
         self.zoom_level = 1.0
@@ -61,15 +67,16 @@ class WaveformVisualizer(QWidget):
 
         # Create position line
         self.position_line = pg.InfiniteLine(
-            pos=0, angle=90, pen=pg.mkPen(color=(255, 100, 100), width=2), movable=False
+            pos=0, angle=90, pen=pg.mkPen(color=(255, 100, 100), width=1), movable=False
         )
+        self.position_line.hide()
         self.plot_widget.addItem(self.position_line)
 
         # Create hover line
         self.hover_line = pg.InfiniteLine(
             pos=0,
             angle=90,
-            pen=pg.mkPen(color=(255, 100, 100, 100), width=2),
+            pen=pg.mkPen(color=(255, 100, 100, 100), width=1),
             movable=False,
         )
         self.hover_line.setVisible(False)
@@ -97,12 +104,13 @@ class WaveformVisualizer(QWidget):
         layout.addLayout(scrollbar_layout)
 
         # Connect mouse events
-        self.plot_widget.scene().sigMouseMoved.connect(self._on_mouse_move)
-        self.plot_widget.scene().sigMouseClicked.connect(self._on_mouse_click)
+        scene: GraphicsScene = self.plot_widget.scene()  # pyright: ignore
+        scene.sigMouseMoved.connect(self._on_mouse_move)
+        scene.sigMouseClicked.connect(self._on_mouse_click)
         self.plot_widget.viewport().installEventFilter(self)
 
-    def set_waveform_data(self, audio_data, sample_rate=None):
-        """Set audio data for visualization - keeps full resolution"""
+    def set_waveform_data(self, audio_data: np.ndarray, sample_rate=None):
+        """Set audio data for visualization - intelligently downsamples to save memory"""
         if audio_data is None:
             self.waveform_data = None
             self.x_data = None
@@ -113,21 +121,46 @@ class WaveformVisualizer(QWidget):
             self._last_split_sample = -1
             return
 
-        # Convert to numpy array
-        if not isinstance(audio_data, np.ndarray):
-            audio_data = np.array(audio_data)
-
         # Handle stereo
         if len(audio_data.shape) > 1:
-            audio_data = np.mean(audio_data, axis=1)
+            raise RuntimeError("Mono audio is required")
 
         # Normalize
         if audio_data.max() > 0:
             audio_data = audio_data / np.max(np.abs(audio_data))
 
-        # Store full resolution data
-        self.waveform_data = audio_data
-        self.x_data = np.arange(len(audio_data))
+        # Memory optimization: downsample to reasonable size
+        # Target: ~500k samples max (enough for good quality, uses ~4MB instead of GB)
+        max_samples = 500000
+
+        if len(audio_data) > max_samples:
+            # Use min/max downsampling to preserve waveform peaks
+            chunk_size = len(audio_data) // (max_samples // 2)
+            downsampled = []
+            x_vals = []
+
+            for i in range(0, len(audio_data), chunk_size):
+                chunk = audio_data[i : i + chunk_size]
+                if len(chunk) > 0:
+                    min_idx = np.argmin(chunk)
+                    max_idx = np.argmax(chunk)
+
+                    if min_idx < max_idx:
+                        downsampled.extend([chunk[min_idx], chunk[max_idx]])
+                        x_vals.extend([i + min_idx, i + max_idx])
+                    else:
+                        downsampled.extend([chunk[max_idx], chunk[min_idx]])
+                        x_vals.extend([i + max_idx, i + min_idx])
+
+            self.waveform_data = np.array(downsampled, dtype=np.float32)
+            self.x_data = np.array(x_vals, dtype=np.int32)
+        else:
+            # Keep original if already small
+            self.waveform_data = audio_data.astype(np.float32)
+            self.x_data = np.arange(len(audio_data), dtype=np.int32)
+
+        # Store original length for position calculations
+        self.original_length = len(audio_data)
 
         # Reset zoom and cache
         self.zoom_level = 1.0
@@ -141,6 +174,9 @@ class WaveformVisualizer(QWidget):
 
         # Update display
         self._update_waveform_display(force_redraw=True)
+
+        # Show position line
+        self.position_line.show()
 
     def _get_visible_range(self):
         """Calculate the visible sample range based on zoom and center"""
@@ -161,7 +197,7 @@ class WaveformVisualizer(QWidget):
 
         return start_idx, end_idx
 
-    def _downsample_for_display(self, x_data, y_data, target_points=10000):
+    def _downsample_for_display(self, x_data, y_data, target_points=5000):
         """Downsample data intelligently for display performance"""
         if len(x_data) <= target_points:
             return x_data, y_data
@@ -226,7 +262,7 @@ class WaveformVisualizer(QWidget):
             self._cached_visible_range = (start_idx, end_idx)
             self._cached_display_data = (display_x, display_y)
 
-            # Update plot range
+            # Update plot range using original sample coordinates
             self.plot_widget.setXRange(visible_x[0], visible_x[-1], padding=0)
 
         # Use cached data if available
@@ -235,21 +271,20 @@ class WaveformVisualizer(QWidget):
 
         display_x, display_y = self._cached_display_data
 
-        # Calculate position sample
-        total_samples = len(self.x_data)
-        pos_sample = int(self.current_position * total_samples)
+        # Calculate position in original sample space
+        pos_original = int(self.current_position * self.original_length)
 
         # Only update position line (very fast)
-        self.position_line.setPos(pos_sample)
+        self.position_line.setPos(pos_original)
 
         # Only update split if position changed significantly (optimization)
-        if need_redraw or abs(pos_sample - self._last_split_sample) > max(
-            1, total_samples // 1000
+        if need_redraw or abs(pos_original - self._last_split_sample) > max(
+            1, self.original_length // 1000
         ):
-            self._last_split_sample = pos_sample
+            self._last_split_sample = pos_original
 
-            # Split into played/unplayed
-            split_mask = display_x <= pos_sample
+            # Split into played/unplayed using original coordinates
+            split_mask = display_x <= pos_original
 
             if np.any(split_mask):
                 self.waveform_played.setData(
@@ -270,29 +305,28 @@ class WaveformVisualizer(QWidget):
         self.current_position = max(0.0, min(1.0, position))
         if not self.is_dragging:
             # During playback, only update position line, not entire waveform
-            if self.waveform_data is not None and len(self.x_data) > 0:
-                total_samples = len(self.x_data)
-                pos_sample = int(self.current_position * total_samples)
-                self.position_line.setPos(pos_sample)
+            if self.waveform_data is not None and self.original_length > 0:
+                # Position in original sample space
+                pos_original = int(self.current_position * self.original_length)
+                self.position_line.setPos(pos_original)
 
                 # Only update split every ~0.1% to reduce CPU usage
-                if abs(pos_sample - self._last_split_sample) > max(
-                    1, total_samples // 1000
+                if abs(pos_original - self._last_split_sample) > max(
+                    1, self.original_length // 1000
                 ):
                     self._update_waveform_display(force_redraw=False)
 
     def _get_position_from_scene(self, scene_pos):
         """Convert scene position to normalized position"""
-        if self.waveform_data is None or len(self.x_data) == 0:
+        if self.waveform_data is None or self.original_length == 0:
             return 0.0
 
         view_box = self.plot_widget.getViewBox()
         mouse_point = view_box.mapSceneToView(scene_pos)
         x = mouse_point.x()
 
-        # Convert to normalized position
-        total_samples = len(self.x_data)
-        position = x / total_samples if total_samples > 0 else 0.0
+        # x is in original sample coordinates, convert to normalized position
+        position = x / self.original_length if self.original_length > 0 else 0.0
         return max(0.0, min(1.0, position))
 
     def _on_mouse_move(self, pos):
@@ -307,9 +341,8 @@ class WaveformVisualizer(QWidget):
             self._update_waveform_display(force_redraw=False)
             self.position_moved.emit(position)
         else:
-            # Show hover line
-            total_samples = len(self.x_data)
-            hover_x = position * total_samples
+            # Show hover line in original sample coordinates
+            hover_x = position * self.original_length
             self.hover_line.setPos(hover_x)
             self.hover_line.setVisible(True)
             self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -344,7 +377,7 @@ class WaveformVisualizer(QWidget):
     def eventFilter(self, obj, event):
         """Handle wheel events for zooming"""
         if event.type() == event.Type.Wheel and obj == self.plot_widget.viewport():
-            if self.waveform_data is not None and len(self.waveform_data) > 0:
+            if self.waveform_data is not None and self.original_length > 0:
                 delta = event.angleDelta().y()
                 zoom_factor = 1.2 if delta > 0 else 1 / 1.2
 
@@ -353,9 +386,11 @@ class WaveformVisualizer(QWidget):
                 scene_pos = self.plot_widget.mapToScene(event.position().toPoint())
                 mouse_point = view_box.mapSceneToView(scene_pos)
 
-                total_samples = len(self.x_data)
+                # Mouse x is in original sample coordinates
                 mouse_norm = (
-                    mouse_point.x() / total_samples if total_samples > 0 else 0.5
+                    mouse_point.x() / self.original_length
+                    if self.original_length > 0
+                    else 0.5
                 )
                 mouse_norm = max(0.0, min(1.0, mouse_norm))
 
@@ -414,3 +449,31 @@ class WaveformVisualizer(QWidget):
         envelope = np.exp(-t / duration_seconds * 2)
         waveform = waveform * envelope
         self.set_waveform_data(waveform, sample_rate)
+
+
+# ============ TEST ============
+if __name__ == "__main__":
+    from PySide6.QtWidgets import QApplication
+    from pathlib import Path
+    import librosa
+
+    def load_waveform_data(audio: Path) -> tuple:
+        audio_data, sr = librosa.load(str(audio), sr=None, mono=True)
+        return audio_data, sr
+
+    app = QApplication([])
+    app.setStyle("Fusion")
+
+    view = WaveformVisualizer()
+    view.resize(300, 150)
+    view.move(1020, 320)
+
+    view.show()
+    audio = Path("tests/audio/LJ025-0076.wav")
+    if audio.exists():
+        audio_data, sr = load_waveform_data(audio)
+        view.set_waveform_data(audio_data, sr)
+    else:
+        print(f"Error: File '{audio.name}' not found")
+
+    app.exec()
