@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QSlider,
 )
 from PySide6.QtCore import Qt
-import librosa
 
 from app.translator import language_manager, _
 from app.constants import PlaybackState
@@ -241,7 +240,6 @@ class AudioPlayer(QWidget):
         self.play_btn.setEnabled(True)
         audio_data, sr = self.vm.load_waveform_data()
         self.audio_visualizer_widget.set_waveform_data(audio_data, sr)
-        # self.audio_visualizer_widget.generate_sample_waveform()
 
     def _on_speed_reset_btn_clicked(self) -> None:
         self.speed_slider.setValue(100)

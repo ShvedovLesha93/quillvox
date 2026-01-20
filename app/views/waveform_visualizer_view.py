@@ -1,47 +1,99 @@
-from PySide6.QtWidgets import QWidget
+import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPainter, QPen, QColor, QPainterPath, QCursor
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QWidget, QVBoxLayout
 import numpy as np
 
 
 class WaveformVisualizer(QWidget):
-    """Widget for visualizing audio waveform with current position indicator"""
+    """High-performance waveform visualizer using PyQtGraph"""
 
-    position_clicked = Signal(float)  # Emits normalized position (0.0 to 1.0)
-    position_moved = Signal(float)  # Emits normalized position while dragging
-    seek_started = Signal()  # Emitted when user starts dragging
-    seek_finished = Signal(float)  # Emitted when user finishes dragging
+    seek_started = Signal()
+    position_moved = Signal(float)
+    seek_finished = Signal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.waveform_data = None
-        self.current_position = 0.0  # Position from 0.0 to 1.0
+        self.current_position = 0.0
         self.is_dragging = False
-        self.hover_position = None
 
         self.setMinimumHeight(80)
         self.setMaximumHeight(120)
-        self.setMouseTracking(True)  # Enable hover detection
 
-        # Colors
-        self.bg_color = QColor(40, 40, 40)
-        self.waveform_color = QColor(100, 180, 255)
-        self.waveform_played_color = QColor(60, 120, 180)
-        self.position_line_color = QColor(255, 100, 100)
-        self.hover_line_color = QColor(255, 100, 100, 100)  # Semi-transparent
-        self.center_line_color = QColor(80, 80, 80)
+        self._setup_plot()
+
+    def _setup_plot(self):
+        """Initialize PyQtGraph plot widget"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create plot widget
+        self.plot_widget = pg.PlotWidget()
+        self.plot_widget.setBackground((40, 40, 40))
+        self.plot_widget.setMouseTracking(True)
+
+        # Configure axes
+        self.plot_widget.showGrid(x=False, y=False)
+        self.plot_widget.hideAxis("left")
+        self.plot_widget.hideAxis("bottom")
+        self.plot_widget.setMouseEnabled(x=False, y=False)
+        self.plot_widget.setMenuEnabled(False)
+
+        # Remove padding
+        self.plot_widget.setContentsMargins(0, 0, 0, 0)
+
+        # Hide all buttons (auto-scale, etc.)
+        self.plot_widget.hideButtons()
+
+        # Create plot items
+        self.waveform_played = self.plot_widget.plot(
+            pen=pg.mkPen(color=(60, 120, 180), width=1)
+        )
+        self.waveform_unplayed = self.plot_widget.plot(
+            pen=pg.mkPen(color=(100, 180, 255), width=1)
+        )
+
+        # Create position line
+        self.position_line = pg.InfiniteLine(
+            pos=0, angle=90, pen=pg.mkPen(color=(255, 100, 100), width=2), movable=False
+        )
+        self.plot_widget.addItem(self.position_line)
+
+        # Create hover line (semi-transparent)
+        self.hover_line = pg.InfiniteLine(
+            pos=0,
+            angle=90,
+            pen=pg.mkPen(color=(255, 100, 100, 100), width=2),
+            movable=False,
+        )
+        self.hover_line.setVisible(False)
+        self.plot_widget.addItem(self.hover_line)
+
+        # Add center line
+        self.center_line = pg.InfiniteLine(
+            pos=0, angle=0, pen=pg.mkPen(color=(80, 80, 80), width=1), movable=False
+        )
+        self.plot_widget.addItem(self.center_line)
+
+        layout.addWidget(self.plot_widget)
+
+        # Connect mouse events
+        self.plot_widget.scene().sigMouseMoved.connect(self._on_mouse_move)
+        self.plot_widget.scene().sigMouseClicked.connect(self._on_mouse_click)
 
     def set_waveform_data(self, audio_data, sample_rate=None):
         """
-        Set audio data for visualization
+        Set audio data for visualization with downsampling for performance
 
         Args:
-            audio_data: numpy array of audio samples or list of floats
-            sample_rate: sample rate (optional, for future use)
+            audio_data: numpy array of audio samples
+            sample_rate: sample rate (optional)
         """
         if audio_data is None:
             self.waveform_data = None
-            self.update()
+            self.waveform_played.setData([])
+            self.waveform_unplayed.setData([])
             return
 
         # Convert to numpy array if needed
@@ -56,177 +108,152 @@ class WaveformVisualizer(QWidget):
         if audio_data.max() > 0:
             audio_data = audio_data / np.max(np.abs(audio_data))
 
-        self.waveform_data = audio_data
-        self.update()
+        # Downsample for performance (keep ~2000-4000 points for smooth visualization)
+        target_points = 3000
+        if len(audio_data) > target_points:
+            # Downsample by taking min/max in chunks for accurate waveform
+            chunk_size = len(audio_data) // (target_points // 2)
+            downsampled = []
+            x_vals = []
 
-    def set_position(self, position):
-        """
-        Set current playback position
+            for i in range(0, len(audio_data), chunk_size):
+                chunk = audio_data[i : i + chunk_size]
+                if len(chunk) > 0:
+                    downsampled.extend([np.min(chunk), np.max(chunk)])
+                    x_vals.extend([i, i + len(chunk) - 1])
 
-        Args:
-            position: float from 0.0 to 1.0
-        """
-        self.current_position = max(0.0, min(1.0, position))
-        if not self.is_dragging:  # Only update if not dragging
-            self.update()
+            self.waveform_data = np.array(downsampled)
+            self.x_data = np.array(x_vals)
+        else:
+            self.waveform_data = audio_data
+            self.x_data = np.arange(len(audio_data))
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        # Set Y-axis range
+        self.plot_widget.setYRange(-1.1, 1.1, padding=0)
 
-        # Fill background
-        painter.fillRect(self.rect(), self.bg_color)
+        # Update waveform display
+        self._update_waveform_display()
 
-        width = self.width()
-        height = self.height()
-        center_y = height / 2
-
-        # Draw center line
-        painter.setPen(QPen(self.center_line_color, 1))
-        painter.drawLine(0, int(center_y), width, int(center_y))
-
+    def _update_waveform_display(self):
+        """Update the waveform plots based on current position"""
         if self.waveform_data is None or len(self.waveform_data) == 0:
-            # Draw placeholder text
-            painter.setPen(QColor(150, 150, 150))
-            painter.drawText(
-                self.rect(), Qt.AlignmentFlag.AlignCenter, "No audio loaded"
-            )
             return
 
-        # Calculate how many samples to show per pixel
-        samples_per_pixel = len(self.waveform_data) / width
+        # Calculate split point based on position
+        total_samples = len(self.x_data)
+        split_index = int(self.current_position * total_samples)
+        split_index = max(0, min(split_index, total_samples))
 
-        # Draw waveform
-        self._draw_waveform(painter, width, height, center_y, samples_per_pixel)
+        # Update X-axis range
+        if len(self.x_data) > 0:
+            self.plot_widget.setXRange(self.x_data[0], self.x_data[-1], padding=0)
 
-        # Draw hover position line (when hovering but not dragging)
-        if self.hover_position is not None and not self.is_dragging:
-            hover_x = int(self.hover_position * width)
-            painter.setPen(QPen(self.hover_line_color, 2))
-            painter.drawLine(hover_x, 0, hover_x, height)
-
-        # Draw current position line
-        pos_x = int(self.current_position * width)
-        painter.setPen(QPen(self.position_line_color, 2))
-        painter.drawLine(pos_x, 0, pos_x, height)
-
-    def _draw_waveform(self, painter, width, height, center_y, samples_per_pixel):
-        """Draw the waveform with played/unplayed sections"""
-        position_pixel = int(self.current_position * width)
-
-        # Draw played portion (left of position line)
-        if position_pixel > 0:
-            path_played = self._create_waveform_path(
-                0, position_pixel, center_y, samples_per_pixel
+            # Update position line
+            pos_x = self.x_data[0] + self.current_position * (
+                self.x_data[-1] - self.x_data[0]
             )
-            painter.setPen(QPen(self.waveform_played_color, 1))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawPath(path_played)
+            self.position_line.setPos(pos_x)
 
-        # Draw unplayed portion (right of position line)
-        if position_pixel < width:
-            path_unplayed = self._create_waveform_path(
-                position_pixel, width, center_y, samples_per_pixel
+        # Split waveform into played and unplayed
+        if split_index > 0:
+            self.waveform_played.setData(
+                self.x_data[:split_index], self.waveform_data[:split_index]
             )
-            painter.setPen(QPen(self.waveform_color, 1))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawPath(path_unplayed)
+        else:
+            self.waveform_played.setData([])
 
-    def _create_waveform_path(self, start_x, end_x, center_y, samples_per_pixel):
-        """Create a QPainterPath for the waveform section"""
-        path = QPainterPath()
+        if split_index < total_samples:
+            self.waveform_unplayed.setData(
+                self.x_data[split_index:], self.waveform_data[split_index:]
+            )
+        else:
+            self.waveform_unplayed.setData([])
 
-        for x in range(start_x, end_x):
-            # Calculate which samples this pixel represents
-            sample_start = int(x * samples_per_pixel)
-            sample_end = int((x + 1) * samples_per_pixel)
+    def set_position(self, position):
+        """Set current playback position (0.0 to 1.0)"""
+        self.current_position = max(0.0, min(1.0, position))
+        if not self.is_dragging:
+            self._update_waveform_display()
 
-            if sample_end > len(self.waveform_data):
-                sample_end = len(self.waveform_data)
+    def _get_position_from_scene(self, scene_pos):
+        """Convert scene position to normalized position (0.0 to 1.0)"""
+        if self.waveform_data is None or len(self.x_data) == 0:
+            return 0.0
 
-            if sample_start >= len(self.waveform_data):
-                break
+        view_box = self.plot_widget.getViewBox()
+        mouse_point = view_box.mapSceneToView(scene_pos)
+        x = mouse_point.x()
 
-            # Get min and max for this pixel's samples
-            samples = self.waveform_data[sample_start:sample_end]
-            if len(samples) == 0:
-                continue
+        # Normalize to 0.0 - 1.0
+        x_min, x_max = self.x_data[0], self.x_data[-1]
+        position = (x - x_min) / (x_max - x_min) if x_max > x_min else 0.0
+        return max(0.0, min(1.0, position))
 
-            min_val = np.min(samples)
-            max_val = np.max(samples)
+    def _on_mouse_move(self, pos):
+        """Handle mouse movement for hover and drag"""
+        if self.waveform_data is None:
+            return
 
-            # Scale to widget height (use 90% of height for amplitude)
-            amplitude_scale = (self.height() / 2) * 0.9
-            y_min = center_y - (min_val * amplitude_scale)
-            y_max = center_y - (max_val * amplitude_scale)
-
-            # Draw vertical line for this pixel
-            if x == start_x:
-                path.moveTo(x, y_max)
-            else:
-                path.lineTo(x, y_max)
-
-            path.lineTo(x, y_min)
-
-        return path
-
-    def _get_position_from_mouse(self, event):
-        """Calculate normalized position from mouse event"""
-        x = event.position().x()
-        return max(0.0, min(1.0, x / self.width()))
-
-    def mousePressEvent(self, event):
-        """Handle mouse press to start seeking"""
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.is_dragging = True
-            position = self._get_position_from_mouse(event)
-            self.current_position = position
-            self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
-            self.seek_started.emit()
-            self.position_moved.emit(position)
-            self.update()
-
-    def mouseMoveEvent(self, event):
-        """Handle mouse move for dragging or hovering"""
-        position = self._get_position_from_mouse(event)
+        position = self._get_position_from_scene(pos)
 
         if self.is_dragging:
             # Update position while dragging
             self.current_position = position
+            self._update_waveform_display()
             self.position_moved.emit(position)
-            self.update()
         else:
-            # Update hover position
-            self.hover_position = position
+            # Show hover line
+            if len(self.x_data) > 0:
+                x_min, x_max = self.x_data[0], self.x_data[-1]
+                hover_x = x_min + position * (x_max - x_min)
+                self.hover_line.setPos(hover_x)
+                self.hover_line.setVisible(True)
             self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-            self.update()
+
+    def _on_mouse_click(self, event):
+        """Handle mouse clicks for seeking"""
+        if self.waveform_data is None:
+            return
+
+        if event.button() == Qt.MouseButton.LeftButton:
+            position = self._get_position_from_scene(event.scenePos())
+
+            if event.double():
+                # Double click - just seek
+                self.current_position = position
+                self._update_waveform_display()
+                self.seek_started.emit()
+                self.position_moved.emit(position)
+                self.seek_finished.emit(position)
+            else:
+                # Single click - start drag
+                self.is_dragging = True
+                self.current_position = position
+                self._update_waveform_display()
+                self.seek_started.emit()
+                self.position_moved.emit(position)
+                self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
 
     def mouseReleaseEvent(self, event):
         """Handle mouse release to finish seeking"""
         if event.button() == Qt.MouseButton.LeftButton and self.is_dragging:
             self.is_dragging = False
-            position = self._get_position_from_mouse(event)
-            self.current_position = position
+            self.seek_finished.emit(self.current_position)
             self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-            self.seek_finished.emit(position)
-            self.update()
 
     def leaveEvent(self, event):
-        """Handle mouse leaving the widget"""
-        self.hover_position = None
+        """Hide hover line when mouse leaves"""
+        self.hover_line.setVisible(False)
         self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
-        self.update()
 
     def generate_sample_waveform(self, duration_seconds=10, sample_rate=44100):
         """Generate a sample waveform for testing"""
         t = np.linspace(0, duration_seconds, int(duration_seconds * sample_rate))
-        # Create a complex waveform with multiple frequencies
         waveform = (
             np.sin(2 * np.pi * 440 * t) * 0.5
             + np.sin(2 * np.pi * 880 * t) * 0.3
             + np.sin(2 * np.pi * 220 * t) * 0.2
         )
-        # Add some envelope
         envelope = np.exp(-t / duration_seconds * 2)
         waveform = waveform * envelope
         self.set_waveform_data(waveform, sample_rate)
