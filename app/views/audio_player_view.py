@@ -235,11 +235,10 @@ class AudioPlayer(QWidget):
         icon = IconName.VOLUME_OFF if value == 0 else IconName.VOLUME_UP
         self.volume_btn.set_icon(icon)
 
-    def _on_file_loaded(self, name: str) -> None:
-        self.file_name.setText(name)
+    def _on_file_loaded(self, file: Path) -> None:
+        self.file_name.setText(file.name)
         self.play_btn.setEnabled(True)
-        audio_data, sr = self.vm.load_waveform_data()
-        self.audio_visualizer_widget.set_waveform_data(audio_data, sr)
+        self.audio_visualizer_widget.load_waveform_data(file)
 
     def _on_speed_reset_btn_clicked(self) -> None:
         self.speed_slider.setValue(100)
@@ -301,6 +300,7 @@ if __name__ == "__main__":
     view.move(1020, 320)
 
     audio = Path("tests/audio/LJ025-0076.wav")
+    long_audio = Path("tests/_local/long_audio.m4a")
     if audio.exists():
         view.vm.load(audio)
     else:

@@ -1,7 +1,6 @@
 from pathlib import Path
 from PySide6.QtCore import QObject, Signal, QUrl
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-import librosa
 
 from app.constants import PlaybackState
 
@@ -14,7 +13,7 @@ class AudioPlayerViewModel(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)
-    file_loaded = Signal(str)
+    file_loaded = Signal(object)
     str_speed_changed = Signal(str)
     str_current_time_changed = Signal(str)
     str_total_time_changed = Signal(str)
@@ -26,7 +25,6 @@ class AudioPlayerViewModel(QObject):
         self.player = QMediaPlayer(self)
         self.audio_output = QAudioOutput(self)
         self.player.setAudioOutput(self.audio_output)
-        self._audio_path: Path
 
         self._state = PlaybackState.STOPPED
         self._was_playing = False
@@ -39,13 +37,7 @@ class AudioPlayerViewModel(QObject):
 
     def load(self, audio: Path):
         self.player.setSource(QUrl.fromLocalFile(audio))
-        self._audio_path = audio
-        self.file_loaded.emit(audio.stem)
-
-    def load_waveform_data(self) -> tuple:
-        print(f"File: {self._audio_path}")
-        audio_data, sr = librosa.load(str(self._audio_path), sr=None, mono=True)
-        return audio_data, sr
+        self.file_loaded.emit(audio)
 
     def toggle_play(self):
         is_playing = self._state != PlaybackState.PLAYING
