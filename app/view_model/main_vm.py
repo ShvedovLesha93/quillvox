@@ -9,6 +9,7 @@ from app.translator import language_manager
 from app.view_model.stt_runner_vm import STTRunnerViewModel
 from app.view_model.stt_settings_vm import STTSettingsViewModel
 from app.view_model.transcript_vm import TranscriptViewModel
+from app.view_model.waveform_vm import WaveformViewModel
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
@@ -23,7 +24,8 @@ class MainViewModel:
         self.app = app
         self.main_model = main_model
         self.theme_manager = theme_manager
-        self.audio_player_vm = AudioPlayerViewModel()
+        self.waveform_vm = WaveformViewModel()
+        self.audio_player_vm = AudioPlayerViewModel(self.waveform_vm)
         self.file_selector_vm = FileSelectorViewModel(
             main_model=self.main_model,
             audio_player_vm=self.audio_player_vm,

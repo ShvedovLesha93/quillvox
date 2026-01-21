@@ -1,10 +1,13 @@
 from pathlib import Path
+from weakref import WeakValueDictionary
 from PySide6.QtCore import QObject, Signal, QUrl
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 from app.constants import PlaybackState
 
 import logging
+
+from app.view_model.waveform_vm import WaveformViewModel
 
 logger = logging.getLogger(__name__)
 
@@ -13,14 +16,16 @@ class AudioPlayerViewModel(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)
-    file_loaded = Signal(object)
+    file_loaded = Signal(str)
     str_speed_changed = Signal(str)
     str_current_time_changed = Signal(str)
     str_total_time_changed = Signal(str)
     int_volume_changed = Signal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, waveform_vm: WaveformViewModel, parent=None):
         super().__init__(parent)
+
+        self.waveform_vm = waveform_vm
 
         self.player = QMediaPlayer(self)
         self.audio_output = QAudioOutput(self)
@@ -37,7 +42,8 @@ class AudioPlayerViewModel(QObject):
 
     def load(self, audio: Path):
         self.player.setSource(QUrl.fromLocalFile(audio))
-        self.file_loaded.emit(audio)
+        self.waveform_vm.load_waveform_file(audio)
+        self.file_loaded.emit(audio.name)
 
     def toggle_play(self):
         is_playing = self._state != PlaybackState.PLAYING
