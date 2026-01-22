@@ -52,7 +52,7 @@ LanguageKey = Literal[
 class STTConfig:
 
     model: ModelKey = "base"
-    device: DeviceKey = "cpu"
+    device: DeviceKey = "cuda"
     compute_type: ComputeTypeKey = "int8"
     batch_size: BatchSizeKey = 2
     language: LanguageKey = "auto"
