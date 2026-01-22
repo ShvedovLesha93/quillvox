@@ -17,6 +17,7 @@ from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
 
 if TYPE_CHECKING:
+    from app.view_model.settings_vm import SettingsViewModel
     from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
     from PySide6.QtWidgets import QApplication
@@ -30,7 +31,10 @@ logger = logging.getLogger(__name__)
 
 class MainWindow(QMainWindow):
     def __init__(
-        self, app: QApplication, theme_manager: ThemeManager, main_vm: MainViewModel
+        self,
+        app: QApplication,
+        theme_manager: ThemeManager,
+        main_vm: MainViewModel,
     ) -> None:
         super().__init__()
         self.app = app
@@ -38,20 +42,18 @@ class MainWindow(QMainWindow):
         self.main_vm = main_vm
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
-        self.general_settings_vm = self.main_vm.general_settings_vm
-        self.stt_settings_vm = self.main_vm.stt_settings_vm
 
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
         self.transcript_controls = TranscriptControls(
-            stt_vm=self.main_vm.stt_vm, file_selector_vm=self.main_vm.file_selector_vm
+            stt_vm=self.main_vm.stt_runner_vm,
+            file_selector_vm=self.main_vm.file_selector_vm,
         )
         self.audio_player = AudioPlayer(
             audio_player_vm=self.audio_player_vm, waveform_vm=self.main_vm.waveform_vm
         )
         self.settings = Settings(
-            general_settings_vm=self.general_settings_vm,
-            stt_settings_vm=self.stt_settings_vm,
+            settings_vm=self.main_vm.settings_vm,
             theme_manager=self.theme_manager,
             main_window=self,
         )
@@ -64,8 +66,8 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
-        self.main_vm.stt_vm.process_active.connect(self.on_transcription_started)
-        self.main_vm.stt_vm.finished.connect(self.on_transcription_finished)
+        self.main_vm.stt_runner_vm.process_active.connect(self.on_transcription_started)
+        self.main_vm.stt_runner_vm.finished.connect(self.on_transcription_finished)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()

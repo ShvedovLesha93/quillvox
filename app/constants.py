@@ -13,3 +13,8 @@ class ThemeMode(Enum):
     LIGHT = 0
     DARK = 1
     SYSTEM = 2
+
+
+class SettingsCategory(Enum):
+    STT_SETTINGS = auto()
+    GENERAL_SETTINGS = auto()

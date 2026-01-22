@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QFrame,
     QSizePolicy,
@@ -11,20 +11,19 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
-from app.constants import ThemeMode
-from app.view_model import general_settings_vm
+from app.constants import SettingsCategory, ThemeMode
 from app.views.settings.general_settings_view import GeneralSettingsView
 from app.views.settings.stt_settings_view import STTSettings
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
-    from app.view_model.stt_settings_vm import STTSettingsViewModel
+    from app.view_model.settings_vm import SettingsViewModel
     from app.theme_manager import ThemeManager
     from app.view_model.general_settings_vm import GeneralSettingsViewModel
     from app.views.main_window import MainWindow
 
 
-class SettingsCategory(QPushButton):
+class SettingsCategoryWidget(QPushButton):
     def __init__(
         self, parent: QWidget | None = None, theme_manager: ThemeManager | None = None
     ) -> None:
@@ -32,15 +31,23 @@ class SettingsCategory(QPushButton):
         self.theme_manager = theme_manager
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.setCheckable(True)
+        self._connect_signals()
 
         if self.theme_manager:
-            self.theme_manager.theme_changed.connect(self.update_theme)
             self.update_theme(self.theme_manager.applied_theme)
+
+    def _connect_signals(self) -> None:
+        if self.theme_manager:
+            self.theme_manager.theme_changed.connect(self.update_theme)
 
     def set_highlighted(self, highlighted: bool):
         self.setProperty("highlighted", highlighted)
         self.style().unpolish(self)
         self.style().polish(self)
+        if highlighted:
+            self.setToolTip(_("Settings was changed"))
+        else:
+            self.setToolTip("")
 
     def update_theme(self, theme: ThemeMode) -> None:
         if theme == ThemeMode.DARK:
@@ -79,7 +86,7 @@ class SettingsCategory(QPushButton):
             }
 
             QPushButton[highlighted="true"] {
-                border: 2px solid #ffa500;
+                border: 2px solid #754C00;
             }
             """
         )
@@ -122,34 +129,43 @@ class SettingsCategory(QPushButton):
 
 
 class Settings(QWidget):
-    restore_settings_request = Signal()
-    save_settings_request = Signal()
 
     def __init__(
         self,
-        general_settings_vm: GeneralSettingsViewModel,
-        stt_settings_vm: STTSettingsViewModel,
+        settings_vm: SettingsViewModel,
         theme_manager: ThemeManager,
         main_window: MainWindow | None = None,
     ):
         super().__init__()
         self.main_window = main_window
         self.theme_manager = theme_manager
-        self.general_settings_vm = general_settings_vm
-        self.stt_settings_vm = stt_settings_vm
-        self.general_settings = GeneralSettingsView(self.general_settings_vm)
-        self.stt_settings = STTSettings(self.stt_settings_vm)
+        self.settings_vm = settings_vm
+        self.general_settings = GeneralSettingsView(
+            self.settings_vm.general_settings_vm
+        )
+        self.stt_settings = STTSettings(self.settings_vm.stt_settings_vm)
+
         self._setup_ui()
-
         self.retranslate()
-        language_manager.language_changed.connect(self.retranslate)
-
-        self.theme_manager.theme_changed.connect(self.update_theme)
+        self._connect_signals()
 
         self.update_theme(self.theme_manager.applied_theme)
 
+    def _connect_signals(self) -> None:
+        language_manager.language_changed.connect(self.retranslate)
+        self.theme_manager.theme_changed.connect(self.update_theme)
+        self.settings_vm.settings_changed.connect(self.settings_chagned)
+        self.settings_vm.settings_restored.connect(self.settings_reset)
+
+        # Connect buttons
+        self.general_btn.clicked.connect(lambda: self.switch_page(0))
+        self.stt_btn.clicked.connect(lambda: self.switch_page(1))
+        self.btn_reset.clicked.connect(self.settings_vm.restore_requested.emit)
+        self.btn_save.clicked.connect(self.settings_vm.save_requested.emit)
+        self.btn_save.clicked.connect(self._reser_ui)
+
     def _setup_ui(self):
-        self.resize(500, 200)
+        self.resize(500, 350)
         # Central widget
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -167,8 +183,10 @@ class Settings(QWidget):
         sidebar_layout.setSpacing(0)
 
         # Category buttons
-        self.general_btn = SettingsCategory(self, theme_manager=self.theme_manager)
-        self.stt_btn = SettingsCategory(self, theme_manager=self.theme_manager)
+        self.general_btn = SettingsCategoryWidget(
+            self, theme_manager=self.theme_manager
+        )
+        self.stt_btn = SettingsCategoryWidget(self, theme_manager=self.theme_manager)
 
         self.categories_btn = (self.general_btn, self.stt_btn)
 
@@ -184,21 +202,25 @@ class Settings(QWidget):
         self.content_stack.addWidget(self.general_settings)
         self.content_stack.addWidget(self.stt_settings)
 
-        # Connect buttons
-        self.general_btn.clicked.connect(lambda: self.switch_page(0))
-        self.stt_btn.clicked.connect(lambda: self.switch_page(1))
-
         # Buttons
         btn_layout = QHBoxLayout()
         btn_layout.setContentsMargins(5, 5, 5, 5)
 
+        # Reset button
+        self.btn_reset = QPushButton()
+        self.btn_reset.setEnabled(False)
+        self.btn_reset.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
+        )
+        btn_layout.addStretch()
+        btn_layout.addWidget(self.btn_reset)
+
+        # Save button
         self.btn_save = QPushButton()
         self.btn_save.setEnabled(False)
         self.btn_save.setSizePolicy(
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
         )
-        self.btn_save.clicked.connect(self.save_settings_request.emit)
-        btn_layout.addStretch()
         btn_layout.addWidget(self.btn_save)
 
         # Vertical separator
@@ -206,7 +228,7 @@ class Settings(QWidget):
         self.v_separator.setFrameShape(QFrame.Shape.VLine)
         self.v_separator.setFixedWidth(2)
 
-        # Gorizontal separator
+        # Gorizontal seaparator
         self.h_separator = QFrame()
         self.h_separator.setFrameShape(QFrame.Shape.HLine)
         self.h_separator.setFixedHeight(2)
@@ -224,6 +246,29 @@ class Settings(QWidget):
         self.general_btn.setChecked(True)
         self.content_stack.setCurrentIndex(0)
 
+    @Slot()
+    def _reser_ui(self) -> None:
+        self.stt_btn.set_highlighted(False)
+        self.btn_save.setEnabled(False)
+        self.btn_reset.setEnabled(False)
+
+    @Slot(object)
+    def settings_chagned(self, category: SettingsCategory) -> None:
+        self.btn_save.setEnabled(True)
+        self.btn_reset.setEnabled(True)
+        match category:
+            case SettingsCategory.STT_SETTINGS:
+                self.stt_btn.set_highlighted(True)
+
+    @Slot(object)
+    def settings_reset(self, category: SettingsCategoryWidget) -> None:
+        self.btn_save.setEnabled(False)
+        self.btn_reset.setEnabled(False)
+        match category:
+            case SettingsCategory.STT_SETTINGS:
+                self.stt_btn.set_highlighted(False)
+
+    @Slot(object)
     def update_theme(self, theme: ThemeMode) -> None:
         if theme == ThemeMode.DARK:
             self.v_separator.setStyleSheet("background-color: #404040; border: none")
@@ -232,10 +277,12 @@ class Settings(QWidget):
             self.v_separator.setStyleSheet("background-color: #b7b6b6; border: none")
             self.h_separator.setStyleSheet("background-color: #b6b6b6; border: none")
 
+    @Slot()
     def retranslate(self) -> None:
         self.general_btn.setText(_("General"))
         self.stt_btn.setText(_("Transcription"))
         self.btn_save.setText(_("Save"))
+        self.btn_reset.setText(_("Reset"))
 
     def switch_page(self, index):
         # Uncheck all buttons
@@ -265,7 +312,7 @@ if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
     from app.view_model.general_settings_vm import GeneralSettingsViewModel
     from app.theme_manager import ThemeManager
-    from app.view_model.stt_settings_vm import STTSettingsViewModel
+    from app.view_model.settings_vm import SettingsViewModel
     from app.utils.logging_config import configure_logging
 
     app = QApplication([])
@@ -273,21 +320,20 @@ if __name__ == "__main__":
 
     configure_logging()
 
-    theme_manager = ThemeManager(app, initial_theme=ThemeMode.LIGHT)
+    theme_manager = ThemeManager(app, initial_theme=ThemeMode.DARK)
 
     general_settings_vm = GeneralSettingsViewModel(theme_manager)
     from app.models.stt_config import STTConfig
 
     stt_config = STTConfig()
-    stt_settings_vm = STTSettingsViewModel(stt_config)
+    settings_vm = SettingsViewModel(stt_config=stt_config, theme_manager=theme_manager)
 
     view = Settings(
-        general_settings_vm=general_settings_vm,
-        stt_settings_vm=stt_settings_vm,
+        settings_vm=settings_vm,
         theme_manager=theme_manager,
     )
 
-    view.resize(500, 200)
+    view.resize(500, 400)
     view.move(1020, 320)
 
     view.show()
