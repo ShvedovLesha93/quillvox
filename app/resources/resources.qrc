@@ -1,12 +1,19 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource prefix="/icons">
-        <file>icons/pause.svg</file>
-        <file>icons/play_arrow.svg</file>
-        <file>icons/replay.svg</file>
-        <file>icons/speed.svg</file>
-        <file>icons/stop.svg</file>
-        <file>icons/volume_off.svg</file>
-        <file>icons/volume_up.svg</file>
+        <file>icons/dark_theme/pause.svg</file>
+        <file>icons/dark_theme/play_arrow.svg</file>
+        <file>icons/dark_theme/replay.svg</file>
+        <file>icons/dark_theme/speed.svg</file>
+        <file>icons/dark_theme/stop.svg</file>
+        <file>icons/dark_theme/volume_off.svg</file>
+        <file>icons/dark_theme/volume_up.svg</file>
+        <file>icons/light_theme/pause.svg</file>
+        <file>icons/light_theme/play_arrow.svg</file>
+        <file>icons/light_theme/replay.svg</file>
+        <file>icons/light_theme/speed.svg</file>
+        <file>icons/light_theme/stop.svg</file>
+        <file>icons/light_theme/volume_off.svg</file>
+        <file>icons/light_theme/volume_up.svg</file>
     </qresource>
 </RCC>
