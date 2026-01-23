@@ -41,6 +41,9 @@ class ThemeManager(QObject):
             self._applied_theme = theme
             self._apply_theme(theme)
 
+        # Initialize IconButton theme on startup
+        self._update_icon_theme(self._applied_theme)
+
     @property
     def current_theme(self) -> ThemeMode:
         """Returns the user's theme preference (may be SYSTEM)."""
@@ -61,6 +64,8 @@ class ThemeManager(QObject):
         if new_theme != self._applied_theme:
             self._applied_theme = new_theme
             self._apply_theme(new_theme)
+            self._update_icon_theme(new_theme)
+            self.theme_changed.emit(new_theme)
 
     def get_system_theme_mode(self) -> ThemeMode:
         style_hints = self.app.styleHints()
@@ -96,6 +101,7 @@ class ThemeManager(QObject):
         if resolved != self._applied_theme:
             self._applied_theme = resolved
             self._apply_theme(resolved)
+            self._update_icon_theme(resolved)
             self.theme_changed.emit(resolved)
 
     def _apply_theme(self, theme: ThemeMode) -> None:
@@ -105,4 +111,31 @@ class ThemeManager(QObject):
             case ThemeMode.LIGHT:
                 theme_palettes.light_palette(self.app)
 
-        logger.info("Theme selected: %s", theme)
+        logger.info("Theme applied: %s", theme)
+
+    def _update_icon_theme(self, theme: ThemeMode) -> None:
+        """Update IconButton and IconLabel class theme and refresh all instances."""
+        from app.views.ui_utils.icons import IconButton, IconLabel, Theme
+
+        # Map ThemeMode to icon Theme
+        icon_theme = Theme.DARK if theme == ThemeMode.DARK else Theme.LIGHT
+
+        # Update class-level theme for both classes
+        IconButton.set_theme(icon_theme)
+        IconLabel.set_theme(icon_theme)
+
+        # Update all existing instances
+        self._update_all_icon_widgets()
+
+    def _update_all_icon_widgets(self) -> None:
+        """Find and update all IconButton and IconLabel instances in the widget tree."""
+        from app.views.ui_utils.icons import IconButton, IconLabel
+
+        # Get all widgets and filter for icon widget instances
+        for widget in self.app.allWidgets():
+            if isinstance(widget, (IconButton, IconLabel)):
+                try:
+                    widget.update_icon_theme()
+                except RuntimeError:
+                    # Widget may have been deleted, skip it
+                    pass
