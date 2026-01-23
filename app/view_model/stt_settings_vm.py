@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsViewModel
 
 
-class Category(Enum):
+class STTSettingCategory(Enum):
     MODEL = "model"
     DEVICE = "device"
     COMPUTE_TYPE = "compute_type"
@@ -97,8 +97,7 @@ LANGUAGE_LABELS: Dict[LanguageKey, str] = {
 
 
 class STTSettingsViewModel(QObject):
-    changed = Signal(object)  # SettingsCategory
-    restored = Signal(object)  # SettingsCategory
+    changed = Signal(object, bool)  # SettingsCategory , bool
     saved = Signal()
 
     def __init__(self, stt_config: STTConfig, settings_vm: SettingsViewModel) -> None:
@@ -110,23 +109,23 @@ class STTSettingsViewModel(QObject):
         self._stt_config = stt_config
         self._snapshot = copy.deepcopy(stt_config)
         self._category_config = {
-            Category.MODEL: {
+            STTSettingCategory.MODEL: {
                 "attr": "model",
                 "labels": MODEL_LABELS,
             },
-            Category.DEVICE: {
+            STTSettingCategory.DEVICE: {
                 "attr": "device",
                 "labels": DEVICE_LABELS,
             },
-            Category.COMPUTE_TYPE: {
+            STTSettingCategory.COMPUTE_TYPE: {
                 "attr": "compute_type",
                 "labels": COMPUTE_TYPE_LABELS,
             },
-            Category.BATCH_SIZE: {
+            STTSettingCategory.BATCH_SIZE: {
                 "attr": "batch_size",
                 "labels": BATCH_SIZE_LABELS,
             },
-            Category.LANGUAGE: {
+            STTSettingCategory.LANGUAGE: {
                 "attr": "language",
                 "labels": LANGUAGE_LABELS,
             },
@@ -135,12 +134,12 @@ class STTSettingsViewModel(QObject):
     def _connect_signals(self) -> None:
         self.settings_vm.save_requested.connect(self.save)
 
-    def get_labels(self, category: Category) -> dict:
+    def get_labels(self, category: STTSettingCategory) -> dict:
         config = self._get_config(category)
         labels = config["labels"]
         return labels
 
-    def get_current(self, category: Category) -> str | int:
+    def get_current(self, category: STTSettingCategory) -> str | int:
         config = self._get_config(category)
         attr_name = config["attr"]
         current_value = getattr(self._stt_config, attr_name)
@@ -155,23 +154,21 @@ class STTSettingsViewModel(QObject):
         logger.info("STT settings saved")
         logger.debug("Saved settings %s", asdict(self._stt_config))
 
-    def setings_changed(self, category: Category, key: str) -> None:
+    def settings_changed(self, category: STTSettingCategory, key: str) -> None:
         self.set_current(category, key)
         if self._snapshot != self._stt_config:
-            self.changed.emit(self.settings_category)
+            self.changed.emit(self.settings_category, True)
         else:
-            self.restored.emit(self.settings_category)
+            self.changed.emit(self.settings_category, False)
 
-    def parameter_changed(self, category: Category, key: str) -> bool:
+    def parameter_changed(self, category: STTSettingCategory, key: str) -> bool:
         config = self._get_config(category)
         attr_name = config["attr"]
         current_value = getattr(self._stt_config, attr_name)
-        if key != current_value:
-            return False
-        else:
-            return True
 
-    def set_current(self, category: Category, key: str) -> None:
+        return key != current_value
+
+    def set_current(self, category: STTSettingCategory, key: str) -> None:
         config = self._category_config.get(category)
         if config is None:
             raise ValueError(f"Invalid category: {category}")
@@ -185,7 +182,7 @@ class STTSettingsViewModel(QObject):
             setattr(self._snapshot, attr_name, key)
             logger.debug("set %s: %s", category, key)
 
-    def _get_config(self, category: Category) -> dict:
+    def _get_config(self, category: STTSettingCategory) -> dict:
         config = self._category_config.get(category)
         if config is None:
             raise ValueError(f"Invalid category: {category}")

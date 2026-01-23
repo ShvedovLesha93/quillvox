@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
-from app.view_model.stt_settings_vm import Category
+from app.view_model.stt_settings_vm import STTSettingCategory
 from app.views.ui_utils.icons import IconButton, IconName
 from app.views.ui_utils.title import Title
 from app.translator import _, language_manager
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 class ResetButton(IconButton):
-    def __init__(self, _parent: STTSettings, category: Category):
+    def __init__(self, _parent: STTSettingsView, category: STTSettingCategory):
         super().__init__(name=IconName.REPLAY, scale=0.7, parent=None)
         self._parent = _parent
         self.category = category
@@ -49,15 +49,15 @@ class ResetButton(IconButton):
 
 @dataclass
 class RowOptions:
-    label: dict = field(default_factory=dict[Category, QLabel])
-    combo: dict = field(default_factory=dict[Category, QComboBox])
-    reset_btn: dict = field(default_factory=dict[Category, ResetButton])
+    label: dict = field(default_factory=dict[STTSettingCategory, QLabel])
+    combo: dict = field(default_factory=dict[STTSettingCategory, QComboBox])
+    reset_btn: dict = field(default_factory=dict[STTSettingCategory, ResetButton])
 
 
-class STTSettings(QWidget):
-    def __init__(self, general_settings_vm: STTSettingsViewModel) -> None:
+class STTSettingsView(QWidget):
+    def __init__(self, stt_settings_vm: STTSettingsViewModel) -> None:
         super().__init__()
-        self.vm = general_settings_vm
+        self.vm = stt_settings_vm
 
         self._row_options = RowOptions()
 
@@ -92,11 +92,11 @@ class STTSettings(QWidget):
         main_layout.addStretch()
 
         # Parameters
-        self.add_option_row(1, Category.MODEL)
-        self.add_option_row(2, Category.DEVICE)
-        self.add_option_row(3, Category.COMPUTE_TYPE)
-        self.add_option_row(4, Category.BATCH_SIZE)
-        self.add_option_row(5, Category.LANGUAGE)
+        self.add_option_row(1, STTSettingCategory.MODEL)
+        self.add_option_row(2, STTSettingCategory.DEVICE)
+        self.add_option_row(3, STTSettingCategory.COMPUTE_TYPE)
+        self.add_option_row(4, STTSettingCategory.BATCH_SIZE)
+        self.add_option_row(5, STTSettingCategory.LANGUAGE)
 
         # ScrollArea
         scroll = QScrollArea()
@@ -112,15 +112,15 @@ class STTSettings(QWidget):
         label: QLabel
         for category, label in self._row_options.label.items():
             match category:
-                case Category.MODEL:
+                case STTSettingCategory.MODEL:
                     label.setText(_("Model"))
-                case Category.DEVICE:
+                case STTSettingCategory.DEVICE:
                     label.setText(_("Device"))
-                case Category.COMPUTE_TYPE:
+                case STTSettingCategory.COMPUTE_TYPE:
                     label.setText(_("Compute type"))
-                case Category.BATCH_SIZE:
+                case STTSettingCategory.BATCH_SIZE:
                     label.setText(_("Batch size"))
-                case Category.LANGUAGE:
+                case STTSettingCategory.LANGUAGE:
                     label.setText(_("Transcription language"))
         self.title.setTitle(_("Transcription"))
 
@@ -136,20 +136,20 @@ class STTSettings(QWidget):
             btn.setVisible(False)
 
     @Slot(int, object)
-    def _on_parameter_changed(self, index: int, category: Category) -> None:
+    def _on_parameter_changed(self, index: int, category: STTSettingCategory) -> None:
         combo = self._row_options.combo[category]
         key = combo.itemData(index)
         is_changed = self.vm.parameter_changed(category=category, key=key)
         reset_btn = self._row_options.reset_btn[category]
-        reset_btn.setVisible(not is_changed)
+        reset_btn.setVisible(is_changed)
 
     @Slot(object)
-    def _reset_parameter(self, category: Category) -> None:
+    def _reset_parameter(self, category: STTSettingCategory) -> None:
         current_key = self.vm.get_current(category)
         combo = self._row_options.combo[category]
         combo.setCurrentIndex(combo.findData(current_key))
 
-    def add_option_row(self, row: int, category: Category) -> None:
+    def add_option_row(self, row: int, category: STTSettingCategory) -> None:
         label = QLabel()
         combo = QComboBox()
         reset_btn = ResetButton(self, category)
@@ -172,7 +172,7 @@ class STTSettings(QWidget):
             lambda i: self._on_parameter_changed(i, category)
         )
 
-    def add_combo_data(self, combo: QComboBox, category: Category) -> None:
+    def add_combo_data(self, combo: QComboBox, category: STTSettingCategory) -> None:
         combo.blockSignals(True)
 
         for key, label in self.vm.get_labels(category).items():
@@ -182,7 +182,7 @@ class STTSettings(QWidget):
         combo.setCurrentIndex(combo.findData(current))
 
         combo.currentIndexChanged.connect(
-            lambda i: self.vm.setings_changed(category=category, key=combo.itemData(i))
+            lambda i: self.vm.settings_changed(category=category, key=combo.itemData(i))
         )
         combo.blockSignals(False)
 

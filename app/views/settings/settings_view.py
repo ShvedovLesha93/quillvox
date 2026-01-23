@@ -11,9 +11,10 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
+from app import general_config
 from app.constants import SettingsCategory, ThemeMode
 from app.views.settings.general_settings_view import GeneralSettingsView
-from app.views.settings.stt_settings_view import STTSettings
+from app.views.settings.stt_settings_view import STTSettingsView
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
@@ -62,7 +63,6 @@ class SettingsCategoryWidget(QPushButton):
                 font: bold;
                 text-align: left;
                 padding: 10px 10px;
-                border: 2px solid #272727;
                 background-color: #272727;
                 color: #ffffff;
                 font-size: 14px;
@@ -72,21 +72,18 @@ class SettingsCategoryWidget(QPushButton):
 
             QPushButton:hover {
                 background-color: #424242;
-                border: 2px solid #424242;
             }
 
             QPushButton:pressed {
                 background-color: #565656;
-                border: 2px solid #565656;
             }
 
             QPushButton:checked {
                 background-color: #424242;
-                border: 2px solid #424242;
             }
 
             QPushButton[highlighted="true"] {
-                border: 2px solid #754C00;
+                color: #d6c1a9;
             }
             """
         )
@@ -98,7 +95,6 @@ class SettingsCategoryWidget(QPushButton):
                 font: bold;
                 text-align: left;
                 padding: 10px 10px;
-                border: 2px solid #e6e6e6;
                 background-color: #f2f2f2;
                 color: #1a1a1a;
                 font-size: 14px;
@@ -111,18 +107,16 @@ class SettingsCategoryWidget(QPushButton):
             }
 
             QPushButton:pressed {
-                border: 2px solid #cecece;
                 background-color: #cecece;
             }
 
             QPushButton:checked {
-                border: 2px solid #dadada;
                 background-color: #dadada;
                 color: #000000;
             }
 
             QPushButton[highlighted="true"] {
-                border: 2px solid #ffa500;
+                color: #644c30;
             }
             """
         )
@@ -143,7 +137,9 @@ class Settings(QWidget):
         self.general_settings = GeneralSettingsView(
             self.settings_vm.general_settings_vm
         )
-        self.stt_settings = STTSettings(self.settings_vm.stt_settings_vm)
+        self.stt_settings = STTSettingsView(self.settings_vm.stt_settings_vm)
+
+        self._is_changed: dict[SettingsCategory, bool] = {}
 
         self._setup_ui()
         self.retranslate()
@@ -154,15 +150,14 @@ class Settings(QWidget):
     def _connect_signals(self) -> None:
         language_manager.language_changed.connect(self.retranslate)
         self.theme_manager.theme_changed.connect(self.update_theme)
-        self.settings_vm.settings_changed.connect(self.settings_chagned)
-        self.settings_vm.settings_restored.connect(self.settings_reset)
+        self.settings_vm.settings_changed.connect(self._on_settings_changed)
 
         # Connect buttons
         self.general_btn.clicked.connect(lambda: self.switch_page(0))
         self.stt_btn.clicked.connect(lambda: self.switch_page(1))
         self.btn_reset.clicked.connect(self.settings_vm.restore_requested.emit)
         self.btn_save.clicked.connect(self.settings_vm.save_requested.emit)
-        self.btn_save.clicked.connect(self._reser_ui)
+        self.btn_save.clicked.connect(self._reset_ui)
 
     def _setup_ui(self):
         self.resize(500, 350)
@@ -247,26 +242,23 @@ class Settings(QWidget):
         self.content_stack.setCurrentIndex(0)
 
     @Slot()
-    def _reser_ui(self) -> None:
+    def _reset_ui(self) -> None:
         self.stt_btn.set_highlighted(False)
         self.btn_save.setEnabled(False)
         self.btn_reset.setEnabled(False)
 
-    @Slot(object)
-    def settings_chagned(self, category: SettingsCategory) -> None:
-        self.btn_save.setEnabled(True)
-        self.btn_reset.setEnabled(True)
-        match category:
-            case SettingsCategory.STT_SETTINGS:
-                self.stt_btn.set_highlighted(True)
+    @Slot(object, bool)
+    def _on_settings_changed(self, category: SettingsCategory, state: bool) -> None:
+        self._is_changed[category] = state
 
-    @Slot(object)
-    def settings_reset(self, category: SettingsCategoryWidget) -> None:
-        self.btn_save.setEnabled(False)
-        self.btn_reset.setEnabled(False)
-        match category:
-            case SettingsCategory.STT_SETTINGS:
-                self.stt_btn.set_highlighted(False)
+        has_changed = any(self._is_changed.values())
+        self.btn_save.setEnabled(has_changed)
+        self.btn_reset.setEnabled(has_changed)
+
+        if category == SettingsCategory.STT_SETTINGS:
+            self.stt_btn.set_highlighted(state)
+        else:
+            self.general_btn.set_highlighted(state)
 
     @Slot(object)
     def update_theme(self, theme: ThemeMode) -> None:
@@ -310,23 +302,26 @@ class Settings(QWidget):
 # ============ TEST ============
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
-    from app.view_model.general_settings_vm import GeneralSettingsViewModel
     from app.theme_manager import ThemeManager
     from app.view_model.settings_vm import SettingsViewModel
     from app.utils.logging_config import configure_logging
+    from app.models.stt_config import STTConfig
+    from app.general_config import GeneralConfig
 
     app = QApplication([])
     app.setStyle("Fusion")
 
     configure_logging()
 
-    theme_manager = ThemeManager(app, initial_theme=ThemeMode.DARK)
-
-    general_settings_vm = GeneralSettingsViewModel(theme_manager)
-    from app.models.stt_config import STTConfig
+    theme_manager = ThemeManager(app, initial_theme=ThemeMode.LIGHT)
 
     stt_config = STTConfig()
-    settings_vm = SettingsViewModel(stt_config=stt_config, theme_manager=theme_manager)
+    general_config = GeneralConfig()
+    settings_vm = SettingsViewModel(
+        general_config=general_config,
+        stt_config=stt_config,
+        theme_manager=theme_manager,
+    )
 
     view = Settings(
         settings_vm=settings_vm,

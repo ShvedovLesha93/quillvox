@@ -1,9 +1,12 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
     QFormLayout,
     QFrame,
+    QGridLayout,
+    QHBoxLayout,
     QScrollArea,
     QWidget,
     QVBoxLayout,
@@ -12,24 +15,57 @@ from PySide6.QtWidgets import (
 )
 
 from app import theme_manager
+from app.view_model.general_settings_vm import GeneralSettingCategory
+from app.views.ui_utils.icons import IconButton, IconName
 from app.views.ui_utils.title import Title
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.view_model.general_settings_vm import GeneralSettingsViewModel
-    from app.view_model.general_settings_vm import Language, Theme
+
+
+class ResetButton(IconButton):
+    def __init__(self, _parent: GeneralSettingsView, category: GeneralSettingCategory):
+        super().__init__(name=IconName.REPLAY, scale=0.7, parent=None)
+        self._parent = _parent
+        self.category = category
+        self._setup_ui()
+
+    def _setup_ui(self):
+        self.setVisible(False)
+        self.setFixedSize(25, 25)
+        self.setToolTip("Reset to default")
+        self.clicked.connect(lambda: self._parent._reset_parameter(self.category))
+
+    def create_container(self):
+        """Create a container widget that reserves space for this button"""
+        container = QWidget()
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self)
+        container.setFixedWidth(30)
+        return container
+
+
+@dataclass
+class RowOptions:
+    label: dict = field(default_factory=dict[GeneralSettingCategory, QLabel])
+    combo: dict = field(default_factory=dict[GeneralSettingCategory, QComboBox])
+    reset_btn: dict = field(default_factory=dict[GeneralSettingCategory, ResetButton])
 
 
 class GeneralSettingsView(QWidget):
-    def __init__(self, general_settings_vm: GeneralSettingsViewModel):
+    def __init__(self, general_settings_vm: GeneralSettingsViewModel) -> None:
         super().__init__()
         self.vm = general_settings_vm
 
+        self._row_options = RowOptions()
+
         self._setup_ui()
-        self._bind_vm()
+        self._connect_signals()
 
         self.retranslate()
-        language_manager.language_changed.connect(self.retranslate)
 
     def _setup_ui(self) -> None:
         outer_layout = QVBoxLayout(self)
@@ -39,27 +75,26 @@ class GeneralSettingsView(QWidget):
         main_layout = QVBoxLayout(content_widget)
         main_layout.setSpacing(10)
 
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setColumnStretch(0, 1)
+        self.grid_layout.setColumnStretch(1, 0)
+        self.grid_layout.setColumnStretch(2, 0)
+        self.grid_layout.setColumnStretch(3, 0)
+        self.grid_layout.setColumnStretch(4, 1)
+
         form_layout = QFormLayout()
 
         # Title
         self.title = Title(self)
         main_layout.addWidget(self.title)
 
+        main_layout.addLayout(self.grid_layout)
         main_layout.addLayout(form_layout)
-
-        # Language
-        self.lang_label = QLabel()
-
-        self.lang_combo = QComboBox()
-        form_layout.addRow(self.lang_label, self.lang_combo)
-
-        # Theme
-        self.theme_label = QLabel()
-        self.theme_combo = QComboBox()
-
-        form_layout.addRow(self.theme_label, self.theme_combo)
-
         main_layout.addStretch()
+
+        # Parameters
+        self.add_option_row(1, GeneralSettingCategory.LANGUAGE)
+        self.add_option_row(2, GeneralSettingCategory.THEME)
 
         # ScrollArea
         scroll = QScrollArea()
@@ -72,76 +107,82 @@ class GeneralSettingsView(QWidget):
         outer_layout.addWidget(scroll)
 
     def retranslate(self) -> None:
+        label: QLabel
+        for category, label in self._row_options.label.items():
+            match category:
+                case GeneralSettingCategory.LANGUAGE:
+                    label.setText(_("Interface language"))
+                case GeneralSettingCategory.THEME:
+                    label.setText(_("Theme"))
         self.title.setTitle(_("General"))
-        self.lang_label.setText(_("Language"))
-        self.theme_label.setText(_("Theme"))
-        self.add_languages(self.vm.languages)
-        self.add_themes(self.vm.themes)
 
-    def _bind_vm(self) -> None:
-        # =========== UI → ViewModel ============
-        self.lang_combo.currentIndexChanged.connect(
-            lambda _: self.vm.set_language(self.lang_combo.currentData())
+    def _connect_signals(self) -> None:
+        language_manager.language_changed.connect(self.retranslate)
+        self.vm.settings_vm.restore_requested.connect(self.restore_currents)
+        self.vm.saved.connect(self._reset_ui)
+
+    @Slot()
+    def _reset_ui(self) -> None:
+        reset_btn = self._row_options.reset_btn
+        for btn in reset_btn.values():
+            btn.setVisible(False)
+
+    @Slot(int, object)
+    def _on_parameter_changed(
+        self, index: int, category: GeneralSettingCategory
+    ) -> None:
+        combo = self._row_options.combo[category]
+        key = combo.itemData(index)
+        is_changed = self.vm.parameter_changed(category=category, key=key)
+        reset_btn = self._row_options.reset_btn[category]
+        reset_btn.setVisible(is_changed)
+
+    @Slot(object)
+    def _reset_parameter(self, category: GeneralSettingCategory) -> None:
+        current_key = self.vm.get_current(category)
+        combo = self._row_options.combo[category]
+        combo.setCurrentIndex(combo.findData(current_key))
+
+    def add_option_row(self, row: int, category: GeneralSettingCategory) -> None:
+        label = QLabel()
+        combo = QComboBox()
+        reset_btn = ResetButton(self, category)
+
+        self._row_options.label[category] = label
+        self._row_options.combo[category] = combo
+        self._row_options.reset_btn[category] = reset_btn
+
+        reset_btn_container = reset_btn = reset_btn.create_container()
+
+        label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+        self.grid_layout.addWidget(label, row, 1)
+        self.grid_layout.addWidget(combo, row, 2)
+        self.grid_layout.addWidget(reset_btn_container, row, 3)
+
+        self.add_combo_data(combo, category)
+
+        combo.currentIndexChanged.connect(
+            lambda i: self._on_parameter_changed(i, category)
         )
-        self.theme_combo.currentIndexChanged.connect(
-            lambda _: self.vm.set_theme(self.theme_combo.currentData())
+
+    def add_combo_data(
+        self, combo: QComboBox, category: GeneralSettingCategory
+    ) -> None:
+        combo.blockSignals(True)
+
+        for key, label in self.vm.get_labels(category).items():
+            combo.addItem(label, key)
+
+        current = self.vm.get_current(category)
+        combo.setCurrentIndex(combo.findData(current))
+
+        combo.currentIndexChanged.connect(
+            lambda i: self.vm.settings_changed(category=category, key=combo.itemData(i))
         )
+        combo.blockSignals(False)
 
-    def add_themes(self, data: list[Theme]) -> None:
-        current_theme = self.vm.current_theme
-
-        self.theme_combo.blockSignals(True)
-        self.theme_combo.clear()
-
-        for theme in data:
-            self.theme_combo.addItem(theme.translated, theme.data)
-
-        self.set_current_item(self.theme_combo, current_theme)
-        self.theme_combo.blockSignals(False)
-
-    def add_languages(self, data: list[Language]) -> None:
-        current_code = self.vm.current_language
-
-        self.lang_combo.blockSignals(True)
-        self.lang_combo.clear()
-
-        for lang in data:
-            self.lang_combo.addItem(
-                f"{lang.translated} ({lang.native})",
-                userData=lang.code,
-            )
-
-        if current_code is not None:
-            index = self.lang_combo.findData(current_code)
-            if index != -1:
-                self.lang_combo.setCurrentIndex(index)
-
-        self.lang_combo.blockSignals(False)
-
-    # TODO: Fix it. 2026-01-13 06:55
-    def set_current_item(self, combo: QComboBox, data) -> None:
-        index = combo.findData(data)
-        if index != -1:
-            combo.setCurrentIndex(index)
-
-
-# ============ TEST ============
-if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication
-    from app.view_model.general_settings_vm import GeneralSettingsViewModel
-    from app.theme_manager import ThemeManager
-    from app.constants import ThemeMode
-
-    app = QApplication([])
-    app.setStyle("Fusion")
-
-    theme_manager = ThemeManager(app, initial_theme=ThemeMode.SYSTEM)
-
-    general_settings_vm = GeneralSettingsViewModel(theme_manager)
-    general_settings_vm.language_changed.connect(language_manager.set_language)
-
-    view = GeneralSettingsView(general_settings_vm=general_settings_vm)
-    view.move(1020, 320)
-
-    view.show()
-    app.exec()
+    @Slot()
+    def restore_currents(self) -> None:
+        for category, combo in self._row_options.combo.items():
+            combo.setCurrentIndex(combo.findData(self.vm.get_current(category)))
