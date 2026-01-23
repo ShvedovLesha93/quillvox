@@ -1,9 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import pyqtgraph as pg
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QWidget, QVBoxLayout
+
+from app.constants import ThemeMode
+from app.theme_manager import ThemeManager
 
 
 if TYPE_CHECKING:
@@ -26,9 +29,13 @@ class WaveformView(QWidget):
     loading_finished = Signal()
     loading_error = Signal(str)
 
-    def __init__(self, waveform_vm: WaveformViewModel, parent=None) -> None:
+    def __init__(
+        self, waveform_vm: WaveformViewModel, theme_manager: ThemeManager, parent=None
+    ) -> None:
         super().__init__(parent)
         self.vm = waveform_vm
+        self.theme_manager = theme_manager
+
         self.x_data = None
         self.original_length = 0
         self.current_position = 0.0
@@ -38,6 +45,8 @@ class WaveformView(QWidget):
         self.setMaximumHeight(120)
 
         self._setup_ui()
+        self.update_theme(self.theme_manager.applied_theme)
+        self._connect_signals()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -46,7 +55,6 @@ class WaveformView(QWidget):
 
         # Plot widget
         self.plot_widget = pg.PlotWidget()
-        self.plot_widget.setBackground((40, 40, 40))
         self.plot_widget.setMouseTracking(True)
 
         # Configure axes
@@ -98,9 +106,33 @@ class WaveformView(QWidget):
         layout.addWidget(self.plot_widget)
 
         # Mouse events
+        self.plot_widget.viewport().installEventFilter(self)
+
+    def _connect_signals(self) -> None:
+        self.theme_manager.theme_changed.connect(self.update_theme)
         self.plot_widget.scene().sigMouseMoved.connect(self._on_mouse_move)  # type: ignore
         self.plot_widget.scene().sigMouseClicked.connect(self._on_mouse_click)  # type: ignore
-        self.plot_widget.viewport().installEventFilter(self)
+
+    @Slot(object)
+    def update_theme(self, theme: ThemeMode) -> None:
+        if theme == ThemeMode.DARK:
+            self.plot_widget.setBackground((25, 25, 25))
+            self.plot_widget.setStyleSheet("")
+            self.waveform.setPen(pg.mkPen(color=(100, 180, 255), width=1))
+
+            # Update other lines too
+            self.position_line.setPen(pg.mkPen(color=(255, 100, 100), width=2))
+            self.hover_line.setPen(pg.mkPen(color=(255, 100, 100, 100), width=2))
+            self.x_axis_line.setPen(pg.mkPen(color=(80, 80, 80), width=1))
+        else:
+            self.plot_widget.setBackground((255, 255, 255))
+            self.plot_widget.setStyleSheet("border: 1px solid rgb(195, 195, 195);")
+            self.waveform.setPen(pg.mkPen(color=(45, 45, 45), width=1))
+
+            # Update other lines for light theme
+            self.position_line.setPen(pg.mkPen(color=(255, 0, 0), width=2))
+            self.hover_line.setPen(pg.mkPen(color=(255, 0, 0, 100), width=2))
+            self.x_axis_line.setPen(pg.mkPen(color=(200, 200, 200), width=1))
 
     def reset(self) -> None:
         """Reset the visualizer to empty state"""

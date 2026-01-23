@@ -50,7 +50,9 @@ class MainWindow(QMainWindow):
             file_selector_vm=self.main_vm.file_selector_vm,
         )
         self.audio_player = AudioPlayer(
-            audio_player_vm=self.audio_player_vm, waveform_vm=self.main_vm.waveform_vm
+            theme_manager=self.theme_manager,
+            audio_player_vm=self.audio_player_vm,
+            waveform_vm=self.main_vm.waveform_vm,
         )
         self.settings = Settings(
             settings_vm=self.main_vm.settings_vm,
