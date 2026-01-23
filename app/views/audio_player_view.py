@@ -13,11 +13,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Slot
 
 from app.translator import language_manager, _
-from app.constants import PlaybackState
+from app.constants import PlaybackState, ThemeMode
 from app.views.waveform_view import WaveformView
 from .ui_utils.icons import IconButton, IconLabel, IconName
 
 if TYPE_CHECKING:
+    from app.theme_manager import ThemeManager
     from app.view_model.waveform_vm import WaveformViewModel
     from app.view_model.audio_player_vm import AudioPlayerViewModel
 
@@ -67,11 +68,15 @@ class TruncatingLabel(QLabel):
 
 class AudioPlayer(QWidget):
     def __init__(
-        self, audio_player_vm: AudioPlayerViewModel, waveform_vm: WaveformViewModel
+        self,
+        audio_player_vm: AudioPlayerViewModel,
+        waveform_vm: WaveformViewModel,
+        theme_manager: ThemeManager,
     ) -> None:
         super().__init__()
         self.audio_player_vm = audio_player_vm
         self.waveform_vm = waveform_vm
+        self.theme_manager = theme_manager
 
         self.volume_before_mute: int
 
@@ -95,7 +100,9 @@ class AudioPlayer(QWidget):
         self.file_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Wave visualizer
-        self.waveform_view = WaveformView(waveform_vm=self.waveform_vm, parent=self)
+        self.waveform_view = WaveformView(
+            waveform_vm=self.waveform_vm, theme_manager=self.theme_manager, parent=self
+        )
         self.waveform_view.seek_started.connect(self.audio_player_vm.begin_seek)
         self.waveform_view.position_moved.connect(self._on_visualizer_position_moved)
         self.waveform_view.seek_finished.connect(self._on_visualizer_seek_finished)
@@ -292,14 +299,20 @@ if __name__ == "__main__":
     from pathlib import Path
     from app.view_model.audio_player_vm import AudioPlayerViewModel
     from app.view_model.waveform_vm import WaveformViewModel
+    from app.theme_manager import ThemeManager
 
     app = QApplication([])
     app.setStyle("Fusion")
 
     waveform_vm = WaveformViewModel()
     audio_player_vm = AudioPlayerViewModel(waveform_vm)
+    theme_manager = ThemeManager(app, ThemeMode.LIGHT)
 
-    view = AudioPlayer(audio_player_vm=audio_player_vm, waveform_vm=waveform_vm)
+    view = AudioPlayer(
+        audio_player_vm=audio_player_vm,
+        waveform_vm=waveform_vm,
+        theme_manager=theme_manager,
+    )
     view.resize(300, 150)
     view.move(1020, 320)
 
