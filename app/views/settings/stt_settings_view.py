@@ -185,3 +185,15 @@ class STTSettingsView(QWidget):
     def discard_settings(self) -> None:
         for category, combo in self._row_options.combo.items():
             combo.setCurrentIndex(combo.findData(self.vm.get_current_value(category)))
+
+    def set_enabled(self, state: bool) -> None:
+        for combo in self._row_options.combo.values():
+            combo.setEnabled(state)
+            combo.setToolTip(
+                _("Please wait… Transcription in progress") if not state else ""
+            )
+        for reset_btn in self._row_options.reset_btn.values():
+            reset_btn.setEnabled(state)
+            reset_btn.setToolTip(
+                _("Please wait… Transcription in progress") if not state else ""
+            )
