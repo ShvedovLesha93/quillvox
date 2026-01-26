@@ -249,7 +249,7 @@ class Settings(QWidget):
         self.btn_save.setEnabled(has_changed)
         self.btn_reset.setEnabled(has_changed)
 
-        if category == SettingsCategory.STT_SETTINGS:
+        if category == SettingsCategory.STT:
             self.stt_btn.set_highlighted(state)
         else:
             self.general_btn.set_highlighted(state)
