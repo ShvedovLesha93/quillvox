@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QFrame,
     QSizePolicy,
@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
-from app import general_config
 from app.constants import SettingsCategory, ThemeMode
 from app.views.settings.general_settings_view import GeneralSettingsView
 from app.views.settings.stt_settings_view import STTSettingsView
@@ -20,7 +19,6 @@ from app.translator import _, language_manager
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsViewModel
     from app.theme_manager import ThemeManager
-    from app.view_model.general_settings_vm import GeneralSettingsViewModel
     from app.views.main_window import MainWindow
 
 
@@ -57,8 +55,7 @@ class SettingsCategoryWidget(QPushButton):
             self.light_theme()
 
     def dark_theme(self) -> None:
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
             QPushButton {
                 font: bold;
                 text-align: left;
@@ -85,12 +82,10 @@ class SettingsCategoryWidget(QPushButton):
             QPushButton[highlighted="true"] {
                 color: #d6c1a9;
             }
-            """
-        )
+            """)
 
     def light_theme(self) -> None:
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
             QPushButton {
                 font: bold;
                 text-align: left;
@@ -118,8 +113,7 @@ class SettingsCategoryWidget(QPushButton):
             QPushButton[highlighted="true"] {
                 color: #644c30;
             }
-            """
-        )
+            """)
 
 
 class Settings(QWidget):
@@ -305,8 +299,8 @@ if __name__ == "__main__":
     from app.theme_manager import ThemeManager
     from app.view_model.settings_vm import SettingsViewModel
     from app.utils.logging_config import configure_logging
-    from app.models.stt_config import STTConfig
-    from app.general_config import GeneralConfig
+    from app.config.stt_config import STTConfig
+    from app.config.general_config import GeneralConfig
 
     app = QApplication([])
     app.setStyle("Fusion")

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from app.stt_worker import Level, STTWorker
 from app.user_message import user_msg
-from app.stt_run_config import STTRunConfig
+from app.config.stt_run_config import STTRunConfig
 from app.models.stt_transcript import STTSegment
 from app.translator import _
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from faster_whisper.transcribe import Segment
-    from app.models.stt_config import STTConfig
+    from app.config.stt_config import STTConfig
     from app.models.main_model import MainModel
     from app.stt_worker import WorkerMessage
 

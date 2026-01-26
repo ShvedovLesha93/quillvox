@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from app.general_config import GeneralConfig
+from app.config.general_config import GeneralConfig
 from app.models.main_model import MainModel
 from app.utils.logging_config import configure_logging
 from app.theme_manager import ThemeManager

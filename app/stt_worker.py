@@ -11,7 +11,7 @@ from faster_whisper import WhisperModel
 from PySide6.QtCore import QObject, Signal
 import torch
 
-from app.stt_run_config import STTRunConfig
+from app.config.stt_run_config import STTRunConfig
 
 logger = logging.getLogger(__name__)
 

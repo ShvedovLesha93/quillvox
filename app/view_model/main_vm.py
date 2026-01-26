@@ -1,17 +1,16 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from app.models.stt_config import STTConfig
+from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
 from app.view_model.file_selector_vm import FileSelectorViewModel
-from app.translator import language_manager
 from app.view_model.settings_vm import SettingsViewModel
 from app.view_model.stt_runner_vm import STTRunnerViewModel
 from app.view_model.transcript_vm import TranscriptViewModel
 from app.view_model.waveform_vm import WaveformViewModel
 
 if TYPE_CHECKING:
-    from app.general_config import GeneralConfig
+    from app.config.general_config import GeneralConfig
     from app.theme_manager import ThemeManager
     from PySide6.QtWidgets import QApplication
     from app.models.main_model import MainModel

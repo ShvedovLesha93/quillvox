@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from enum import Enum
 from PySide6.QtCore import QEvent, QSize, Qt
 from PySide6.QtGui import QIcon
