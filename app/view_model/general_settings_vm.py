@@ -62,15 +62,6 @@ class GeneralSettingsViewModel(QObject):
             },
         }
 
-        # language_manager.set_language(self.general_config.language)
-        # TODO: 2026-01-23 14:50
-        """
-        The language should be set when the user selects a language in the settings.
-        The first theme that is initialized is the System theme.
-        """
-        self._current_language: str = language_manager.current_lang
-        # self._current_theme = self.theme_manager.applied_theme
-
     def _connect_signals(self) -> None:
         self.settings_vm.save_requested.connect(self.save)
 
