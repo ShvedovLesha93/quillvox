@@ -3,7 +3,6 @@ from typing import Literal
 
 from app.constants import ThemeMode
 
-
 InterfaceLanguageKey = Literal["en", "ru"]
 ThemeKey = Literal[ThemeMode.SYSTEM, ThemeMode.DARK, ThemeMode.LIGHT]
 
@@ -11,7 +10,7 @@ ThemeKey = Literal[ThemeMode.SYSTEM, ThemeMode.DARK, ThemeMode.LIGHT]
 @dataclass
 class GeneralConfig:
 
-    language: InterfaceLanguageKey = "en"
+    language: InterfaceLanguageKey = "ru"
     theme: ThemeKey = ThemeMode.SYSTEM
 
     def as_dict(self) -> dict:

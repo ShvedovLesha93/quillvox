@@ -1,8 +1,11 @@
-import locale
 import gettext
+from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
-import re
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LanguageManager(QObject):
@@ -13,46 +16,58 @@ class LanguageManager(QObject):
 
         self._ = None
         self.translator = None
-        self.current_lang = self.get_language_code()
-        self.set_language(self.current_lang)
+        self.locales_dir = Path("app/locales")
 
-    def get_language_code(self) -> str:
-        lang, _ = locale.getlocale()
+    def _is_language_avilable(self, lang_code: str) -> bool:
+        """Check if a language has translation files available"""
 
-        if not lang:
-            return "en"
+        mo_file = self.locales_dir / lang_code / "LC_MESSAGES" / "messages.mo"
+        return mo_file.exists()
 
-        # Normalize to lowercase for easier matching
-        lang = lang.lower()
+    def get_available_languages(self) -> list[str]:
+        """Get list of all available language codes"""
+        available = []
+        if not self.locales_dir.exists():
+            logger.warning("Locales directory does not extst: %s", self.locales_dir)
+            return available
 
-        # Case 1: POSIX-style, e.g. "ru_by", "en_us"
-        if re.match(r"^[a-z]{2}_[a-z]{2}$", lang):
-            return lang.split("_")[0]
+        for lang_dir in self.locales_dir.iterdir():
+            if lang_dir.is_dir():
+                mo_file = lang_dir / "LC_MESSAGES" / "messages.po"
+                if mo_file.exists():
+                    code = mo_file.parent.parent.name
+                    available.append(code)
 
-        # Case 2: Windows-style, e.g. "russian_belarus"
-        mapping = {
-            "english": "en",
-            "russian": "ru",
-        }
-
-        base = lang.split("_")[0].split(" ")[0]  # "russian_belarus" → "russian"
-        return mapping.get(base, "en")
+        return sorted(available)
 
     def set_language(self, lang_code: str) -> None:
-        self.current_lang = lang_code
+        """Set the application language"""
+        if not self._is_language_avilable(lang_code) and lang_code != "en":
+            logger.warning(
+                "Language '%s' not found. Available languages: %s",
+                lang_code,
+                self.get_available_languages(),
+            )
 
-        self.translator = gettext.translation(
-            domain="messages",
-            localedir="app/locales",
-            languages=[self.current_lang],
-            fallback=True,
-        )
-        print(f"Language set to {lang_code}")
+        try:
+            self.translator = gettext.translation(
+                domain="messages",
+                localedir="app/locales",
+                languages=[lang_code],
+                fallback=True,
+            )
+            logger.info("Language set to %s", lang_code)
 
-        self._ = self.translator.gettext
-        self.language_changed.emit()
+            self._ = self.translator.gettext
+            self.language_changed.emit()
+        except Exception as e:
+            logger.error("Failed to set language '%s': %s", lang_code, e)
 
     def get_text(self, message: str) -> str:
+        """Get translated text for a message"""
+        if self._ is None:
+            logger.warning("Translator not initialized, returning original message")
+            return message
         return self._(message)  # pyright: ignore
 
 
