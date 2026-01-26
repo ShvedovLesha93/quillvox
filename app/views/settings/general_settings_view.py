@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
-from app import theme_manager
 from app.view_model.general_settings_vm import GeneralSettingCategory
 from app.views.ui_utils.icons import IconButton, IconName
 from app.views.ui_utils.title import Title

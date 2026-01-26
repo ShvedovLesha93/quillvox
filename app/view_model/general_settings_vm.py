@@ -5,14 +5,14 @@ from enum import Enum
 from typing import TYPE_CHECKING, Dict
 
 from PySide6.QtCore import QObject, Signal, Slot
-from app.translator import _, language_manager
+from app.translator import language_manager
 
 from app.constants import SettingsCategory, ThemeMode
-from app.general_config import InterfaceLanguageKey, ThemeKey
+from app.config.general_config import InterfaceLanguageKey, ThemeKey
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsViewModel
-    from app.general_config import GeneralConfig
+    from app.config.general_config import GeneralConfig
     from app.theme_manager import ThemeManager
 
 import logging

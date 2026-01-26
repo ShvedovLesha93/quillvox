@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 
 from app.view_model.transcript_vm import TranscriptViewModel
 

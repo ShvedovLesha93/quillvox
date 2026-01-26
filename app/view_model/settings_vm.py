@@ -7,8 +7,8 @@ from app.view_model.stt_settings_vm import STTSettingsViewModel
 from app.view_model.general_settings_vm import GeneralSettingsViewModel
 
 if TYPE_CHECKING:
-    from app.general_config import GeneralConfig
-    from app.models.stt_config import STTConfig
+    from app.config.general_config import GeneralConfig
+    from app.config.stt_config import STTConfig
     from app.theme_manager import ThemeManager
 
 

@@ -6,7 +6,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 import copy
 
 from app.constants import SettingsCategory
-from app.models.stt_config import (
+from app.config.stt_config import (
     ModelKey,
     DeviceKey,
     ComputeTypeKey,
@@ -20,7 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from app.models.stt_config import STTConfig
+    from app.config.stt_config import STTConfig
     from app.view_model.settings_vm import SettingsViewModel
 
 

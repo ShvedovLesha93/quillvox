@@ -17,7 +17,6 @@ from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
 
 if TYPE_CHECKING:
-    from app.view_model.settings_vm import SettingsViewModel
     from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
     from PySide6.QtWidgets import QApplication
