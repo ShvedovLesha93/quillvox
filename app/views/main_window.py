@@ -59,8 +59,6 @@ class MainWindow(QMainWindow):
             main_window=self,
         )
 
-        self._first_palette_change = True  # Flag for first event
-
         self._setup_ui()
         self._setup_status_bar()
         self._connect_signals()
@@ -107,11 +105,13 @@ class MainWindow(QMainWindow):
     def on_transcription_started(self) -> None:
         self.transcript_controls.transcribe_btn.setEnabled(False)
         self.transcript_controls.transcribe_btn.start_spinner()
+        self.settings.stt_settings.set_enabled(False)
         self.menu_bar.open_media.setEnabled(False)
 
     def on_transcription_finished(self) -> None:
         self.transcript_controls.transcribe_btn.setEnabled(True)
         self.transcript_controls.transcribe_btn.stop_spinner()
+        self.settings.stt_settings.set_enabled(True)
         self.menu_bar.open_media.setEnabled(True)
 
     def open_file(self) -> None:
