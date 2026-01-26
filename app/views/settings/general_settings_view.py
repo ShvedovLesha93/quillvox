@@ -34,7 +34,7 @@ class ResetButton(IconButton):
         self.setVisible(False)
         self.setFixedSize(25, 25)
         self.setToolTip("Reset to default")
-        self.clicked.connect(lambda: self._parent._reset_parameter(self.category))
+        self.clicked.connect(lambda: self._parent._discard_value(self.category))
 
     def create_container(self):
         """Create a container widget that reserves space for this button"""
@@ -117,7 +117,7 @@ class GeneralSettingsView(QWidget):
 
     def _connect_signals(self) -> None:
         language_manager.language_changed.connect(self.retranslate)
-        self.vm.settings_vm.restore_requested.connect(self.restore_currents)
+        self.vm.discarded.connect(self.discard_settings)
         self.vm.saved.connect(self._reset_ui)
 
     @Slot()
@@ -127,18 +127,14 @@ class GeneralSettingsView(QWidget):
             btn.setVisible(False)
 
     @Slot(int, object)
-    def _on_parameter_changed(
-        self, index: int, category: GeneralSettingCategory
-    ) -> None:
-        combo = self._row_options.combo[category]
-        key = combo.itemData(index)
-        is_changed = self.vm.parameter_changed(category=category, key=key)
+    def _on_index_changed(self, category: GeneralSettingCategory, value) -> None:
+        is_changed = self.vm.on_value_changed(category=category, new_value=value)
         reset_btn = self._row_options.reset_btn[category]
         reset_btn.setVisible(is_changed)
 
     @Slot(object)
-    def _reset_parameter(self, category: GeneralSettingCategory) -> None:
-        current_key = self.vm.get_current(category)
+    def _discard_value(self, category: GeneralSettingCategory) -> None:
+        current_key = self.vm.get_current_value(category)
         combo = self._row_options.combo[category]
         combo.setCurrentIndex(combo.findData(current_key))
 
@@ -161,10 +157,6 @@ class GeneralSettingsView(QWidget):
 
         self.add_combo_data(combo, category)
 
-        combo.currentIndexChanged.connect(
-            lambda i: self._on_parameter_changed(i, category)
-        )
-
     def add_combo_data(
         self, combo: QComboBox, category: GeneralSettingCategory
     ) -> None:
@@ -173,15 +165,15 @@ class GeneralSettingsView(QWidget):
         for key, label in self.vm.get_labels(category).items():
             combo.addItem(label, key)
 
-        current = self.vm.get_current(category)
+        current = self.vm.get_current_value(category)
         combo.setCurrentIndex(combo.findData(current))
 
         combo.currentIndexChanged.connect(
-            lambda i: self.vm.settings_changed(category=category, key=combo.itemData(i))
+            lambda i: self._on_index_changed(category=category, value=combo.itemData(i))
         )
         combo.blockSignals(False)
 
     @Slot()
-    def restore_currents(self) -> None:
+    def discard_settings(self) -> None:
         for category, combo in self._row_options.combo.items():
-            combo.setCurrentIndex(combo.findData(self.vm.get_current(category)))
+            combo.setCurrentIndex(combo.findData(self.vm.get_current_value(category)))

@@ -16,5 +16,5 @@ class ThemeMode(Enum):
 
 
 class SettingsCategory(Enum):
-    STT_SETTINGS = auto()
-    GENERAL_SETTINGS = auto()
+    STT = auto()
+    GENERAL = auto()
