@@ -24,7 +24,10 @@ class NotificationsView(QWidget):
         main_window: MainWindow | None = None,
         theme_manager: ThemeManager | None = None,
     ) -> None:
-        super().__init__()
+        super().__init__(main_window)
+
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
+
         self.main_window = main_window
         self.theme_manager = theme_manager
 

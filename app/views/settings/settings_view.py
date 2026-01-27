@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
     QFrame,
     QSizePolicy,
@@ -124,7 +124,10 @@ class Settings(QWidget):
         theme_manager: ThemeManager,
         main_window: MainWindow | None = None,
     ):
-        super().__init__()
+        super().__init__(main_window)
+
+        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
+
         self.main_window = main_window
         self.theme_manager = theme_manager
         self.settings_vm = settings_vm
@@ -278,11 +281,6 @@ class Settings(QWidget):
         # Check clicked button and switch page
         self.categories_btn[index].setChecked(True)
         self.content_stack.setCurrentIndex(index)
-
-    def on_main_closing(self):
-        """Called when main window is closing."""
-        self.force_close = True
-        self.close()
 
     def showEvent(self, event):
         super().showEvent(event)
