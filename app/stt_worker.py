@@ -41,6 +41,7 @@ def stt_worker(
     terminate_event,
     is_working,
 ):
+    is_working.set()
 
     model: WhisperModel | None = None
     model_name = cfg.model
@@ -125,6 +126,7 @@ def stt_worker(
         )
 
     finally:
+        print("Finally from worker is done")
         is_working.clear()
         # Clean up GPU memory
         if device == "cuda":

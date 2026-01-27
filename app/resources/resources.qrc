@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource prefix="/icons">
+        <file>icons/dark_theme/close.svg</file>
         <file>icons/dark_theme/format_align_justify.svg</file>
         <file>icons/dark_theme/format_text_overflow.svg</file>
         <file>icons/dark_theme/format_text_wrap.svg</file>
@@ -11,6 +12,7 @@
         <file>icons/dark_theme/stop.svg</file>
         <file>icons/dark_theme/volume_off.svg</file>
         <file>icons/dark_theme/volume_up.svg</file>
+        <file>icons/light_theme/close.svg</file>
         <file>icons/light_theme/format_align_justify.svg</file>
         <file>icons/light_theme/format_text_overflow.svg</file>
         <file>icons/light_theme/format_text_wrap.svg</file>

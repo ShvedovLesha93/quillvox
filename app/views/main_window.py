@@ -79,6 +79,11 @@ class MainWindow(QMainWindow):
         self.main_vm.stt_runner_vm.finished.connect(self.on_transcription_finished)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
 
+        # Stop transcript
+        self.transcript_controls.stop_transctipt_request.connect(
+            self.main_vm.stop_transcript
+        )
+
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
         self.status_message = QLabel()
@@ -139,12 +144,14 @@ class MainWindow(QMainWindow):
     def on_transcription_started(self) -> None:
         self.transcript_controls.transcribe_btn.setEnabled(False)
         self.transcript_controls.transcribe_btn.start_spinner()
+        self.transcript_controls.stop_transcript_btn.setEnabled(True)
         self.settings.stt_settings.set_enabled(False)
         self.menu_bar.open_media.setEnabled(False)
 
     def on_transcription_finished(self) -> None:
         self.transcript_controls.transcribe_btn.setEnabled(True)
         self.transcript_controls.transcribe_btn.stop_spinner()
+        self.transcript_controls.stop_transcript_btn.setEnabled(False)
         self.settings.stt_settings.set_enabled(True)
         self.menu_bar.open_media.setEnabled(True)
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Slot
+
 from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
 from app.view_model.file_selector_vm import FileSelectorViewModel
@@ -44,3 +46,7 @@ class MainViewModel:
             stt_config=self.stt_config, main_model=self.main_model
         )
         self.transcript_vm = TranscriptViewModel(self.stt_runner_vm)
+
+    @Slot()
+    def stop_transcript(self) -> None:
+        self.stt_runner_vm.terminate_process()

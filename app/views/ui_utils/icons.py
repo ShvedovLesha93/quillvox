@@ -87,6 +87,7 @@ QPushButton:disabled {
 
 
 class IconName(str, Enum):
+    CLOSE = "close"
     FORMAT_ALIGN_JUSTIFY = "format_align_justify"
     FORMAT_TEXT_OVERFLOW = "format_text_overflow"
     FORMAT_TEXT_WRAP = "format_text_wrap"
