@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
 
-
 ModelKey = Literal[
     "tiny",
     "base",
@@ -51,8 +50,8 @@ LanguageKey = Literal[
 @dataclass
 class STTConfig:
 
-    model: ModelKey = "base"
-    device: DeviceKey = "cuda"
+    model: ModelKey = "large"
+    device: DeviceKey = "cpu"
     compute_type: ComputeTypeKey = "int8"
     batch_size: BatchSizeKey = 2
     language: LanguageKey = "auto"

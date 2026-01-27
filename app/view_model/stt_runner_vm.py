@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import asdict
+import os
 from queue import Empty
 from typing import TYPE_CHECKING
 
@@ -10,6 +11,7 @@ from app.config.stt_run_config import STTRunConfig
 from app.models.stt_transcript import STTSegment
 from app.translator import _
 from multiprocessing import Event, Process, Queue
+from concurrent.futures import ThreadPoolExecutor
 
 
 import logging
@@ -33,6 +35,8 @@ class STTRunnerViewModel(QObject):
         self.transcript = self.main_model.stt_transcript
         self.stt_config = stt_config
         self.process: Process | None = None
+        self.executer = ThreadPoolExecutor(max_workers=1)
+        self.termination_future = None
 
     def run_stt(self) -> None:
         if self.process is not None and self.process.is_alive():
@@ -78,7 +82,7 @@ class STTRunnerViewModel(QObject):
         # Process results
         try:
             while True:
-                seg = self.result_queue.get_nowait()
+                seg = self.result_queue.get_nowait()  # pyright: ignore
                 self._on_segment(seg)
         except Empty:
             pass
@@ -86,7 +90,7 @@ class STTRunnerViewModel(QObject):
         # Process messages
         try:
             while True:
-                msg = self.message_queue.get_nowait()
+                msg = self.message_queue.get_nowait()  # pyright: ignore
                 if isinstance(msg, WorkerUserMessage):
                     self._send_user_message(msg)
                 elif isinstance(msg, WorkerLogMessage):
@@ -163,3 +167,88 @@ class STTRunnerViewModel(QObject):
             return result
         else:
             raise FileNotFoundError
+
+    def terminate_process(self):
+        """Terminate the running transcription process safely."""
+        if self.termination_future and not self.termination_future.done():
+            logger.warning("Termination already in progress")
+            return
+
+        if self.is_working.is_set():
+            # TODO: Бывает, что бесконечно висит, что процесс завершается и ничего не происходит, когда происходит в этом файла ошибка
+            logger.info("Terminating transcription process...")
+
+            # Stop the timer first (no more periodic checks)
+            if self.timer:
+                self.timer.stop()
+
+            # Run termination in background thread
+            self.termination_future = self.executer.submit(self._terminate_background)
+        else:
+            # TODO: This is a critical error. The program doesn't close.
+            logger.info("No active process to terminate")
+
+    def _terminate_background(self):
+        # Ask the worker process to exit gracefully
+        if self.terminate_event:
+            self.terminate_event.set()
+
+        # Give the process some time to finish gracefully
+        if self.process:
+            self.process.join(timeout=5.0)
+
+            # If still alive, try force terminate
+            if self.process.is_alive():
+                logger.info("Force terminating process...")
+                self.process.terminate()
+                self.process.join(timeout=2.0)
+
+                # Last resort: kill the process directly
+                if self.process.is_alive():
+                    if os.name == "nt":  # Windows
+                        # On Windows, os.kill with SIGTERM calls TerminateProcess (hard kill)
+                        os.kill(self.process.pid, signal.SIGTERM)  # type: ignore
+                        print("The process was killed (Windows)")
+                    else:  # Unix/Linux/Mac
+                        os.kill(self.process.pid, signal.SIGKILL)
+                        print("The process was killed (Unix)")
+                    self.process.join()
+
+        self.finished.emit()
+
+        logger.info("Process terminated")
+        user_msg.info(_("Transcription is terminated"))
+
+        # Clean up resources
+        self._cleanup()
+
+    def _cleanup(self):
+        """Clean up resources after process termination or completion."""
+
+        # Stop the timer completely
+        if self.timer:
+            self.timer.stop()
+            self.timer = None
+
+        # Drain result queue to avoid memory leaks
+        if self.result_queue:
+            try:
+                while True:
+                    self.result_queue.get_nowait()
+            except Exception:
+                pass
+
+        # Drain message queue to avoid memory leaks
+        if self.message_queue:
+            try:
+                while True:
+                    self.message_queue.get_nowait()
+            except Exception:
+                pass
+
+        # Reset process-related attributes
+        self.process = None
+        self.result_queue = None
+        self.message_queue = None
+        self.pause_event = None
+        self.terminate_event = None

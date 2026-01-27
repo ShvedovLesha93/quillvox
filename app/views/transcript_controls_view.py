@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation
-from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, Signal
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from app.translator import _, language_manager
+from app.views.ui_utils.icons import IconButton, IconName
 
 if TYPE_CHECKING:
     from app.view_model.file_selector_vm import FileSelectorViewModel
@@ -48,6 +49,8 @@ class SpinnerButton(QPushButton):
 
 
 class TranscriptControls(QWidget):
+    stop_transctipt_request = Signal()
+
     def __init__(
         self, stt_vm: STTRunnerViewModel, file_selector_vm: FileSelectorViewModel
     ) -> None:
@@ -55,24 +58,29 @@ class TranscriptControls(QWidget):
         self.stt_vm = stt_vm
         self.file_selector_vm = file_selector_vm
         self._setup_ui()
-        self._bind_vm()
+        self._connect_signals()
 
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
 
     def _setup_ui(self) -> None:
-        layout = QVBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.transcribe_btn = SpinnerButton()
         self.transcribe_btn.setEnabled(False)
         layout.addWidget(self.transcribe_btn)
 
-    def _bind_vm(self) -> None:
+        self.stop_transcript_btn = IconButton(IconName.CLOSE)
+        self.stop_transcript_btn.setEnabled(False)
+        layout.addWidget(self.stop_transcript_btn)
+
+    def _connect_signals(self) -> None:
         self.transcribe_btn.clicked.connect(self.stt_vm.run_stt)
         self.file_selector_vm.file_opened.connect(
             lambda: self.transcribe_btn.setEnabled(True)
         )
+        self.stop_transcript_btn.clicked.connect(self.stop_transctipt_request.emit)
 
     def retranslate(self) -> None:
         self.transcribe_btn.setText(_("Transcribe"))
