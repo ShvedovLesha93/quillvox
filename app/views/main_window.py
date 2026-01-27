@@ -15,13 +15,15 @@ from app.views.settings.settings_view import Settings
 from app.views.transcript_controls_view import TranscriptControls
 from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
+from app.views.notifications_view import NotificationsView
+from app.views.ui_utils.icons import IconButton, IconName
+from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
     from PySide6.QtWidgets import QApplication
 
-from app.translator import _
 
 import logging
 
@@ -59,18 +61,29 @@ class MainWindow(QMainWindow):
             main_window=self,
         )
 
+        self.notifications_view = NotificationsView(
+            main_window=self, theme_manager=self.theme_manager
+        )
+
         self._setup_ui()
         self._setup_status_bar()
         self._connect_signals()
 
+        self.retranslate()
+        language_manager.language_changed.connect(self.retranslate)
+
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
+        user_msg.message.connect(self.append_status_message)
         self.main_vm.stt_runner_vm.process_active.connect(self.on_transcription_started)
         self.main_vm.stt_runner_vm.finished.connect(self.on_transcription_finished)
+        self.user_logger_btn.clicked.connect(self.open_status_messages)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
         self.status_message = QLabel()
+        self.user_logger_btn = IconButton(IconName.FORMAT_ALIGN_JUSTIFY, scale=0.8)
+        status_bar.addWidget(self.user_logger_btn)
         status_bar.addWidget(self.status_message)
 
     def _setup_ui(self) -> None:
@@ -84,7 +97,10 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.transcript_view)
         layout.addWidget(self.audio_player)
 
-    def set_status_message(self, level: MessageLevel, message: str) -> None:
+    def retranslate(self) -> None:
+        self.user_logger_btn.setToolTip(_("See all notifications"))
+
+    def set_status_message(self, level: MessageLevel, message: str, time: str) -> None:
         palette = self.status_message.palette()
 
         if level == MessageLevel.ERROR:
@@ -99,6 +115,24 @@ class MainWindow(QMainWindow):
                 self.palette().color(QPalette.ColorRole.WindowText),
             )
             self.status_message.setText(message)
+
+        self.status_message.setPalette(palette)
+
+    def append_status_message(
+        self, level: MessageLevel, message: str, time: str
+    ) -> None:
+        palette = self.status_message.palette()
+
+        if level == MessageLevel.ERROR:
+            self.notifications_view.append_message(f"{time} | Error: {message}", "red")
+        elif level == MessageLevel.WARNING:
+            self.notifications_view.append_message(
+                f"{time} | Warning: {message}", "orange"
+            )
+        else:  # INFO
+            self.notifications_view.append_message(
+                f"{time} | {message}", QPalette.ColorRole.WindowText
+            )
 
         self.status_message.setPalette(palette)
 
@@ -130,6 +164,13 @@ class MainWindow(QMainWindow):
         else:
             self.settings.raise_()
             self.settings.activateWindow()
+
+    def open_status_messages(self) -> None:
+        if not self.notifications_view.isVisible():
+            self.notifications_view.show()
+        else:
+            self.notifications_view.raise_()
+            self.notifications_view.activateWindow()
 
     def _open_file_dialog(
         self, filter: str, last_filter: str, last_dir: str
