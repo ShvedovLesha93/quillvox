@@ -45,10 +45,13 @@ class MainViewModel:
             stt_config=self.stt_config,
             theme_manager=self.theme_manager,
         )
-        self.stt_worker_vm = STTWorkerViewModel(
-            stt_config=self.stt_config, main_model=self.main_model
+        self.transcript_vm = TranscriptViewModel(
+            transcript=self.main_model.stt_transcript
         )
-        self.transcript_vm = TranscriptViewModel(self.stt_worker_vm)
+
+        self.stt_worker_vm = STTWorkerViewModel(
+            stt_config=self.stt_config, transcript_vm=self.transcript_vm
+        )
 
     @Slot()
     def stop_transcript(self) -> None:

@@ -9,7 +9,6 @@ from PySide6.QtCore import QObject, QTimer, Signal
 from app.stt_worker import WorkerLogMessage, WorkerUserMessage, stt_worker, Level
 from app.user_message import user_msg
 from app.config.stt_run_config import STTRunConfig
-from app.models.stt_transcript import STTSegment
 from app.translator import _
 from multiprocessing import Event, Process, Queue
 from concurrent.futures import ThreadPoolExecutor
@@ -17,24 +16,27 @@ from concurrent.futures import ThreadPoolExecutor
 
 import logging
 
+from app.view_model.transcript_vm import TranscriptViewModel
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from faster_whisper.transcribe import Segment
     from app.config.stt_config import STTConfig
-    from app.models.main_model import MainModel
 
 
 class STTWorkerViewModel(QObject):
-    segment_sent = Signal(str)
     finished = Signal()
-    process_active = Signal()
+    process_started = Signal()
 
-    def __init__(self, stt_config: STTConfig, main_model: MainModel):
+    def __init__(
+        self,
+        transcript_vm: TranscriptViewModel,
+        stt_config: STTConfig,
+    ):
         super().__init__()
-        self.main_model = main_model
-        self.transcript = self.main_model.stt_transcript
+        self.transcript_vm = transcript_vm
         self.stt_config = stt_config
+
         self.process: Process | None = None
         self.executer = ThreadPoolExecutor(max_workers=1)
         self.termination_future = None
@@ -44,11 +46,10 @@ class STTWorkerViewModel(QObject):
             logger.warning("STT process already running")
             return
 
-        self.transcript.segments.clear()
-
         cfg = self.build_run_config()
 
-        self.result_queue = Queue()
+        self.info_queue = Queue()
+        self.segment_queue = Queue()
         self.message_queue = Queue()
         self.terminate_event = Event()
         self.is_working = Event()
@@ -57,7 +58,8 @@ class STTWorkerViewModel(QObject):
             target=stt_worker,
             args=(
                 cfg,
-                self.result_queue,
+                self.info_queue,
+                self.segment_queue,
                 self.message_queue,
                 self.terminate_event,
                 self.is_working,
@@ -68,7 +70,8 @@ class STTWorkerViewModel(QObject):
         self.timer = QTimer()
         self.timer.timeout.connect(self._check_result)
         self.timer.start(100)
-        self.process_active.emit()  # Emit signal to show process is still active
+        self.transcript_vm.clear_transcription()
+        self.process_started.emit()
 
     def _check_result(self):
         # Check if process is still running
@@ -77,14 +80,21 @@ class STTWorkerViewModel(QObject):
             self.process.join()  # pyright: ignore
             self.finished.emit()
             logger.info("STT process completed")
-            logger.debug("Created transcript: %s", asdict(self.transcript))
             return
 
-        # Process results
+        # Process segments
         try:
             while True:
-                seg = self.result_queue.get_nowait()  # pyright: ignore
-                self._on_segment(seg)
+                seg = self.segment_queue.get_nowait()  # pyright: ignore
+                self.transcript_vm.on_segment(seg)
+        except Empty:
+            pass
+
+        # Process transcript info
+        try:
+            while True:
+                info = self.info_queue.get_nowait()  # pyright: ignore
+                self.transcript_vm.on_info(info)
         except Empty:
             pass
 
@@ -130,20 +140,8 @@ class STTWorkerViewModel(QObject):
             case Level.ERROR:
                 user_msg.error(text)
 
-    def _on_segment(self, seg: Segment):
-        self.transcript.segments.append(
-            STTSegment(
-                id=seg.id,
-                start=seg.start,
-                end=seg.end,
-                text=seg.text,
-            )
-        )
-        self.segment_sent.emit(seg.text)
-
     def _on_finished(self):
         logger.info("STT thread completed")
-        logger.debug("Created transcript: %d segments", len(self.transcript.segments))
 
         self.finished.emit()
 
@@ -228,10 +226,10 @@ class STTWorkerViewModel(QObject):
             self.timer = None
 
         # Drain result queue to avoid memory leaks
-        if self.result_queue:
+        if self.segment_queue:
             try:
                 while True:
-                    self.result_queue.get_nowait()
+                    self.segment_queue.get_nowait()
             except Exception:
                 pass
 
@@ -245,7 +243,7 @@ class STTWorkerViewModel(QObject):
 
         # Reset process-related attributes
         self.process = None
-        self.result_queue = None
+        self.segment_queue = None
         self.message_queue = None
         self.pause_event = None
         self.terminate_event = None
