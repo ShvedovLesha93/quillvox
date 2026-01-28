@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
         self.transcript_controls = TranscriptControls(
-            stt_vm=self.main_vm.stt_runner_vm,
+            stt_vm=self.main_vm.stt_worker_vm,
             file_selector_vm=self.main_vm.file_selector_vm,
         )
         self.audio_player = AudioPlayer(
@@ -75,8 +75,8 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
         user_msg.message.connect(self.append_status_message)
-        self.main_vm.stt_runner_vm.process_active.connect(self.on_transcription_started)
-        self.main_vm.stt_runner_vm.finished.connect(self.on_transcription_finished)
+        self.main_vm.stt_worker_vm.process_active.connect(self.on_transcription_started)
+        self.main_vm.stt_worker_vm.finished.connect(self.on_transcription_finished)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
 
         # Stop transcript

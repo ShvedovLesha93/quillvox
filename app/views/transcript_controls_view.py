@@ -10,7 +10,7 @@ from app.views.ui_utils.icons import IconButton, IconName
 
 if TYPE_CHECKING:
     from app.view_model.file_selector_vm import FileSelectorViewModel
-    from app.view_model.stt_runner_vm import STTRunnerViewModel
+    from app.view_model.stt_worker_vm import STTWorkerViewModel
 
 
 class SpinnerButton(QPushButton):
@@ -52,7 +52,7 @@ class TranscriptControls(QWidget):
     stop_transctipt_request = Signal()
 
     def __init__(
-        self, stt_vm: STTRunnerViewModel, file_selector_vm: FileSelectorViewModel
+        self, stt_vm: STTWorkerViewModel, file_selector_vm: FileSelectorViewModel
     ) -> None:
         super().__init__()
         self.stt_vm = stt_vm
