@@ -27,16 +27,19 @@ class MainViewModel:
         theme_manager: ThemeManager,
     ):
         self.app = app
-        self.general_config = general_config
         self.main_model = main_model
         self.theme_manager = theme_manager
+
+        self.stt_config = STTConfig()
+        self.general_config = general_config
+
         self.waveform_vm = WaveformViewModel()
         self.audio_player_vm = AudioPlayerViewModel(self.waveform_vm)
         self.file_selector_vm = FileSelectorViewModel(
+            stt_config=self.stt_config,
             main_model=self.main_model,
             audio_player_vm=self.audio_player_vm,
         )
-        self.stt_config = STTConfig()
         self.settings_vm = SettingsViewModel(
             general_config=self.general_config,
             stt_config=self.stt_config,

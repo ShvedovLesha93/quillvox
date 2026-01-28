@@ -6,8 +6,8 @@ from pathlib import Path
 from app.translator import language_manager, _
 from app.user_message import user_msg
 
-
 if TYPE_CHECKING:
+    from app.config.stt_config import STTConfig
     from app.models.main_model import MainModel
     from app.view_model.audio_player_vm import AudioPlayerViewModel
 
@@ -23,15 +23,17 @@ class FileSelectorViewModel(QObject):
         self,
         main_model: MainModel,
         audio_player_vm: AudioPlayerViewModel,
+        stt_config: STTConfig,
     ):
         super().__init__()
         self.main_model = main_model
         self.audio_player_vm = audio_player_vm
-        self.media_file_model = self.main_model.media_file
-        self.file_formats = self.main_model.file_formats
+        self.stt_config = stt_config
 
+        self.file_formats = self.main_model.file_formats
         self.audio_formats = self.file_formats.audio
         self.video_formats = self.file_formats.video
+
         self._last_directory = Path.home()
         self._last_filter = ""
         self.filter = ""
@@ -68,7 +70,7 @@ class FileSelectorViewModel(QObject):
             status, msg = self._validate(file_path)
 
             if status:
-                self.media_file_model.path = file_path
+                self.stt_config.audio = file_path
                 self.last_dir = file_path.parent
                 self.last_filter = filter
                 self.audio_player_vm.load(file_path)

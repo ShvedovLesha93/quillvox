@@ -1,11 +1,16 @@
 from dataclasses import dataclass, field
-from pathlib import Path
 
 
 @dataclass
 class SupportedFormats:
     audio: list[str] = field(
-        default_factory=lambda: ["*.mp3", "*.wav", "*.ogg", "*.flac", "*.m4a"]
+        default_factory=lambda: [
+            "*.mp3",
+            "*.wav",
+            "*.ogg",
+            "*.flac",
+            "*.m4a",
+        ]  # TODO: Maybe switch to list? 2026-01-28 09:37
     )
     video: list[str] = field(
         default_factory=lambda: [
@@ -19,8 +24,3 @@ class SupportedFormats:
             "*.m4v",
         ]
     )
-
-
-@dataclass
-class MediaFile:
-    path: Path | None = None
