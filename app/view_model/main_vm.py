@@ -7,7 +7,7 @@ from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
 from app.view_model.file_selector_vm import FileSelectorViewModel
 from app.view_model.settings_vm import SettingsViewModel
-from app.view_model.stt_runner_vm import STTRunnerViewModel
+from app.view_model.stt_worker_vm import STTWorkerViewModel
 from app.view_model.transcript_vm import TranscriptViewModel
 from app.view_model.waveform_vm import WaveformViewModel
 
@@ -42,11 +42,11 @@ class MainViewModel:
             stt_config=self.stt_config,
             theme_manager=self.theme_manager,
         )
-        self.stt_runner_vm = STTRunnerViewModel(
+        self.stt_worker_vm = STTWorkerViewModel(
             stt_config=self.stt_config, main_model=self.main_model
         )
-        self.transcript_vm = TranscriptViewModel(self.stt_runner_vm)
+        self.transcript_vm = TranscriptViewModel(self.stt_worker_vm)
 
     @Slot()
     def stop_transcript(self) -> None:
-        self.stt_runner_vm.terminate_process()
+        self.stt_worker_vm.terminate_process()
