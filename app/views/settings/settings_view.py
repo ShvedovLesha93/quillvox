@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
     QFrame,
+    QMessageBox,
     QSizePolicy,
     QWidget,
     QVBoxLayout,
@@ -136,8 +137,6 @@ class Settings(QWidget):
         )
         self.stt_settings = STTSettingsView(self.settings_vm.stt_settings_vm)
 
-        self._is_changed: dict[SettingsCategory, bool] = {}
-
         self._setup_ui()
         self.retranslate()
         self._connect_signals()
@@ -241,21 +240,23 @@ class Settings(QWidget):
     @Slot()
     def _reset_ui(self) -> None:
         self.stt_btn.set_highlighted(False)
+        self.general_btn.set_highlighted(False)
         self.btn_save.setEnabled(False)
         self.btn_reset.setEnabled(False)
 
-    @Slot(object, bool)
-    def _on_settings_changed(self, category: SettingsCategory, state: bool) -> None:
-        self._is_changed[category] = state
+    @Slot()
+    def _on_settings_changed(self) -> None:
 
-        has_changed = any(self._is_changed.values())
-        self.btn_save.setEnabled(has_changed)
-        self.btn_reset.setEnabled(has_changed)
+        has_changes = self.settings_vm.has_any_changes()
+        self.btn_save.setEnabled(has_changes)
+        self.btn_reset.setEnabled(has_changes)
 
-        if category == SettingsCategory.STT:
-            self.stt_btn.set_highlighted(state)
-        else:
-            self.general_btn.set_highlighted(state)
+        self.stt_btn.set_highlighted(
+            self.settings_vm.has_category_changes(SettingsCategory.STT)
+        )
+        self.general_btn.set_highlighted(
+            self.settings_vm.has_category_changes(SettingsCategory.GENERAL)
+        )
 
     @Slot(object)
     def update_theme(self, theme: ThemeMode) -> None:
@@ -282,13 +283,36 @@ class Settings(QWidget):
         self.categories_btn[index].setChecked(True)
         self.content_stack.setCurrentIndex(index)
 
-    def showEvent(self, event):
+    def showEvent(self, event) -> None:
         super().showEvent(event)
         if self.main_window is not None:
             main_center = self.main_window.frameGeometry().center()
             geom = self.frameGeometry()
             geom.moveCenter(main_center)
             self.move(geom.topLeft())
+
+    def closeEvent(self, event) -> None:
+        if self.settings_vm.has_any_changes():
+            reply = QMessageBox.question(
+                self,
+                _("Exit Confirmation"),
+                _("Settings not saved. Save changes?"),
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+                | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                self.settings_vm.save_requested.emit()
+                event.accept()
+
+            elif reply == QMessageBox.StandardButton.No:
+                self.settings_vm.restore_requested.emit()
+                event.accept()
+
+            elif reply == QMessageBox.StandardButton.Cancel:
+                event.ignore()
 
 
 # ============ TEST ============

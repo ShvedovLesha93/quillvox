@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -13,8 +14,7 @@ if TYPE_CHECKING:
 
 
 class SettingsViewModel(QObject):
-    settings_changed = Signal(object, bool)  # SettingsCategory, bool
-    # settings_restored = Signal(object)  # SettingsCategory
+    settings_changed = Signal()
     restore_requested = Signal()
     save_requested = Signal()
 
@@ -28,6 +28,10 @@ class SettingsViewModel(QObject):
         self.stt_config = stt_config
         self.general_config = general_config
         self.theme_manager = theme_manager
+        self._is_changed: dict[SettingsCategory, bool] = {
+            SettingsCategory.GENERAL: False,
+            SettingsCategory.STT: False,
+        }
 
         self.general_settings_vm = GeneralSettingsViewModel(
             general_config=self.general_config,
@@ -39,6 +43,17 @@ class SettingsViewModel(QObject):
         )
         self._connect_signals()
 
+    def has_any_changes(self) -> bool:
+        return any(self._is_changed.values())
+
+    def has_category_changes(self, category: SettingsCategory) -> bool:
+        return self._is_changed[category]
+
+    def _on_settings_changed(self, category: SettingsCategory, state: bool) -> None:
+        self._is_changed[category] = state
+        self.settings_changed.emit()
+
     def _connect_signals(self) -> None:
-        self.stt_settings_vm.changed.connect(self.settings_changed.emit)
-        self.general_settings_vm.changed.connect(self.settings_changed.emit)
+        settings = (self.stt_settings_vm.changed, self.general_settings_vm.changed)
+        for signal in settings:
+            signal.connect(self._on_settings_changed)
