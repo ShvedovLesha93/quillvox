@@ -188,6 +188,7 @@ class STTSettingsViewModel(QObject):
             snapshot_value = getattr(self._snapshot, field.name)
             setattr(self._config, field.name, snapshot_value)
         self.saved.emit()
+        self._emit_change_status()
 
         logger.info("General settings saved: %s", asdict(self._config))
 
@@ -223,4 +224,4 @@ class STTSettingsViewModel(QObject):
 
     def _emit_change_status(self) -> None:
         has_changed = self.has_unsaved_changes()
-        self.changed.emit(SettingsCategory.GENERAL, has_changed)
+        self.changed.emit(SettingsCategory.STT, has_changed)
