@@ -75,7 +75,9 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
         user_msg.message.connect(self.append_status_message)
-        self.main_vm.stt_worker_vm.process_active.connect(self.on_transcription_started)
+        self.main_vm.stt_worker_vm.process_started.connect(
+            self.on_transcription_started
+        )
         self.main_vm.stt_worker_vm.finished.connect(self.on_transcription_finished)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
 

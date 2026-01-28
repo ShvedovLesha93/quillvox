@@ -31,7 +31,7 @@ class STTSegment:
 
 
 @dataclass
-class STTTranscript:
+class Transcript:
     language: str | None = None
     segments: List[STTSegment] = field(default_factory=list)
 
@@ -42,7 +42,7 @@ class STTTranscript:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "STTTranscript":
+    def from_dict(cls, data: dict) -> "Transcript":
         return cls(
             language=data.get("language"),
             segments=[STTSegment.from_dict(seg) for seg in data.get("segments", [])],

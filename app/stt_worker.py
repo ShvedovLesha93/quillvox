@@ -36,7 +36,8 @@ class WorkerLogMessage:
 
 def stt_worker(
     cfg: STTRunConfig,
-    result_queue: Queue,
+    info_queue: Queue,
+    segment_queue: Queue,
     message_queue: Queue,
     terminate_event,
     is_working,
@@ -101,10 +102,12 @@ def stt_worker(
             WorkerUserMessage(level=Level.INFO, message=_("Transcription in progress"))
         )
 
+        info_queue.put(info)
+
         for seg in segments:
             if terminate_event.is_set():
                 return  # Exit early if termination requested
-            result_queue.put(seg)
+            segment_queue.put(seg)
 
         end = time.perf_counter()
         duration = format_duration(end - start)
