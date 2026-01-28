@@ -148,11 +148,9 @@ class STTWorkerViewModel(QObject):
         self.finished.emit()
 
     def build_run_config(self) -> STTRunConfig:
-        file = self.main_model.media_file.path
+        cfg = self.stt_config
 
-        if file:
-            cfg = self.stt_config
-            file = str(file.absolute())
+        if cfg.audio:
 
             result = STTRunConfig(
                 model=cfg.model,
@@ -160,7 +158,7 @@ class STTWorkerViewModel(QObject):
                 batch_size=cfg.batch_size,
                 compute_type=cfg.compute_type,
                 language=cfg.language,
-                audio=file,
+                audio=str(cfg.audio.absolute()),
             )
 
             logger.info("Builded configs for stt: %s", asdict(result))
