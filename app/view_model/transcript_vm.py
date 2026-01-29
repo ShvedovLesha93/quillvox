@@ -1,10 +1,12 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal
 import json
 from app.models.transcript import STTSegment
 
 if TYPE_CHECKING:
+    from app.config.stt_config import STTConfig
     from faster_whisper.transcribe import Segment, TranscriptionInfo
     from app.models.transcript import Transcript
 
@@ -16,23 +18,32 @@ logger = logging.getLogger(__name__)
 class TranscriptViewModel(QObject):
     segment_str = Signal(str)
 
-    def __init__(self, transcript: Transcript):
+    def __init__(self, transcript: Transcript, stt_config: STTConfig) -> None:
         super().__init__()
         self.transcript = transcript
-        self.buf_text = []
+        self.stt_config = stt_config
 
-    def clear_transcription(self) -> None:
-        self.transcript.segments.clear()
-        logger.info("transcript.json cleared")
-        with open("transcript.json", "w", encoding="utf-8") as f:
-            f.write("")
+        self.json_path: Path
 
     def continue_transcription(
         self,
     ) -> None:  # TODO: realize this feature. 2026-01-28 11:59
         pass
 
+    def on_start_transcription(self) -> None:
+        audio = self.stt_config.audio
+        if audio:
+            self.generate_json_path(audio)
+            self._clear_transcription()
+        else:
+            raise FileNotFoundError("Cannot find audio file")
+
+    def generate_json_path(self, audio: Path) -> None:
+        """To create a JSON file next to the transcribed audio file"""
+        self.json_path = audio.with_suffix(".json")
+
     def on_info(self, info: TranscriptionInfo) -> None:
+        """Transcription information"""
         self.transcript.language = info.language
 
     def on_segment(self, seg: Segment) -> None:
@@ -48,5 +59,17 @@ class TranscriptViewModel(QObject):
 
     def _save_to_json(self) -> None:
         data_json = json.dumps(self.transcript.to_dict(), ensure_ascii=False, indent=2)
-        with open("transcript.json", "w", encoding="utf-8") as f:
+        with open(self.json_path, "w", encoding="utf-8") as f:
             f.write(data_json)
+
+    def _clear_transcription(self) -> None:
+        if self.transcript.segments:
+            self.transcript.segments.clear()
+
+            logger.info("cleared transcript from memory")
+
+        if self.json_path.exists():
+            with open(self.json_path, "w", encoding="utf-8") as f:
+                f.write("")
+
+            logger.info("Cleared JSON transcipt file: %s", self.json_path.name)
