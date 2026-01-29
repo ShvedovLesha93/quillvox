@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 class STTWorkerViewModel(QObject):
     finished = Signal()
-    process_started = Signal()
+    started = Signal()
 
     def __init__(
         self,
@@ -71,7 +71,7 @@ class STTWorkerViewModel(QObject):
         self.timer.start(100)
 
         self.transcript_vm.on_start_transcription()
-        self.process_started.emit()
+        self.started.emit()
 
     def _check_result(self):
         # Check if process is still running
