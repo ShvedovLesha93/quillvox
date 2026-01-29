@@ -172,16 +172,16 @@ class MainWindow(QMainWindow):
 
     def on_transcription_started(self) -> None:
         self.is_process_alive = True
-        self.transcript_controls.transcribe_btn.setEnabled(False)
-        self.transcript_controls.transcribe_btn.start_spinner()
+        self.transcript_controls.start_transcript_btn.setEnabled(False)
+        self.transcript_controls.start_transcript_btn.start_spinner()
         self.transcript_controls.stop_transcript_btn.setEnabled(True)
         self.settings.stt_settings.set_enabled(False)
         self.menu_bar.open_media.setEnabled(False)
 
     def on_transcription_finished(self) -> None:
         self.is_process_alive = False
-        self.transcript_controls.transcribe_btn.setEnabled(True)
-        self.transcript_controls.transcribe_btn.stop_spinner()
+        self.transcript_controls.start_transcript_btn.setEnabled(True)
+        self.transcript_controls.start_transcript_btn.stop_spinner()
         self.transcript_controls.stop_transcript_btn.setEnabled(False)
         self.settings.stt_settings.set_enabled(True)
         self.menu_bar.open_media.setEnabled(True)

@@ -77,23 +77,39 @@ class TranscriptControls(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.transcribe_btn = SpinnerButton()
-        self.transcribe_btn.setEnabled(False)
-        layout.addWidget(self.transcribe_btn)
+        self.start_transcript_btn = SpinnerButton()
+        self.start_transcript_btn.setEnabled(False)
+        layout.addWidget(self.start_transcript_btn)
 
         self.stop_transcript_btn = IconButton(IconName.CLOSE)
         self.stop_transcript_btn.setEnabled(False)
         layout.addWidget(self.stop_transcript_btn)
 
     def _connect_signals(self) -> None:
-        self.transcribe_btn.clicked.connect(self.main_vm.stt_worker_vm.run_stt)
+        self.start_transcript_btn.clicked.connect(self._on_start_transctipt_clicked)
         self.file_selector_vm.file_opened.connect(
-            lambda: self.transcribe_btn.setEnabled(True)
+            lambda: self.start_transcript_btn.setEnabled(True)
         )
         self.stop_transcript_btn.clicked.connect(self._on_stop_transcript_clicked)
 
     def retranslate(self) -> None:
-        self.transcribe_btn.setText(_("Transcribe"))
+        self.start_transcript_btn.setText(_("Transcribe"))
+
+    def _on_start_transctipt_clicked(self) -> None:
+        if self.main_vm.has_transcript():
+            reply = QMessageBox.question(
+                self,
+                _("Transcript exists"),
+                _("Transcription is already exist. Do you want to rewrite it?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                self.main_vm.stt_worker_vm.run_stt()
+            else:
+                return
+        else:
+            self.main_vm.stt_worker_vm.run_stt()
 
     @Slot()
     def _on_stop_transcript_clicked(self) -> None:

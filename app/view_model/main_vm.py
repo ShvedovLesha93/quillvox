@@ -57,3 +57,6 @@ class MainViewModel:
 
     def stop_transcript(self) -> None:
         self.stt_worker_vm.terminate_process()
+
+    def has_transcript(self) -> bool:
+        return True if self.transcript.segments else False
