@@ -152,7 +152,7 @@ class Settings(QWidget):
         self.general_btn.clicked.connect(lambda: self.switch_page(0))
         self.stt_btn.clicked.connect(lambda: self.switch_page(1))
 
-        self.btn_reset.clicked.connect(self.settings_vm.restore_requested.emit)
+        self.btn_reset.clicked.connect(self._on_reset_clicked)
         self.btn_apply.clicked.connect(self.settings_vm.save_requested.emit)
         self.btn_apply.clicked.connect(self._reset_ui)
         self.btn_ok.clicked.connect(self._on_ok_clicked)
@@ -296,6 +296,21 @@ class Settings(QWidget):
         self.categories_btn[index].setChecked(True)
         self.content_stack.setCurrentIndex(index)
 
+    @Slot()
+    def _on_reset_clicked(self) -> None:
+        reply = QMessageBox.question(
+            self,
+            _("Reset all settings"),
+            _("Are you sure you want to reset the changed settings?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.settings_vm.restore_requested.emit()
+        else:
+            return
+
+    @Slot()
     def _on_ok_clicked(self) -> None:
         self.settings_vm.save_requested.emit()
         self._reset_ui
