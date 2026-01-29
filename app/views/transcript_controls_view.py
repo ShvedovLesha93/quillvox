@@ -2,13 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, Signal
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Property, QEasingCurve, QPropertyAnimation, Signal, Slot
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMessageBox,
+    QPushButton,
+    QWidget,
+)
 
 from app.translator import _, language_manager
 from app.views.ui_utils.icons import IconButton, IconName
 
 if TYPE_CHECKING:
+    from app.views.main_window import MainWindow
     from app.view_model.file_selector_vm import FileSelectorViewModel
     from app.view_model.stt_worker_vm import STTWorkerViewModel
 
@@ -52,11 +58,16 @@ class TranscriptControls(QWidget):
     stop_transctipt_request = Signal()
 
     def __init__(
-        self, stt_vm: STTWorkerViewModel, file_selector_vm: FileSelectorViewModel
+        self,
+        stt_worker_vm: STTWorkerViewModel,
+        file_selector_vm: FileSelectorViewModel,
+        main_window: MainWindow,
     ) -> None:
         super().__init__()
-        self.stt_vm = stt_vm
+        self.main_window = main_window
+        self.stt_worker_vm = stt_worker_vm
         self.file_selector_vm = file_selector_vm
+        self._is_process_alive = False
         self._setup_ui()
         self._connect_signals()
 
@@ -76,11 +87,35 @@ class TranscriptControls(QWidget):
         layout.addWidget(self.stop_transcript_btn)
 
     def _connect_signals(self) -> None:
-        self.transcribe_btn.clicked.connect(self.stt_vm.run_stt)
+        self.transcribe_btn.clicked.connect(self.stt_worker_vm.run_stt)
         self.file_selector_vm.file_opened.connect(
             lambda: self.transcribe_btn.setEnabled(True)
         )
-        self.stop_transcript_btn.clicked.connect(self.stop_transctipt_request.emit)
+        self.stop_transcript_btn.clicked.connect(self._on_stop_transcript_clicked)
 
     def retranslate(self) -> None:
         self.transcribe_btn.setText(_("Transcribe"))
+
+    @Slot()
+    def _on_stop_transcript_clicked(self) -> None:
+        if self.main_window.is_process_alive:
+            reply = QMessageBox.question(
+                self,
+                _("Transcription in Progress"),
+                _("Transcription is currently running. Do you want to stop it?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                self.stop_transctipt_request.emit()
+            else:
+                return
+
+    @Slot()
+    def _on_process_started(self) -> None:
+        self._is_process_alive = True
+
+    @Slot()
+    def _on_process_finished(self) -> None:
+        self._is_process_alive = False

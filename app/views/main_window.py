@@ -44,11 +44,14 @@ class MainWindow(QMainWindow):
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
 
+        self.is_process_alive = False
+
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
         self.transcript_controls = TranscriptControls(
-            stt_vm=self.main_vm.stt_worker_vm,
+            stt_worker_vm=self.main_vm.stt_worker_vm,
             file_selector_vm=self.main_vm.file_selector_vm,
+            main_window=self,
         )
         self.audio_player = AudioPlayer(
             theme_manager=self.theme_manager,
@@ -60,7 +63,6 @@ class MainWindow(QMainWindow):
             theme_manager=self.theme_manager,
             main_window=self,
         )
-
         self.notifications_view = NotificationsView(
             main_window=self, theme_manager=self.theme_manager
         )
@@ -75,9 +77,7 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
         user_msg.message.connect(self.append_status_message)
-        self.main_vm.stt_worker_vm.process_started.connect(
-            self.on_transcription_started
-        )
+        self.main_vm.stt_worker_vm.started.connect(self.on_transcription_started)
         self.main_vm.stt_worker_vm.finished.connect(self.on_transcription_finished)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
 
@@ -144,6 +144,7 @@ class MainWindow(QMainWindow):
         self.status_message.setPalette(palette)
 
     def on_transcription_started(self) -> None:
+        self.is_process_alive = True
         self.transcript_controls.transcribe_btn.setEnabled(False)
         self.transcript_controls.transcribe_btn.start_spinner()
         self.transcript_controls.stop_transcript_btn.setEnabled(True)
@@ -151,6 +152,7 @@ class MainWindow(QMainWindow):
         self.menu_bar.open_media.setEnabled(False)
 
     def on_transcription_finished(self) -> None:
+        self.is_process_alive = False
         self.transcript_controls.transcribe_btn.setEnabled(True)
         self.transcript_controls.transcribe_btn.stop_spinner()
         self.transcript_controls.stop_transcript_btn.setEnabled(False)
