@@ -41,9 +41,6 @@ class Transcript:
             "segments": [seg.to_dict() for seg in self.segments],
         }
 
-    @classmethod
-    def from_dict(cls, data: dict) -> "Transcript":
-        return cls(
-            language=data.get("language"),
-            segments=[STTSegment.from_dict(seg) for seg in data.get("segments", [])],
-        )
+    def from_dict(self, data: dict) -> None:
+        self.language = data.get("language")
+        self.segments = [STTSegment.from_dict(seg) for seg in data.get("segments", [])]
