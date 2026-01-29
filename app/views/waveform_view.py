@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 from app.constants import ThemeMode
 from app.theme_manager import ThemeManager
 
-
 if TYPE_CHECKING:
     from numpy import ndarray
     from app.view_model.waveform_vm import WaveformViewModel
@@ -40,9 +39,6 @@ class WaveformView(QWidget):
         self.original_length = 0
         self.current_position = 0.0
         self.is_dragging = False
-
-        self.setMinimumHeight(80)
-        self.setMaximumHeight(120)
 
         self._setup_ui()
         self.update_theme(self.theme_manager.applied_theme)
