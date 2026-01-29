@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -124,8 +125,16 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
 
         layout.addWidget(self.transcript_controls)
-        layout.addWidget(self.transcript_view)
-        layout.addWidget(self.audio_player)
+
+        self.splitter = QSplitter(Qt.Orientation.Vertical)
+
+        self.splitter.addWidget(self.transcript_view)
+        self.splitter.addWidget(self.audio_player)
+
+        self.splitter.setSizes([400, 200])
+        self.splitter.setChildrenCollapsible(False)
+
+        layout.addWidget(self.splitter)
 
     def retranslate(self) -> None:
         self.user_logger_btn.setToolTip(_("See all notifications"))
