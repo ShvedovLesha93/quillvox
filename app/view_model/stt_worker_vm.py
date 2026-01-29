@@ -16,11 +16,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import logging
 
-from app.view_model.transcript_vm import TranscriptViewModel
-
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from app.view_model.transcript_vm import TranscriptViewModel
     from app.config.stt_config import STTConfig
 
 
@@ -70,7 +69,8 @@ class STTWorkerViewModel(QObject):
         self.timer = QTimer()
         self.timer.timeout.connect(self._check_result)
         self.timer.start(100)
-        self.transcript_vm.clear_transcription()
+
+        self.transcript_vm.on_start_transcription()
         self.process_started.emit()
 
     def _check_result(self):

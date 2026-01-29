@@ -46,7 +46,7 @@ class MainViewModel:
             theme_manager=self.theme_manager,
         )
         self.transcript_vm = TranscriptViewModel(
-            transcript=self.main_model.stt_transcript
+            transcript=self.main_model.stt_transcript, stt_config=self.stt_config
         )
 
         self.stt_worker_vm = STTWorkerViewModel(
