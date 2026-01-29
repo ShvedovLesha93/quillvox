@@ -8,7 +8,7 @@ class TranscriptView(QWidget):
         super().__init__()
         self.vm = transcript_vm
         self._setup_ui()
-        self._bing_vm()
+        self._connect_signals()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -17,5 +17,6 @@ class TranscriptView(QWidget):
         self.text_edit = QPlainTextEdit()
         layout.addWidget(self.text_edit)
 
-    def _bing_vm(self) -> None:
+    def _connect_signals(self) -> None:
         self.vm.segment_str.connect(self.text_edit.appendPlainText)
+        self.vm.clear_requested.connect(self.text_edit.clear)

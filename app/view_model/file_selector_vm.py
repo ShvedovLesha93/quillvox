@@ -56,20 +56,23 @@ class FileSelectorViewModel(QObject):
     def retranslate(self) -> None:
         self.generate_filter()
 
-    def _validate(self, path: Path) -> tuple[bool, str]:
+    def _validate(self, path: Path) -> bool:
         if not path.exists():
-            return False, _("File not found")
+            user_msg.error(_("File not found"))
+            return False
 
-        return True, ""
+        if path == self.stt_config.audio:
+            user_msg.warning(_("File '{file}' already opened").format(file=path))
+            return False
+
+        return True
 
     def on_file_selected(self, opened_file: tuple[str, str] | None):
         if opened_file:
             file, filter = opened_file
             file_path = Path(file)
 
-            status, msg = self._validate(file_path)
-
-            if status:
+            if self._validate(file_path):
                 self.stt_config.audio = file_path
                 self.last_dir = file_path.parent
                 self.last_filter = filter
@@ -83,10 +86,6 @@ class FileSelectorViewModel(QObject):
                 user_msg.info(
                     _("File '{file}' has been opened").format(file=file_path.name)
                 )
-
-            else:
-                logger.error(msg)
-                user_msg.error(msg)
 
         else:
             logger.info("No selected file")
