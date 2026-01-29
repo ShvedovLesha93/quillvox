@@ -1,10 +1,11 @@
 from __future__ import annotations
-from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal, Slot
 import json
+from app.user_message import user_msg
 from app.models.transcript import STTSegment
+from app.translator import _
 
 if TYPE_CHECKING:
     from app.view_model.main_vm import MainViewModel
@@ -51,8 +52,8 @@ class TranscriptViewModel(QObject):
             self.clear_requested.emit()
 
         if self._check_existing_json():
-            self.load_json()
-            self.transcript_loaded.emit(self.extract_text())
+            if self.load_json():
+                self.transcript_loaded.emit(self.extract_text())
 
     def on_start_transcription(self) -> None:
         audio = self.stt_config.audio
@@ -99,12 +100,25 @@ class TranscriptViewModel(QObject):
         else:
             raise FileNotFoundError("Cannot find audio file")
 
-    def load_json(self) -> None:
-        with open(self.json_path, "r", encoding="utf-8") as f:
-            json_data = f.read()
-            data = json.loads(json_data)
+    def load_json(self) -> bool:
+        try:
+            with open(self.json_path, "r", encoding="utf-8") as f:
+                json_data = f.read()
+                data = json.loads(json_data)
 
-        self.transcript.from_dict(data)
+            state, msg = self.transcript.from_dict(data)
+            if state:
+                return True
+            else:
+                user_msg.error(_("The JSON file is corrupted: {e}").format(e=msg))
+                return False
+
+        except (json.JSONDecodeError, OSError) as e:
+            user_msg.error(
+                _("Failed to load JSON file: {file}").format(file=self.json_path)
+            )
+            logger.error("Failed to load json: %s", e)
+            return False
 
     def extract_text(self) -> str:
         segments = [segment.text.strip() for segment in self.transcript.segments]
@@ -118,7 +132,7 @@ class TranscriptViewModel(QObject):
             logger.info("Cleared JSON transcipt file: %s", self.json_path.name)
 
         else:
-            raise FileNotFoundError("Cannot find audio file")
+            logger.warning("JSON file not exists: %s", self.json_path)
 
     def _check_existing_json(self) -> bool:
         if self.json_path.exists():  # pyright: ignore

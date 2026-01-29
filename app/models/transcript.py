@@ -41,6 +41,14 @@ class Transcript:
             "segments": [seg.to_dict() for seg in self.segments],
         }
 
-    def from_dict(self, data: dict) -> None:
-        self.language = data.get("language")
-        self.segments = [STTSegment.from_dict(seg) for seg in data.get("segments", [])]
+    def from_dict(self, data: dict) -> tuple[bool, str]:
+        try:
+            self.language = data["language"]
+            self.segments = [STTSegment.from_dict(seg) for seg in data["segments"]]
+            return True, ""
+        except KeyError as e:
+            return False, f"Missing key: {e}"
+        except TypeError as e:
+            return False, f"Type error: {e}"
+        except Exception as e:
+            return False, f"Error: {e}"
