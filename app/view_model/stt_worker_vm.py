@@ -86,7 +86,7 @@ class STTWorkerViewModel(QObject):
         try:
             while True:
                 seg = self.segment_queue.get_nowait()  # pyright: ignore
-                self.transcript_vm.on_segment(seg)
+                self.transcript_vm._on_segment(seg)
         except Empty:
             pass
 
@@ -94,7 +94,7 @@ class STTWorkerViewModel(QObject):
         try:
             while True:
                 info = self.info_queue.get_nowait()  # pyright: ignore
-                self.transcript_vm.on_info(info)
+                self.transcript_vm._on_info(info)
         except Empty:
             pass
 

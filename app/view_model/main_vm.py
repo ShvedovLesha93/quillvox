@@ -33,6 +33,7 @@ class MainViewModel:
 
         self.stt_config = STTConfig()
         self.general_config = general_config
+        self.transcript = self.main_model.stt_transcript
 
         self.waveform_vm = WaveformViewModel()
         self.audio_player_vm = AudioPlayerViewModel(self.waveform_vm)
@@ -47,22 +48,13 @@ class MainViewModel:
             theme_manager=self.theme_manager,
         )
         self.transcript_vm = TranscriptViewModel(
-            transcript=self.main_model.stt_transcript, stt_config=self.stt_config
+            main_vm=self, transcript=self.transcript, stt_config=self.stt_config
         )
 
         self.stt_worker_vm = STTWorkerViewModel(
             stt_config=self.stt_config, transcript_vm=self.transcript_vm
         )
 
-        self._connect_signals()
-
-    def _connect_signals(self) -> None:
-        self.file_selector_vm.file_opened.connect(self._on_file_opened)
-
     @Slot()
     def stop_transcript(self) -> None:
         self.stt_worker_vm.terminate_process()
-
-    def _on_file_opened(self) -> None:
-        self.transcript_vm.clear_transcription()
-        self.transcript_vm.clear_requested.emit()

@@ -2,6 +2,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from rich.logging import RichHandler
 
+import app.waveform_loader_worker
+
 
 def configure_logging() -> None:
     """Configure logging once for the entire application."""
@@ -10,6 +12,9 @@ def configure_logging() -> None:
         return
 
     root.setLevel(logging.DEBUG)
+
+    # ---- silence specific modules ----
+    logging.getLogger(app.waveform_loader_worker.__name__).setLevel(logging.WARNING)
 
     console = RichHandler(rich_tracebacks=True, markup=True)
     console.setLevel(logging.DEBUG)
