@@ -151,9 +151,11 @@ class Settings(QWidget):
         # Connect buttons
         self.general_btn.clicked.connect(lambda: self.switch_page(0))
         self.stt_btn.clicked.connect(lambda: self.switch_page(1))
+
         self.btn_reset.clicked.connect(self.settings_vm.restore_requested.emit)
-        self.btn_save.clicked.connect(self.settings_vm.save_requested.emit)
-        self.btn_save.clicked.connect(self._reset_ui)
+        self.btn_apply.clicked.connect(self.settings_vm.save_requested.emit)
+        self.btn_apply.clicked.connect(self._reset_ui)
+        self.btn_ok.clicked.connect(self._on_ok_clicked)
 
     def _setup_ui(self):
         self.resize(500, 350)
@@ -204,15 +206,24 @@ class Settings(QWidget):
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
         )
         btn_layout.addStretch()
-        btn_layout.addWidget(self.btn_reset)
 
-        # Save button
-        self.btn_save = QPushButton()
-        self.btn_save.setEnabled(False)
-        self.btn_save.setSizePolicy(
+        # Apply button
+        self.btn_apply = QPushButton()
+        self.btn_apply.setEnabled(False)
+        self.btn_apply.setSizePolicy(
             QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed
         )
-        btn_layout.addWidget(self.btn_save)
+
+        # Ok button
+        self.btn_ok = QPushButton()
+        self.btn_ok.setEnabled(False)
+        self.btn_ok.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+        btn_layout.addWidget(self.btn_reset)
+        btn_layout.addSpacing(10)
+        btn_layout.addWidget(self.btn_apply)
+        btn_layout.addSpacing(10)
+        btn_layout.addWidget(self.btn_ok)
 
         # Vertical separator
         self.v_separator = QFrame()
@@ -241,15 +252,16 @@ class Settings(QWidget):
     def _reset_ui(self) -> None:
         self.stt_btn.set_highlighted(False)
         self.general_btn.set_highlighted(False)
-        self.btn_save.setEnabled(False)
+        self.btn_apply.setEnabled(False)
         self.btn_reset.setEnabled(False)
 
     @Slot()
     def _on_settings_changed(self) -> None:
 
         has_changes = self.settings_vm.has_any_changes()
-        self.btn_save.setEnabled(has_changes)
+        self.btn_apply.setEnabled(has_changes)
         self.btn_reset.setEnabled(has_changes)
+        self.btn_ok.setEnabled(has_changes)
 
         self.stt_btn.set_highlighted(
             self.settings_vm.has_category_changes(SettingsCategory.STT)
@@ -271,8 +283,9 @@ class Settings(QWidget):
     def retranslate(self) -> None:
         self.general_btn.setText(_("General"))
         self.stt_btn.setText(_("Transcription"))
-        self.btn_save.setText(_("Save"))
         self.btn_reset.setText(_("Reset"))
+        self.btn_apply.setText(_("Apply"))
+        self.btn_ok.setText(_("Ok"))
 
     def switch_page(self, index):
         # Uncheck all buttons
@@ -282,6 +295,11 @@ class Settings(QWidget):
         # Check clicked button and switch page
         self.categories_btn[index].setChecked(True)
         self.content_stack.setCurrentIndex(index)
+
+    def _on_ok_clicked(self) -> None:
+        self.settings_vm.save_requested.emit()
+        self._reset_ui
+        self.close()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
