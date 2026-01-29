@@ -15,8 +15,8 @@ from app.views.ui_utils.icons import IconButton, IconName
 
 if TYPE_CHECKING:
     from app.views.main_window import MainWindow
+    from app.view_model.main_vm import MainViewModel
     from app.view_model.file_selector_vm import FileSelectorViewModel
-    from app.view_model.stt_worker_vm import STTWorkerViewModel
 
 
 class SpinnerButton(QPushButton):
@@ -55,17 +55,16 @@ class SpinnerButton(QPushButton):
 
 
 class TranscriptControls(QWidget):
-    stop_transctipt_request = Signal()
 
     def __init__(
         self,
-        stt_worker_vm: STTWorkerViewModel,
+        main_vm: MainViewModel,
         file_selector_vm: FileSelectorViewModel,
         main_window: MainWindow,
     ) -> None:
         super().__init__()
+        self.main_vm = main_vm
         self.main_window = main_window
-        self.stt_worker_vm = stt_worker_vm
         self.file_selector_vm = file_selector_vm
         self._is_process_alive = False
         self._setup_ui()
@@ -87,7 +86,7 @@ class TranscriptControls(QWidget):
         layout.addWidget(self.stop_transcript_btn)
 
     def _connect_signals(self) -> None:
-        self.transcribe_btn.clicked.connect(self.stt_worker_vm.run_stt)
+        self.transcribe_btn.clicked.connect(self.main_vm.stt_worker_vm.run_stt)
         self.file_selector_vm.file_opened.connect(
             lambda: self.transcribe_btn.setEnabled(True)
         )
@@ -108,14 +107,6 @@ class TranscriptControls(QWidget):
             )
 
             if reply == QMessageBox.StandardButton.Yes:
-                self.stop_transctipt_request.emit()
+                self.main_vm.stop_transcript()
             else:
                 return
-
-    @Slot()
-    def _on_process_started(self) -> None:
-        self._is_process_alive = True
-
-    @Slot()
-    def _on_process_finished(self) -> None:
-        self._is_process_alive = False

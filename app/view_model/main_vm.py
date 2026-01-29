@@ -55,6 +55,5 @@ class MainViewModel:
             stt_config=self.stt_config, transcript_vm=self.transcript_vm
         )
 
-    @Slot()
     def stop_transcript(self) -> None:
         self.stt_worker_vm.terminate_process()
