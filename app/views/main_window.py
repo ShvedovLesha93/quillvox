@@ -1,10 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
+    QDialog,
     QFileDialog,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QVBoxLayout,
     QWidget,
 )
@@ -30,6 +33,25 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class TerminationDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(_("Transcription in Progress"))
+        self.setModal(True)
+        self.setMinimumWidth(300)
+
+        # Prevent closing with X button
+        self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
+
+        layout = QVBoxLayout()
+
+        self.label = QLabel(_("Terminating transcription process..."))
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
+
+        self.setLayout(layout)
+
+
 class MainWindow(QMainWindow):
     def __init__(
         self,
@@ -45,6 +67,7 @@ class MainWindow(QMainWindow):
         self.audio_player_vm = self.main_vm.audio_player_vm
 
         self.is_process_alive = False
+        self._skip_exit_confirmation = False
 
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
@@ -159,6 +182,11 @@ class MainWindow(QMainWindow):
         self.settings.stt_settings.set_enabled(True)
         self.menu_bar.open_media.setEnabled(True)
 
+        if hasattr(self, "termination_dialog") and self.termination_dialog:
+            self.termination_dialog.close()
+            self._skip_exit_confirmation = True
+            self.close()
+
     def open_file(self) -> None:
         filter = self.file_selector_vm.filter
         last_filter = self.file_selector_vm.last_filter
@@ -198,3 +226,43 @@ class MainWindow(QMainWindow):
             return file, filter
         else:
             return None
+
+    def closeEvent(self, event):
+        # If transcription is running, prevent immediate close
+        if self.is_process_alive:
+            reply = QMessageBox.question(
+                self,
+                _("Transcription in Progress"),
+                _(
+                    "Transcription is currently running. Do you want to stop it and exit?"
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                self.termination_dialog = TerminationDialog(self)
+                self.termination_dialog.show()
+                self.transcript_controls.stop_transctipt_request.emit()
+                event.ignore()  # Temporarily ignore until process actually stops
+            else:
+                event.ignore()
+
+        else:
+            if self._skip_exit_confirmation:
+                event.accept()
+                return
+
+            # Normal close confirmation when no transcription is running
+            reply = QMessageBox.question(
+                self,
+                _("Exit Confirmation"),
+                _("Are you sure you want to exit?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                event.accept()
+            else:
+                event.ignore()
