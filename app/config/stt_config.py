@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
@@ -51,12 +51,15 @@ LanguageKey = Literal[
 @dataclass
 class STTConfig:
 
+    # Parameters for UI
     model: ModelKey = "base"
     device: DeviceKey = "cpu"
     compute_type: ComputeTypeKey = "int8"
     batch_size: BatchSizeKey = 2
     language: LanguageKey = "auto"
-    audio: Path | None = None
+
+    # Parameters are not used for UI
+    audio: Path | None = field(default=None, metadata={"save": False})
 
     def as_dict(self) -> dict:
         """Serialize to a plain dict."""

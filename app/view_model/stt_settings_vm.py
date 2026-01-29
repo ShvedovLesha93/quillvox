@@ -3,7 +3,6 @@ from dataclasses import asdict, dataclass, fields
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, Generic, TypeVar
 from PySide6.QtCore import QObject, Signal, Slot
-import copy
 
 from app.constants import SettingsCategory
 from app.config.stt_config import (
@@ -15,11 +14,11 @@ from app.config.stt_config import (
 )
 
 import logging
+from app.config.stt_config import STTConfig
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from app.config.stt_config import STTConfig
     from app.view_model.settings_vm import SettingsViewModel
 
 
@@ -116,11 +115,25 @@ class STTSettingsViewModel(QObject):
         self._config = stt_config
 
         # For unsaved changes
-        self._snapshot = copy.deepcopy(self._config)
+        self._snapshot = self._make_shapshot()
 
         self._categories = self._build_category_config()
 
         self._connect_signals()
+
+    def _make_shapshot(self) -> STTConfig:
+        snapshot = STTConfig()
+
+        for field in fields(self._config):
+            if not field.metadata.get("save", True):
+                continue
+
+            snapshot_value = getattr(self._config, field.name)
+            setattr(snapshot, field.name, snapshot_value)
+
+        logger.debug("Gerenated snapshot: %s", snapshot)
+
+        return snapshot
 
     def _build_category_config(self) -> Dict[STTSettingCategory, CategoryConfig]:
 
@@ -178,22 +191,33 @@ class STTSettingsViewModel(QObject):
         return value != current_saved
 
     def has_unsaved_changes(self) -> bool:
-        return self._snapshot != self._config
+        for f in fields(self._config):
+            if not f.metadata.get("save", True):
+                continue
+
+            if getattr(self._snapshot, f.name) != getattr(self._config, f.name):
+                return True
+
+        return False
 
     # ============ Save/Reset ============
 
     @Slot()
     def save(self) -> None:
         for field in fields(self._config):
+            if not field.metadata.get("save", True):
+                continue
+
             snapshot_value = getattr(self._snapshot, field.name)
             setattr(self._config, field.name, snapshot_value)
+
         self.saved.emit()
         self._emit_change_status()
 
         logger.info("General settings saved: %s", asdict(self._config))
 
     def discard(self) -> None:
-        self._snapshot = copy.deepcopy(self._config)
+        self._snapshot = self._make_shapshot()
         self.discarded.emit()
         self._emit_change_status()
 
