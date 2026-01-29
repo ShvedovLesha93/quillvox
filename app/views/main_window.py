@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
         self.transcript_controls = TranscriptControls(
-            stt_worker_vm=self.main_vm.stt_worker_vm,
+            main_vm=self.main_vm,
             file_selector_vm=self.main_vm.file_selector_vm,
             main_window=self,
         )
@@ -104,11 +104,6 @@ class MainWindow(QMainWindow):
         self.main_vm.stt_worker_vm.started.connect(self.on_transcription_started)
         self.main_vm.stt_worker_vm.finished.connect(self.on_transcription_finished)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
-
-        # Stop transcript
-        self.transcript_controls.stop_transctipt_request.connect(
-            self.main_vm.stop_transcript
-        )
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -252,7 +247,7 @@ class MainWindow(QMainWindow):
             if reply == QMessageBox.StandardButton.Yes:
                 self.termination_dialog = TerminationDialog(self)
                 self.termination_dialog.show()
-                self.transcript_controls.stop_transctipt_request.emit()
+                self.main_vm.stop_transcript()
                 event.ignore()  # Temporarily ignore until process actually stops
             else:
                 event.ignore()
