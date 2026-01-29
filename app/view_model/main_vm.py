@@ -1,4 +1,5 @@
 from __future__ import annotations
+from re import NOFLAG
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Slot
@@ -53,6 +54,15 @@ class MainViewModel:
             stt_config=self.stt_config, transcript_vm=self.transcript_vm
         )
 
+        self._connect_signals()
+
+    def _connect_signals(self) -> None:
+        self.file_selector_vm.file_opened.connect(self._on_file_opened)
+
     @Slot()
     def stop_transcript(self) -> None:
         self.stt_worker_vm.terminate_process()
+
+    def _on_file_opened(self) -> None:
+        self.transcript_vm.clear_transcription()
+        self.transcript_vm.clear_requested.emit()

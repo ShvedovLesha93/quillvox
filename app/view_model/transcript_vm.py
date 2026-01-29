@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class TranscriptViewModel(QObject):
     segment_str = Signal(str)
+    clear_requested = Signal()
 
     def __init__(self, transcript: Transcript, stt_config: STTConfig) -> None:
         super().__init__()
@@ -34,7 +35,9 @@ class TranscriptViewModel(QObject):
         audio = self.stt_config.audio
         if audio:
             self.generate_json_path(audio)
-            self._clear_transcription()
+            self.clear_requested.emit()
+            self.clear_transcription()
+            self.clear_json()
         else:
             raise FileNotFoundError("Cannot find audio file")
 
@@ -62,12 +65,13 @@ class TranscriptViewModel(QObject):
         with open(self.json_path, "w", encoding="utf-8") as f:
             f.write(data_json)
 
-    def _clear_transcription(self) -> None:
+    def clear_transcription(self) -> None:
         if self.transcript.segments:
             self.transcript.segments.clear()
 
             logger.info("cleared transcript from memory")
 
+    def clear_json(self) -> None:
         if self.json_path.exists():
             with open(self.json_path, "w", encoding="utf-8") as f:
                 f.write("")
