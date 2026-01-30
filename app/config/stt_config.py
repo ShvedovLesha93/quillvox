@@ -47,6 +47,18 @@ LanguageKey = Literal[
     "tr",
 ]
 
+VadFilterKey = Literal[True, False]
+
+
+@dataclass(frozen=True)
+class STTRunConfig:
+    model: str
+    device: str
+    batch_size: int
+    compute_type: str
+    language: str
+    audio: str
+
 
 @dataclass
 class STTConfig:
@@ -57,6 +69,7 @@ class STTConfig:
     compute_type: ComputeTypeKey = "int8"
     batch_size: BatchSizeKey = 2
     language: LanguageKey = "auto"
+    vad_filter: VadFilterKey = False
 
     # Parameters are not used for UI
     audio: Path | None = field(default=None, metadata={"save": False})

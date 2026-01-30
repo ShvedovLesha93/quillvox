@@ -1,5 +1,7 @@
 {
   "exclude": [
+    "dist",
+    "build",
     "**/.venv*",
     "**/venv*",
     "**/__pycache__"

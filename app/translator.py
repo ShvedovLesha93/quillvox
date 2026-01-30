@@ -1,5 +1,6 @@
 import gettext
 from pathlib import Path
+import sys
 
 from PySide6.QtCore import QObject, Signal
 
@@ -14,9 +15,19 @@ class LanguageManager(QObject):
     def __init__(self):
         super().__init__()
 
+        # Detect if running from PyInstaller bundle
+        if getattr(sys, "frozen", False):
+            # Running in PyInstaller bundle
+            bundle_dir = Path(sys._MEIPASS)  # type: ignore
+            self.locales_dir = bundle_dir / "app" / "locales"
+        else:
+            # Running in normal Python environment
+            self.locales_dir = Path("app/locales")
+
+        logger.info(f"Locales directory: {self.locales_dir}")
+
         self._ = None
         self.translator = None
-        self.locales_dir = Path("app/locales")
 
     def _is_language_avilable(self, lang_code: str) -> bool:
         """Check if a language has translation files available"""
@@ -52,7 +63,7 @@ class LanguageManager(QObject):
         try:
             self.translator = gettext.translation(
                 domain="messages",
-                localedir="app/locales",
+                localedir=self.locales_dir,
                 languages=[lang_code],
                 fallback=True,
             )
