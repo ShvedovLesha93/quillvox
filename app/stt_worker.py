@@ -22,6 +22,12 @@ class Level(Enum):
 
 @dataclass(frozen=True, slots=True)
 class WorkerUserMessage:
+    """Message intended for end users.
+
+    Used to display human-readable information in the UI.
+    Supports named parameters for safe formatting and localization.
+    """
+
     level: Level
     message: str
     params: Mapping[str, Any] | None = None
@@ -29,9 +35,15 @@ class WorkerUserMessage:
 
 @dataclass(frozen=True, slots=True)
 class WorkerLogMessage:
+    """Message intended for application logging.
+
+    Uses positional arguments for deferred `%`-style formatting
+    to avoid unnecessary string construction.
+    """
+
     level: Level
     message: str
-    params: Mapping[str, Any] | None = None
+    args: tuple[Any, ...] = ()
 
 
 def stt_worker(
@@ -56,7 +68,7 @@ def stt_worker(
         WorkerLogMessage(
             level=Level.INFO,
             message="Loaded parameters to STT worker: %s",
-            params=asdict(cfg),
+            args=(asdict(cfg),),
         )
     )
 
@@ -79,7 +91,10 @@ def stt_worker(
             return  # Exit early if termination requested
 
         model = WhisperModel(
-            model_size_or_path=model_name, device=device, compute_type=compute_type
+            model_size_or_path=model_name,
+            device=device,
+            compute_type=compute_type,
+            batch_size=batch_size,
         )
 
         message_queue.put(
@@ -95,7 +110,8 @@ def stt_worker(
         segments, info = model.transcribe(
             audio=audio,
             language=language,
-            # log_progress=True,
+            vad_filter=True,
+            log_progress=True,
         )
 
         message_queue.put(
@@ -121,10 +137,16 @@ def stt_worker(
         )
     except Exception as e:
         message_queue.put(
+            WorkerLogMessage(
+                level=Level.ERROR,
+                message=_("Error occurred during transcription: %s"),
+                args=(str(e),),
+            )
+        )
+        message_queue.put(
             WorkerUserMessage(
-                level=Level.INFO,
-                message=_("Error occurred during transcription: {e}"),
-                params={"e": str(e)},
+                level=Level.ERROR,
+                message=_("Error occurred during transcription"),
             )
         )
 

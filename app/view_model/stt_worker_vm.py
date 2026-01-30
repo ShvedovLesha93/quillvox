@@ -123,8 +123,8 @@ class STTWorkerViewModel(QObject):
             logger.error(f"Unknown log level: {msg.level}, message: {msg.message}")
             return
 
-        if msg.params:
-            log_fn(msg.message, msg.params)
+        if msg.args:
+            log_fn(msg.message, *msg.args)
         else:
             log_fn(msg.message)
 
