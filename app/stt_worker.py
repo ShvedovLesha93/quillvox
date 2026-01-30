@@ -5,12 +5,13 @@ from enum import Enum
 from gettext import gettext as _  # It is used for parsing only, not for translation
 from multiprocessing import Queue
 import time
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 from faster_whisper import WhisperModel
 import torch
 
-from app.config.stt_run_config import STTRunConfig
+if TYPE_CHECKING:
+    from app.config.stt_config import STTConfig
 
 
 class Level(Enum):
@@ -47,7 +48,7 @@ class WorkerLogMessage:
 
 
 def stt_worker(
-    cfg: STTRunConfig,
+    cfg: STTConfig,
     info_queue: Queue,
     segment_queue: Queue,
     message_queue: Queue,
@@ -62,7 +63,11 @@ def stt_worker(
     batch_size = cfg.batch_size
     compute_type = cfg.compute_type
     language = cfg.language
-    audio = cfg.audio
+
+    if cfg.audio:
+        audio = str(cfg.audio.absolute())
+    else:
+        raise FileNotFoundError("Audio doesn't exist")
 
     message_queue.put(
         WorkerLogMessage(
@@ -94,7 +99,6 @@ def stt_worker(
             model_size_or_path=model_name,
             device=device,
             compute_type=compute_type,
-            batch_size=batch_size,
         )
 
         message_queue.put(

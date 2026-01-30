@@ -1,5 +1,4 @@
 from __future__ import annotations
-from dataclasses import asdict
 import os
 import signal
 from queue import Empty
@@ -8,7 +7,6 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, QTimer, Signal
 from app.stt_worker import WorkerLogMessage, WorkerUserMessage, stt_worker, Level
 from app.user_message import user_msg
-from app.config.stt_run_config import STTRunConfig
 from app.translator import _
 from multiprocessing import Event, Process, Queue
 from concurrent.futures import ThreadPoolExecutor
@@ -45,7 +43,7 @@ class STTWorkerViewModel(QObject):
             logger.warning("STT process already running")
             return
 
-        cfg = self.build_run_config()
+        cfg = self.stt_config
 
         self.info_queue = Queue()
         self.segment_queue = Queue()
@@ -144,26 +142,6 @@ class STTWorkerViewModel(QObject):
         logger.info("STT thread completed")
 
         self.finished.emit()
-
-    def build_run_config(self) -> STTRunConfig:
-        cfg = self.stt_config
-
-        if cfg.audio:
-
-            result = STTRunConfig(
-                model=cfg.model,
-                device=cfg.device,
-                batch_size=cfg.batch_size,
-                compute_type=cfg.compute_type,
-                language=cfg.language,
-                audio=str(cfg.audio.absolute()),
-            )
-
-            logger.info("Builded configs for stt: %s", asdict(result))
-
-            return result
-        else:
-            raise FileNotFoundError
 
     def terminate_process(self):
         """Terminate the running transcription process safely."""

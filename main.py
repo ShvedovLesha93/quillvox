@@ -1,3 +1,4 @@
+import multiprocessing
 import sys
 from PySide6.QtWidgets import QApplication
 from app.config.general_config import GeneralConfig
@@ -11,6 +12,7 @@ from app.translator import language_manager
 
 
 def main():
+    multiprocessing.freeze_support()  # mandatory for PyInstaller
     configure_logging()
 
     app = QApplication([])
