@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 import sys
 from PySide6.QtWidgets import QApplication
@@ -11,9 +12,20 @@ from app.views.main_window import MainWindow
 from app.translator import language_manager
 
 
+import atexit
+
+
 def main():
-    multiprocessing.freeze_support()  # mandatory for PyInstaller
-    configure_logging()
+    multiprocessing.freeze_support()
+
+    result = configure_logging(console_level=logging.DEBUG)
+    if result:
+        log_queue, log_listener = result
+        # Ensure listener stops even on unexpected exit
+        atexit.register(log_listener.stop)
+    else:
+        log_queue = None
+        log_listener = None
 
     app = QApplication([])
     app.setStyle("Fusion")
@@ -29,11 +41,13 @@ def main():
         general_config=general_config,
         main_model=main_model,
         theme_manager=theme_manager,
+        log_queue=log_queue,
     )
+
     view = MainWindow(app=app, theme_manager=theme_manager, main_vm=main_vm)
     view.move(1020, 320)
-
     view.show()
+
     sys.exit(app.exec())
 
 
