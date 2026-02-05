@@ -2,11 +2,11 @@ from __future__ import annotations
 import os
 import signal
 from queue import Empty
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from PySide6.QtCore import QObject, QTimer, Signal
-from app.stt_worker import WorkerLogMessage, WorkerUserMessage, stt_worker, Level
-from app.user_message import user_msg
+from app.stt_worker import STTUserMessage, stt_worker
+from app.user_message import MessageLevel, user_msg
 from app.translator import _
 from multiprocessing import Event, Process, Queue
 from concurrent.futures import ThreadPoolExecutor
@@ -29,10 +29,12 @@ class STTWorkerViewModel(QObject):
         self,
         transcript_vm: TranscriptViewModel,
         stt_config: STTConfig,
+        log_queue: Queue | None = None,
     ):
         super().__init__()
         self.transcript_vm = transcript_vm
         self.stt_config = stt_config
+        self.log_queue = log_queue
 
         self.process: Process | None = None
         self.executer = ThreadPoolExecutor(max_workers=1)
@@ -60,6 +62,7 @@ class STTWorkerViewModel(QObject):
                 self.message_queue,
                 self.terminate_event,
                 self.is_working,
+                self.log_queue,
             ),
         )
         self.process.start()
@@ -100,43 +103,23 @@ class STTWorkerViewModel(QObject):
         try:
             while True:
                 msg = self.message_queue.get_nowait()  # pyright: ignore
-                if isinstance(msg, WorkerUserMessage):
-                    self._send_user_message(msg)
-                elif isinstance(msg, WorkerLogMessage):
-                    self._send_log_message(msg)
+                self._send_user_message(msg)
         except Empty:
             pass
 
-    def _send_log_message(self, msg: WorkerLogMessage) -> None:
-        log_functions = {
-            Level.INFO: logger.info,
-            Level.WARNING: logger.warning,
-            Level.ERROR: logger.error,
-            Level.DEBUG: logger.debug,
-        }
-
-        try:
-            log_fn = log_functions[msg.level]
-        except KeyError:
-            logger.error(f"Unknown log level: {msg.level}, message: {msg.message}")
-            return
-
-        if msg.args:
-            log_fn(msg.message, *msg.args)
-        else:
-            log_fn(msg.message)
-
-    def _send_user_message(self, msg: WorkerUserMessage) -> None:
+    def _send_user_message(self, msg: STTUserMessage) -> None:
         if msg.params:
             text = _(msg.message).format(**msg.params)
         else:
             text = _(msg.message)
 
-        match msg.level:
-            case Level.INFO:
-                user_msg.info(text)
-            case Level.ERROR:
-                user_msg.error(text)
+        user_msg_funcs: dict[MessageLevel, Callable[[str], None]] = {
+            MessageLevel.INFO: user_msg.info,
+            MessageLevel.ERROR: user_msg.error,
+            MessageLevel.WARNING: user_msg.warning,
+        }
+
+        user_msg_funcs[msg.level](text)
 
     def _on_finished(self):
         logger.info("STT thread completed")

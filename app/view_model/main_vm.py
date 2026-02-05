@@ -1,8 +1,5 @@
 from __future__ import annotations
-from re import NOFLAG
 from typing import TYPE_CHECKING
-
-from PySide6.QtCore import Slot
 
 from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
@@ -26,6 +23,7 @@ class MainViewModel:
         general_config: GeneralConfig,
         main_model: MainModel,
         theme_manager: ThemeManager,
+        log_queue,
     ):
         self.app = app
         self.main_model = main_model
@@ -52,7 +50,9 @@ class MainViewModel:
         )
 
         self.stt_worker_vm = STTWorkerViewModel(
-            stt_config=self.stt_config, transcript_vm=self.transcript_vm
+            stt_config=self.stt_config,
+            transcript_vm=self.transcript_vm,
+            log_queue=log_queue,
         )
 
     def stop_transcript(self) -> None:
