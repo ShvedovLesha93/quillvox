@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-import app.resources.resources_rc
+import app.resources.resources_rc as _  # noqa: F401
 
 
 class Theme(str, Enum):
@@ -62,28 +62,6 @@ QPushButton:disabled {
 
     def get_style(self, theme: Theme) -> str:
         return self._themes[theme]
-
-
-FLAT_ICON_BUTTON_STYLE = """
-QPushButton {
-    background-color: transparent;
-    border: none;
-    border-radius: 8px;
-    padding: 8px;
-}
-
-QPushButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-QPushButton:pressed {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-QPushButton:disabled {
-    background-color: transparent;
-}
-"""
 
 
 class IconName(str, Enum):
