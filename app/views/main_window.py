@@ -20,7 +20,7 @@ from app.views.transcript_controls_view import TranscriptControls
 from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
 from app.views.notifications_view import NotificationsView
-from app.views.ui_utils.icons import IconButton, IconName
+from app.views.ui_utils.icons import IconButton, Icon
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
         self.status_message = QLabel()
-        self.user_logger_btn = IconButton(IconName.FORMAT_ALIGN_JUSTIFY, scale=0.8)
+        self.user_logger_btn = IconButton("format_align_justify", scale=0.8)
         status_bar.addWidget(self.user_logger_btn)
         status_bar.addWidget(self.status_message)
 
