@@ -35,12 +35,11 @@ if __name__ == "__main__":
 
         return "\n".join(members)
 
-    def generate_icon_enum(icon_names: set[str]) -> str:
-        """Generate IconName enum members."""
+    def generate_icon_literal(icon_names: set[str]) -> str:
+        """Generate Icon literal."""
         members = []
         for name in sorted(icon_names):
-            enum_name = name.upper()
-            members.append(f'    {enum_name} = "{name}"')
+            members.append(f'    "{name}",')
 
         return "\n".join(members)
 
@@ -85,22 +84,23 @@ if __name__ == "__main__":
         file_path.write_text(new_content, encoding="utf-8")
         return True
 
-    def update_icon_enum(file_path: Path, new_members: str) -> bool:
-        """Update the IconName enum in the file with new members."""
+    def update_icon_literal(file_path: Path, new_members: str) -> bool:
+        """Update the Icon literal."""
         if not file_path.exists():
             print(f"Error: File not found: {file_path}")
             return False
 
         content = file_path.read_text(encoding="utf-8")
 
-        pattern = r'(class IconName\(str, Enum\):)\s*\n(?:    [A-Z_]+ = "[^"]+"\s*\n)+'
+        pattern = r"(Icon = Literal\[)\n(?:\s+\"[^\"]+\",?\s*\n)+(\])"
 
         if not re.search(pattern, content):
-            print(f"Error: IconName enum not found in {file_path}")
+            print(f"Error: Icon literal not found in {file_path}")
             return False
 
-        new_enum = f"\\1\n{new_members}\n"
-        new_content = re.sub(pattern, new_enum, content)
+        new_literal = f"\\1\n{new_members}\n\\2"
+        print(new_literal)
+        new_content = re.sub(pattern, new_literal, content)
 
         if content == new_content:
             print("✓ No changes needed - IconName enum is up to date.")
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
         # Generate enum members
         theme_members = generate_theme_enum(themes)
-        icon_members = generate_icon_enum(icons)
+        icon_members = generate_icon_literal(icons)
 
         print("\n" + "=" * 60)
         print("Generated Theme enum:")
@@ -208,9 +208,9 @@ if __name__ == "__main__":
         if theme_updated:
             print("✓ Successfully updated Theme enum!")
 
-        icon_updated = update_icon_enum(icons_file, icon_members)
+        icon_updated = update_icon_literal(icons_file, icon_members)
         if icon_updated:
-            print("✓ Successfully updated IconName enum!")
+            print("✓ Successfully updated Icon literal!")
 
         # Update resources.qrc
         print("\nUpdating resources.qrc...")

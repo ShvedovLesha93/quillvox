@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.translator import _, language_manager
-from app.views.ui_utils.icons import IconButton, IconName
+from app.views.ui_utils.icons import IconButton
 
 if TYPE_CHECKING:
     from app.views.main_window import MainWindow
@@ -81,7 +81,7 @@ class TranscriptControls(QWidget):
         self.start_transcript_btn.setEnabled(False)
         layout.addWidget(self.start_transcript_btn)
 
-        self.stop_transcript_btn = IconButton(IconName.CLOSE)
+        self.stop_transcript_btn = IconButton("close")
         self.stop_transcript_btn.setEnabled(False)
         layout.addWidget(self.stop_transcript_btn)
 

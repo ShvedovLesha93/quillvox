@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.views.ui_utils.icons import IconButton, IconName
+from app.views.ui_utils.icons import IconButton
 
 from app.translator import _, language_manager
 
@@ -53,7 +53,7 @@ class NotificationsView(QWidget):
         self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         layout.addWidget(self.text)
 
-        self.btn_toggle_wrap = IconButton(IconName.FORMAT_TEXT_WRAP)
+        self.btn_toggle_wrap = IconButton(name="format_text_wrap")
         self.btn_toggle_wrap.clicked.connect(self.toggle_wrap)
         layout.addWidget(self.btn_toggle_wrap, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -92,12 +92,12 @@ class NotificationsView(QWidget):
             # Enable wrapping
             self.set_btn_tooltip()
             self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
-            self.btn_toggle_wrap.set_icon(IconName.FORMAT_TEXT_OVERFLOW)
+            self.btn_toggle_wrap.set_icon(icon="format_text_overflow")
         else:
             # Disable wrapping
             self.set_btn_tooltip()
             self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
-            self.btn_toggle_wrap.set_icon(IconName.FORMAT_TEXT_WRAP)
+            self.btn_toggle_wrap.set_icon(icon="format_text_wrap")
 
     def retranslate(self) -> None:
         self.set_btn_tooltip()

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 from PySide6.QtCore import QEvent, QSize, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -64,23 +65,24 @@ QPushButton:disabled {
         return self._themes[theme]
 
 
-class IconName(str, Enum):
-    CLOSE = "close"
-    FORMAT_ALIGN_JUSTIFY = "format_align_justify"
-    FORMAT_TEXT_OVERFLOW = "format_text_overflow"
-    FORMAT_TEXT_WRAP = "format_text_wrap"
-    PAUSE = "pause"
-    PLAY_ARROW = "play_arrow"
-    REPLAY = "replay"
-    SPEED = "speed"
-    STOP = "stop"
-    VOLUME_OFF = "volume_off"
-    VOLUME_UP = "volume_up"
+Icon = Literal[
+    "close",
+    "format_align_justify",
+    "format_text_overflow",
+    "format_text_wrap",
+    "pause",
+    "play_arrow",
+    "replay",
+    "speed",
+    "stop",
+    "volume_off",
+    "volume_up",
+]
 
 
-def get_icon(theme: Theme, icon: IconName) -> QIcon:
+def get_icon(theme: Theme, icon: str) -> QIcon:
     """Get icon from resources"""
-    return QIcon(f":/icons/icons/{theme.value}/{icon.value}.svg")
+    return QIcon(f":/icons/icons/{theme.value}/{icon}.svg")
 
 
 class IconButton(QPushButton):
@@ -89,9 +91,9 @@ class IconButton(QPushButton):
 
     _current_theme: Theme
 
-    def __init__(self, name: IconName, scale: float = 1.0, parent=None) -> None:
+    def __init__(self, name: Icon, scale: float = 1.0, parent=None) -> None:
         super().__init__(parent)
-        self.name = name
+        self.name: Icon = name
         self.scale = scale
         self.icon_style = IconStyle()
 
@@ -127,9 +129,9 @@ class IconButton(QPushButton):
         self.setIconSize(QSize(icon_size, icon_size))
         self.setFixedSize(button_size, button_size)
 
-    def set_icon(self, name: IconName) -> None:
-        self.name = name
-        self.setIcon(get_icon(self._current_theme, name))
+    def set_icon(self, icon: Icon) -> None:
+        self.name = icon
+        self.setIcon(get_icon(self._current_theme, icon))
 
     def _update_opacity(self) -> None:
         """Update opacity based on enabled state."""
@@ -150,7 +152,7 @@ class IconLabel(QLabel):
 
     def __init__(
         self,
-        name: IconName,
+        name: Icon,
         scale: float = 1.0,
         parent=None,
     ) -> None:
@@ -187,7 +189,7 @@ class IconLabel(QLabel):
         self.setFixedSize(size, size)
         self._update_pixmap(icon)
 
-    def set_icon(self, name: IconName) -> None:
+    def set_icon(self, name: Icon) -> None:
         """Change the icon to a different one."""
         self.name = name
         self._update_pixmap()

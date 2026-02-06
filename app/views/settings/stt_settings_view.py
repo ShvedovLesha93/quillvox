@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.view_model.stt_settings_vm import STTSettingCategory
-from app.views.ui_utils.icons import IconButton, IconName
+from app.views.ui_utils.icons import IconButton
 from app.views.ui_utils.title import Title
 from app.translator import _, language_manager
 
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 class ResetButton(IconButton):
     def __init__(self, _parent: STTSettingsView, category: STTSettingCategory):
-        super().__init__(name=IconName.REPLAY, scale=0.7, parent=None)
+        super().__init__(name="replay", scale=0.7, parent=None)
         self._parent = _parent
         self.category = category
         self._setup_ui()
