@@ -115,14 +115,11 @@ class ThemeManager(QObject):
 
     def _update_icon_theme(self, theme: ThemeMode) -> None:
         """Update IconButton and IconLabel class theme and refresh all instances."""
-        from app.views.ui_utils.icons import IconButton, IconLabel, Theme
-
-        # Map ThemeMode to icon Theme
-        icon_theme = Theme.DARK if theme == ThemeMode.DARK else Theme.LIGHT
+        from app.views.ui_utils.icons import IconButton, IconLabel
 
         # Update class-level theme for both classes
-        IconButton.set_theme(icon_theme)
-        IconLabel.set_theme(icon_theme)
+        IconButton.set_theme(theme)
+        IconLabel.set_theme(theme)
 
         # Update all existing instances
         self._update_all_icon_widgets()
