@@ -45,7 +45,7 @@ def main():
     )
 
     view = MainWindow(app=app, theme_manager=theme_manager, main_vm=main_vm)
-    view.move(1020, 320)
+    view.move(1020, 200)
     view.show()
 
     sys.exit(app.exec())
