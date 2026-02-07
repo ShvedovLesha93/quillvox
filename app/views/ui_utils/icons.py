@@ -1,5 +1,3 @@
-from enum import Enum
-from pathlib import Path
 from typing import Literal
 from PySide6.QtCore import QEvent, QSize, Qt
 from PySide6.QtGui import QIcon
@@ -9,9 +7,9 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from app.constants import ThemeMode
 import app.resources.resources_rc as _  # noqa: F401
-
-Styles = Literal["flat"]
+from app.views.ui_utils.style_loader import StyleLoader
 
 Icon = Literal[
     "close",
@@ -28,63 +26,19 @@ Icon = Literal[
 ]
 
 
-class Theme(Enum):
-    LIGHT = "light_theme"
-    DARK = "dark_theme"
-
-
-class StyleLoader:
-    """Load and cache QSS styles."""
-
-    _cache: dict[str, str] = {}
-
-    @classmethod
-    def load(cls, theme: Theme, style: Styles = "flat") -> str:
-        """Load QSS style for a specific theme.
-
-        Args:
-            theme: Theme enum (LIGHT or DARK)
-            style: Style name (e.g., 'flat_icon')
-
-        Returns:
-            QSS stylesheet string
-        """
-
-        cache_key = f"{theme.value}_{style}"
-
-        if cache_key in cls._cache:
-            return cls._cache[cache_key]
-
-        import app.views.styles.buttons as btn_styles
-
-        styles_folder = Path(btn_styles.__file__).parent
-        style_path = styles_folder / theme.value / f"{style}.qss"
-
-        if not style_path.exists():
-            raise FileNotFoundError(f"Style file not found: {style_path}")
-
-        # Load and cache
-        style_content = style_path.read_text(encoding="utf-8")
-        cls._cache[style] = style_content
-
-        return style_content
-
-    @classmethod
-    def clear_cache(cls) -> None:
-        """Clear the style cache. Useful for development/hot-reload."""
-        cls._cache.clear()
-
-
-def get_icon(theme: Theme, icon: str) -> QIcon:
+def get_icon(theme: ThemeMode, icon: str) -> QIcon:
     """Get icon from resources"""
-    return QIcon(f":/icons/icons/{theme.value}/{icon}.svg")
+    if theme == ThemeMode.DARK:
+        return QIcon(f":/icons/icons/dark_theme/{icon}.svg")
+    else:
+        return QIcon(f":/icons/icons/light_theme/{icon}.svg")
 
 
 class IconButton(QPushButton):
     BASE_ICON_SIZE = 28
     BASE_BUTTON_PADDING = 4
 
-    _current_theme: Theme
+    _current_theme: ThemeMode
 
     def __init__(self, name: Icon, scale: float = 1.0, parent=None) -> None:
         super().__init__(parent)
@@ -103,7 +57,7 @@ class IconButton(QPushButton):
         self.set_scale(self.scale)
 
     @classmethod
-    def set_theme(cls, theme: Theme) -> None:
+    def set_theme(cls, theme: ThemeMode) -> None:
         """Class method to update theme for all IconButton instances.
         This should be called by ThemeManager when theme changes.
         """
@@ -142,7 +96,7 @@ class IconLabel(QLabel):
     BASE_ICON_SIZE = 28
     BASE_PADDING = 4
 
-    _current_theme: Theme
+    _current_theme: ThemeMode
 
     def __init__(
         self,
@@ -162,7 +116,7 @@ class IconLabel(QLabel):
         self.set_scale(scale)
 
     @classmethod
-    def set_theme(cls, theme: Theme) -> None:
+    def set_theme(cls, theme: ThemeMode) -> None:
         """Class method to update theme for all IconLabel instances.
 
         This should be called by ThemeManager when theme changes.
