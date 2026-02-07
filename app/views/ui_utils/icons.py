@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
 
 from app.constants import ThemeMode
 import app.resources.resources_rc as _  # noqa: F401
-from app.views.ui_utils.style_loader import StyleLoader
 
 Icon = Literal[
     "close",
@@ -42,12 +41,12 @@ class IconButton(QPushButton):
 
     def __init__(self, name: Icon, scale: float = 1.0, parent=None) -> None:
         super().__init__(parent)
+        self.setObjectName("iconButton")
         self.name: Icon = name
         self.scale = scale
 
         self.setIcon(get_icon(self._current_theme, self.name))
         self.setFlat(True)
-        self.setStyleSheet(StyleLoader.load(theme=self._current_theme))
 
         # Setup opacity effect
         self._opacity_effect = QGraphicsOpacityEffect(self)
@@ -66,7 +65,6 @@ class IconButton(QPushButton):
     def update_icon_theme(self) -> None:
         """Update this button's icon to match current theme."""
         self.setIcon(get_icon(self._current_theme, self.name))
-        self.setStyleSheet(StyleLoader.load(self._current_theme))
 
     def set_scale(self, scale: float) -> None:
         """Set the button scale factor."""
