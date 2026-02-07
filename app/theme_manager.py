@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QPalette
 from app.constants import ThemeMode
+from app.resources.styles.style_loader import StyleLoader
 from app.views.styles import theme_palettes
 
 if TYPE_CHECKING:
@@ -37,9 +38,16 @@ class ThemeManager(QObject):
             resolved = self.get_system_theme_mode()
             self._applied_theme = resolved
             self._apply_theme(resolved)
+
+            stylesheet = StyleLoader.load(resolved)
+            self.app.setStyleSheet(stylesheet)
+
         else:
             self._applied_theme = theme
             self._apply_theme(theme)
+
+            stylesheet = StyleLoader.load(theme)
+            self.app.setStyleSheet(stylesheet)
 
         # Initialize IconButton theme on startup
         self._update_icon_theme(self._applied_theme)
@@ -99,9 +107,13 @@ class ThemeManager(QObject):
             resolved = theme
 
         if resolved != self._applied_theme:
+            logger.debug("Resolved theme: %s", resolved)
             self._applied_theme = resolved
             self._apply_theme(resolved)
             self._update_icon_theme(resolved)
+            stylesheet = StyleLoader.load(resolved)
+            self.app.setStyleSheet(stylesheet)
+
             self.theme_changed.emit(resolved)
 
     def _apply_theme(self, theme: ThemeMode) -> None:

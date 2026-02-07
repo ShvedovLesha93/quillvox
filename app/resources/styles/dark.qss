@@ -1,0 +1,53 @@
+/* Settings Category Button */
+QPushButton#settingsCategory {
+  font: bold;
+  text-align: left;
+  padding: 10px 10px;
+  background-color: #272727;
+  color: #ffffff;
+  font-size: 14px;
+  border-radius: 8px;
+  margin: 2px 5px;
+}
+
+QPushButton#settingsCategory:hover {
+  background-color: #424242;
+}
+
+QPushButton#settingsCategory:pressed {
+  background-color: #565656;
+}
+
+QPushButton#settingsCategory:checked {
+  background-color: #424242;
+}
+
+QPushButton#settingsCategory[highlighted="true"] {
+  color: #d6c1a9;
+}
+
+/* Icon Button */
+QPushButton#iconButton {
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+QPushButton#iconButton:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+QPushButton#iconButton:pressed {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+QPushButton#iconButton:disabled {
+  background-color: transparent;
+}
+
+/* Separator */
+QFrame#separator {
+  background-color: #404040;
+  border: none
+}

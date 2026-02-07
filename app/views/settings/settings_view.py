@@ -16,30 +16,19 @@ from app.constants import SettingsCategory, ThemeMode
 from app.views.settings.general_settings_view import GeneralSettingsView
 from app.views.settings.stt_settings_view import STTSettingsView
 from app.translator import _, language_manager
-from app.views.ui_utils.style_loader import StyleLoader
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsViewModel
-    from app.theme_manager import ThemeManager
     from app.views.main_window import MainWindow
 
 
 class SettingsCategoryWidget(QPushButton):
-    def __init__(
-        self, parent: QWidget | None = None, theme_manager: ThemeManager | None = None
-    ) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.theme_manager = theme_manager
+        self.setObjectName("settingsCategory")
+
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.setCheckable(True)
-        self._connect_signals()
-
-        if self.theme_manager:
-            self.update_theme(self.theme_manager.applied_theme)
-
-    def _connect_signals(self) -> None:
-        if self.theme_manager:
-            self.theme_manager.theme_changed.connect(self.update_theme)
 
     def set_highlighted(self, highlighted: bool):
         self.setProperty("highlighted", highlighted)
@@ -49,18 +38,6 @@ class SettingsCategoryWidget(QPushButton):
             self.setToolTip(_("Settings was changed"))
         else:
             self.setToolTip("")
-
-    def update_theme(self, theme: ThemeMode) -> None:
-        if theme == ThemeMode.DARK:
-            self.dark_theme()
-        else:
-            self.light_theme()
-
-    def dark_theme(self) -> None:
-        self.setStyleSheet(StyleLoader.load(ThemeMode.DARK, style="setting_category"))
-
-    def light_theme(self) -> None:
-        self.setStyleSheet(StyleLoader.load(ThemeMode.LIGHT, style="setting_category"))
 
 
 class Settings(QWidget):
@@ -87,11 +64,8 @@ class Settings(QWidget):
         self.retranslate()
         self._connect_signals()
 
-        self.update_theme(self.theme_manager.applied_theme)
-
     def _connect_signals(self) -> None:
         language_manager.language_changed.connect(self.retranslate)
-        self.theme_manager.theme_changed.connect(self.update_theme)
         self.settings_vm.settings_changed.connect(self._on_settings_changed)
 
         # Connect buttons
@@ -122,10 +96,8 @@ class Settings(QWidget):
         sidebar_layout.setSpacing(0)
 
         # Category buttons
-        self.general_btn = SettingsCategoryWidget(
-            self, theme_manager=self.theme_manager
-        )
-        self.stt_btn = SettingsCategoryWidget(self, theme_manager=self.theme_manager)
+        self.general_btn = SettingsCategoryWidget(self)
+        self.stt_btn = SettingsCategoryWidget(self)
 
         self.categories_btn = (self.general_btn, self.stt_btn)
 
@@ -173,11 +145,13 @@ class Settings(QWidget):
 
         # Vertical separator
         self.v_separator = QFrame()
+        self.v_separator.setObjectName("separator")
         self.v_separator.setFrameShape(QFrame.Shape.VLine)
         self.v_separator.setFixedWidth(2)
 
         # Gorizontal seaparator
         self.h_separator = QFrame()
+        self.h_separator.setObjectName("separator")
         self.h_separator.setFrameShape(QFrame.Shape.HLine)
         self.h_separator.setFixedHeight(2)
 
@@ -215,15 +189,6 @@ class Settings(QWidget):
         self.general_btn.set_highlighted(
             self.settings_vm.has_category_changes(SettingsCategory.GENERAL)
         )
-
-    @Slot(object)
-    def update_theme(self, theme: ThemeMode) -> None:
-        if theme == ThemeMode.DARK:
-            self.v_separator.setStyleSheet("background-color: #404040; border: none")
-            self.h_separator.setStyleSheet("background-color: #404040; border: none")
-        else:
-            self.v_separator.setStyleSheet("background-color: #b7b6b6; border: none")
-            self.h_separator.setStyleSheet("background-color: #b6b6b6; border: none")
 
     @Slot()
     def retranslate(self) -> None:
