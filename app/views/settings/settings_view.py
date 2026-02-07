@@ -16,6 +16,7 @@ from app.constants import SettingsCategory, ThemeMode
 from app.views.settings.general_settings_view import GeneralSettingsView
 from app.views.settings.stt_settings_view import STTSettingsView
 from app.translator import _, language_manager
+from app.views.ui_utils.style_loader import StyleLoader
 
 if TYPE_CHECKING:
     from app.view_model.settings_vm import SettingsViewModel
@@ -56,65 +57,10 @@ class SettingsCategoryWidget(QPushButton):
             self.light_theme()
 
     def dark_theme(self) -> None:
-        self.setStyleSheet("""
-            QPushButton {
-                font: bold;
-                text-align: left;
-                padding: 10px 10px;
-                background-color: #272727;
-                color: #ffffff;
-                font-size: 14px;
-                border-radius: 8px;
-                margin: 2px 5px;
-            }
-
-            QPushButton:hover {
-                background-color: #424242;
-            }
-
-            QPushButton:pressed {
-                background-color: #565656;
-            }
-
-            QPushButton:checked {
-                background-color: #424242;
-            }
-
-            QPushButton[highlighted="true"] {
-                color: #d6c1a9;
-            }
-            """)
+        self.setStyleSheet(StyleLoader.load(ThemeMode.DARK, style="setting_category"))
 
     def light_theme(self) -> None:
-        self.setStyleSheet("""
-            QPushButton {
-                font: bold;
-                text-align: left;
-                padding: 10px 10px;
-                background-color: #f2f2f2;
-                color: #1a1a1a;
-                font-size: 14px;
-                border-radius: 8px;
-                margin: 2px 5px;
-            }
-
-            QPushButton:hover {
-                background-color: #e5e5e5;
-            }
-
-            QPushButton:pressed {
-                background-color: #cecece;
-            }
-
-            QPushButton:checked {
-                background-color: #dadada;
-                color: #000000;
-            }
-
-            QPushButton[highlighted="true"] {
-                color: #644c30;
-            }
-            """)
+        self.setStyleSheet(StyleLoader.load(ThemeMode.LIGHT, style="setting_category"))
 
 
 class Settings(QWidget):

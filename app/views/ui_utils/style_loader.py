@@ -3,7 +3,7 @@ from typing import Literal
 
 from app.constants import ThemeMode
 
-Styles = Literal["flat"]
+Styles = Literal["flat", "setting_category"]
 
 
 class StyleLoader:
