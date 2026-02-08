@@ -34,6 +34,7 @@ class AudioPlayerViewModel(QObject):
         self._state = PlaybackState.STOPPED
         self._was_playing = False
         self.is_muted = False
+        self.is_file_loaded = False
 
         # Qt → VM
         self.player.durationChanged.connect(self._on_duration_changed)
@@ -44,6 +45,7 @@ class AudioPlayerViewModel(QObject):
         self.player.setSource(QUrl.fromLocalFile(audio))
         self.waveform_vm.load_waveform_file(audio)
         self.file_loaded.emit(audio.name)
+        self.is_file_loaded = True
 
     def toggle_play(self):
         is_playing = self._state != PlaybackState.PLAYING
