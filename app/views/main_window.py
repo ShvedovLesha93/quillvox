@@ -8,7 +8,10 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
+    QPushButton,
+    QSlider,
     QSplitter,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -20,18 +23,13 @@ from app.views.transcript_controls_view import TranscriptControls
 from app.views.transcript_view import TranscriptView
 from app.user_message import user_msg, MessageLevel
 from app.views.notifications_view import NotificationsView
-from app.views.ui_utils.icons import IconButton, Icon
+from app.views.ui_utils.icons import IconButton
 from app.translator import _, language_manager
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
     from PySide6.QtWidgets import QApplication
-
-
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class TerminationDialog(QDialog):
@@ -70,6 +68,8 @@ class MainWindow(QMainWindow):
         self.is_process_alive = False
         self._skip_exit_confirmation = False
 
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
         self.transcript_controls = TranscriptControls(
@@ -92,6 +92,8 @@ class MainWindow(QMainWindow):
         )
 
         self._setup_ui()
+        self._set_no_focus_recursive(self)
+
         self._setup_status_bar()
         self._connect_signals()
 
@@ -109,6 +111,7 @@ class MainWindow(QMainWindow):
         status_bar = self.statusBar()
         self.status_message = QLabel()
         self.user_logger_btn = IconButton("format_align_justify", scale=0.8)
+        self.user_logger_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         status_bar.addWidget(self.user_logger_btn)
         status_bar.addWidget(self.status_message)
 
@@ -215,6 +218,14 @@ class MainWindow(QMainWindow):
             self.notifications_view.raise_()
             self.notifications_view.activateWindow()
 
+    def _set_no_focus_recursive(self, widget: QWidget) -> None:
+        """Recursively set NoFocus on all buttons and sliders"""
+        if isinstance(widget, (QPushButton, QSlider, QToolButton)):
+            widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        for child in widget.findChildren(QWidget):
+            self._set_no_focus_recursive(child)
+
     def _open_file_dialog(
         self, filter: str, last_filter: str, last_dir: str
     ) -> tuple[str, str] | None:
@@ -270,3 +281,15 @@ class MainWindow(QMainWindow):
                 event.accept()
             else:
                 event.ignore()
+
+    def keyPressEvent(self, event) -> None:
+        """Handle global keyboard shortcuts"""
+        key = event.key()
+
+        if key == Qt.Key.Key_Space:
+            if self.audio_player_vm.is_file_loaded:
+                self.audio_player_vm.toggle_play()
+                event.accept()
+                return
+
+        super().keyPressEvent(event)
