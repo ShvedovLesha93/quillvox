@@ -1,5 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
+import shutil
 from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal, Slot
 import json
@@ -31,12 +32,25 @@ class TranscriptViewModel(QObject):
         self.transcript = transcript
         self.stt_config = stt_config
 
+        self.backup_path: Path
         self.json_path: Path
+        self._is_json_corrupted = False
 
         self._connect_signals()
 
     def _connect_signals(self) -> None:
         self.main_vm.file_selector_vm.file_opened.connect(self._on_file_opened)
+        self.main_vm.stt_finished.connect(self.on_transcript_completed)
+
+    def on_transcript_completed(self) -> None:
+        self._is_json_corrupted = False
+        self._delete_json_backup()
+
+    def restore_transcript(self) -> None:
+        self.load_json(load_backup=True)
+        self._save_to_json()
+        self.transcript_loaded.emit(self.extract_text())
+        self._delete_json_backup()
 
     def continue_transcription(
         self,
@@ -45,6 +59,7 @@ class TranscriptViewModel(QObject):
 
     @Slot()
     def _on_file_opened(self) -> None:
+        self._is_json_corrupted = False  # Reset to default
         self.create_json_path()
 
         if self.transcript.segments:
@@ -82,7 +97,7 @@ class TranscriptViewModel(QObject):
 
     def clear_transcription(self) -> None:
         if self.transcript.segments:
-            self.transcript.segments.clear()
+            self.transcript.clear_all()
 
             logger.info("cleared transcript from memory")
 
@@ -100,23 +115,29 @@ class TranscriptViewModel(QObject):
         else:
             raise FileNotFoundError("Cannot find audio file")
 
-    def load_json(self) -> bool:
+    def load_json(self, load_backup=False) -> bool:
+        if load_backup:
+            path = self.json_path.with_suffix(self.json_path.suffix + ".bak")
+        else:
+            path = self.json_path
+
         try:
-            with open(self.json_path, "r", encoding="utf-8") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 json_data = f.read()
                 data = json.loads(json_data)
 
             state, msg = self.transcript.from_dict(data)
             if state:
+                self._is_json_corrupted = False
                 return True
             else:
+                self._is_json_corrupted = True
                 user_msg.error(_("The JSON file is corrupted: {e}").format(e=msg))
                 return False
 
         except (json.JSONDecodeError, OSError) as e:
-            user_msg.error(
-                _("Failed to load JSON file: {file}").format(file=self.json_path)
-            )
+            self._is_json_corrupted = True
+            user_msg.error(_("Failed to load JSON file: {file}").format(file=path))
             logger.error("Failed to load json: %s", e)
             return False
 
@@ -124,8 +145,21 @@ class TranscriptViewModel(QObject):
         segments = [segment.text.strip() for segment in self.transcript.segments]
         return "\n".join(segments)
 
+    def _json_backup(self) -> None:
+        if self.json_path.exists():
+            if not self._is_json_corrupted:
+                self.backup_path = self.json_path.with_suffix(
+                    self.json_path.suffix + ".bak"
+                )
+                shutil.copy(self.json_path, self.backup_path)
+
+    def _delete_json_backup(self) -> None:
+        if self.backup_path.exists():
+            self.backup_path.unlink()
+
     def _clear_json(self) -> None:
         if self.json_path.exists():
+            self._json_backup()
             with open(self.json_path, "w", encoding="utf-8") as f:
                 f.write("")
 
@@ -139,5 +173,5 @@ class TranscriptViewModel(QObject):
             logger.info("JSON transcipt file found: %s", self.json_path)
             return True
         else:
-            logger.info("JSON transcript file not found")
+            logger.warning("JSON transcript file not found")
             return False
