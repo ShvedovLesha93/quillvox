@@ -51,7 +51,6 @@ class STTWorkerViewModel(QObject):
         self.segment_queue = Queue()
         self.message_queue = Queue()
         self.terminate_event = Event()
-        self.is_working = Event()
 
         self.process = Process(
             target=stt_worker,
@@ -61,7 +60,6 @@ class STTWorkerViewModel(QObject):
                 self.segment_queue,
                 self.message_queue,
                 self.terminate_event,
-                self.is_working,
                 self.log_queue,
             ),
         )
@@ -132,7 +130,7 @@ class STTWorkerViewModel(QObject):
             logger.warning("Termination already in progress")
             return
 
-        if self.is_working.is_set():
+        if self.process.is_alive():  # pyright: ignore
             logger.info("Terminating transcription process...")
 
             # Stop the timer first (no more periodic checks)

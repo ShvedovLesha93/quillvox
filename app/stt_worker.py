@@ -36,7 +36,6 @@ def stt_worker(
     segment_queue: Queue,
     message_queue: Queue,
     terminate_event,
-    is_working,
     log_queue: Queue | None,
 ):
 
@@ -49,8 +48,6 @@ def stt_worker(
     logger = logging.getLogger(__name__)
 
     logger.info("Starting STT (speech-to-text) worker")
-
-    is_working.set()
 
     model: WhisperModel | None = None
     model_name = cfg.model
@@ -181,7 +178,6 @@ def stt_worker(
         )
 
     finally:
-        is_working.clear()
         # Clean up GPU memory
         if device == "cuda":
             try:
