@@ -35,6 +35,10 @@ class Transcript:
     language: str | None = None
     segments: List[STTSegment] = field(default_factory=list)
 
+    def clear_all(self) -> None:
+        self.language = None
+        self.segments.clear()
+
     def to_dict(self) -> dict:
         return {
             "language": self.language,

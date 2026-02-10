@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QObject, Signal, Slot
+
 from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
 from app.view_model.file_selector_vm import FileSelectorViewModel
@@ -16,7 +18,9 @@ if TYPE_CHECKING:
     from app.models.main_model import MainModel
 
 
-class MainViewModel:
+class MainViewModel(QObject):
+    stt_finished = Signal()
+
     def __init__(
         self,
         app: QApplication,
@@ -25,6 +29,7 @@ class MainViewModel:
         theme_manager: ThemeManager,
         log_queue,
     ):
+        super().__init__()
         self.app = app
         self.main_model = main_model
         self.theme_manager = theme_manager
@@ -55,8 +60,13 @@ class MainViewModel:
             log_queue=log_queue,
         )
 
+        self._connect_signals()
+
     def stop_transcript(self) -> None:
         self.stt_worker_vm.terminate_process()
 
     def has_transcript(self) -> bool:
         return True if self.transcript.segments else False
+
+    def _connect_signals(self) -> None:
+        self.stt_worker_vm.finished.connect(self.stt_finished.emit)
