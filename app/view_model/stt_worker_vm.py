@@ -49,6 +49,7 @@ class STTWorkerViewModel(QObject):
 
         self.info_queue = Queue()
         self.segment_queue = Queue()
+        self.segment_started_event = Event()
         self.message_queue = Queue()
         self.terminate_event = Event()
 
@@ -58,6 +59,7 @@ class STTWorkerViewModel(QObject):
                 cfg,
                 self.info_queue,
                 self.segment_queue,
+                self.segment_started_event,
                 self.message_queue,
                 self.terminate_event,
                 self.log_queue,
@@ -69,7 +71,6 @@ class STTWorkerViewModel(QObject):
         self.timer.timeout.connect(self._check_result)
         self.timer.start(100)
 
-        self.transcript_vm.on_start_transcription()
         self.started.emit()
 
     def _check_result(self):
@@ -80,6 +81,11 @@ class STTWorkerViewModel(QObject):
             self.finished.emit()
             logger.info("STT process completed")
             return
+
+        if self.segment_started_event.is_set():
+            self.segment_started_event.clear()
+            self.transcript_vm.on_start_transcription()
+            logger.info("Segment streaming started")
 
         # Process segments
         try:

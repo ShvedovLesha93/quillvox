@@ -34,6 +34,7 @@ def stt_worker(
     cfg: STTConfig,
     info_queue: Queue,
     segment_queue: Queue,
+    segment_started_event,
     message_queue: Queue,
     terminate_event,
     log_queue: Queue | None,
@@ -148,6 +149,7 @@ def stt_worker(
             )
         )
 
+        segment_started_event.set()
         start = time.perf_counter()
 
         for seg in segments:
