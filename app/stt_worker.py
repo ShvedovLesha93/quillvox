@@ -6,7 +6,7 @@ import logging
 from logging.handlers import QueueHandler
 from multiprocessing import Queue
 import time
-from typing import TYPE_CHECKING, Any, Literal, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 from faster_whisper import WhisperModel
 import torch
@@ -15,8 +15,6 @@ from app.user_message import MessageLevel
 
 if TYPE_CHECKING:
     from app.config.stt_config import STTConfig
-
-WORKER_RESULT = Literal["success", "failed"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,7 +36,6 @@ def stt_worker(
     segment_queue: Queue,
     message_queue: Queue,
     terminate_event,
-    completion_queue: Queue[WORKER_RESULT],
     log_queue: Queue | None,
 ):
 
@@ -83,7 +80,6 @@ def stt_worker(
             )
 
             logger.error("CUDA not available")
-            completion_queue.put("failed")
             return
 
     try:
@@ -172,8 +168,6 @@ def stt_worker(
 
         logger.info("Transcription completed in %s", duration)
 
-        completion_queue.put("success")
-
     except Exception as e:
         logger.error("Error occurred during transcription: %s", e)
         message_queue.put(
@@ -182,7 +176,6 @@ def stt_worker(
                 message=_("Error occurred during transcription: "),
             )
         )
-        completion_queue.put("failed")
 
     finally:
         # Clean up GPU memory
