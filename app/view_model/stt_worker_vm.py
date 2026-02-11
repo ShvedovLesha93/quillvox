@@ -5,7 +5,7 @@ from queue import Empty
 from typing import TYPE_CHECKING, Callable
 
 from PySide6.QtCore import QObject, QTimer, Signal
-from app.stt_worker import WORKER_RESULT, STTUserMessage, stt_worker
+from app.stt_worker import STTUserMessage, stt_worker
 from app.user_message import MessageLevel, user_msg
 from app.translator import _
 from multiprocessing import Event, Process, Queue
@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 
 
 class STTWorkerViewModel(QObject):
-    started = Signal()
     finished = Signal()
+    started = Signal()
 
     def __init__(
         self,
@@ -50,7 +50,6 @@ class STTWorkerViewModel(QObject):
         self.info_queue = Queue()
         self.segment_queue = Queue()
         self.message_queue = Queue()
-        self.completion_queue: Queue[WORKER_RESULT] = Queue()
         self.terminate_event = Event()
 
         self.process = Process(
@@ -61,7 +60,6 @@ class STTWorkerViewModel(QObject):
                 self.segment_queue,
                 self.message_queue,
                 self.terminate_event,
-                self.completion_queue,
                 self.log_queue,
             ),
         )
@@ -80,7 +78,6 @@ class STTWorkerViewModel(QObject):
             self.timer.stop()  # pyright: ignore
             self.process.join()  # pyright: ignore
             self.finished.emit()
-
             logger.info("STT process completed")
             return
 
@@ -105,16 +102,6 @@ class STTWorkerViewModel(QObject):
             while True:
                 msg = self.message_queue.get_nowait()  # pyright: ignore
                 self._send_user_message(msg)
-        except Empty:
-            pass
-
-        # Process worker result
-        try:
-            while True:
-                status = self.completion_queue.get_nowait()  # pyright: ignore
-                if status == "failed":
-                    self.transcript_vm.restore_transcript()
-
         except Empty:
             pass
 
