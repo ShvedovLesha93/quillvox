@@ -6,6 +6,7 @@ import json
 from app.user_message import user_msg
 from app.models.transcript import STTSegment
 from app.translator import _
+from bisect import bisect_right
 
 if TYPE_CHECKING:
     from app.view_model.main_vm import MainViewModel
@@ -22,6 +23,7 @@ class TranscriptViewModel(QObject):
     segment_str = Signal(str)
     clear_requested = Signal()
     transcript_loaded = Signal(str)
+    block_index_changed = Signal(int)
 
     def __init__(
         self, main_vm: MainViewModel, transcript: Transcript, stt_config: STTConfig
@@ -37,6 +39,13 @@ class TranscriptViewModel(QObject):
 
     def _connect_signals(self) -> None:
         self.main_vm.file_selector_vm.file_opened.connect(self._on_file_opened)
+        self.main_vm.audio_player_vm.position_changed.connect(self._on_position_changed)
+
+    @Slot(int)
+    def _on_position_changed(self, pos: int) -> None:
+        pos_seconds = pos / 1000.0
+        idx = self.find_block_at_position(pos_seconds)
+        self.block_index_changed.emit(idx)
 
     @Slot()
     def _on_file_opened(self) -> None:
@@ -59,6 +68,22 @@ class TranscriptViewModel(QObject):
             self._clear_json()
         else:
             raise FileNotFoundError("Cannot find audio file")
+
+    def find_block_at_position(self, position: float) -> int:
+        """Find which block contains the given character position using binary search."""
+        idx = bisect_right(
+            self.transcript.segments, position, key=lambda seg: seg.start
+        )
+
+        if idx == 0:
+            return -1  # Position is before the first segment
+
+        # Check if position falls within the previous segment
+        seg = self.transcript.segments[idx - 1]
+        if seg.start <= position <= seg.end:
+            return idx - 1
+
+        return -1  # Position is in a gap between segments
 
     def _on_info(self, info: TranscriptionInfo) -> None:
         """Transcription information"""
