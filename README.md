@@ -23,11 +23,12 @@ A user-friendly desktop application for transcribing audio files with automatic 
 git clone https://github.com/ShvedovLesha93/quillvox.git
 cd quillvox
 
-# Install dependencies with uv
-uv sync
+# Install dependencies
+## CPU version
+uv sync --extra cpu
 
-# Install torch with CUDA
-uv pip install torch --index-url https://download.pytorch.org/whl/cu126
+## CUDA version (GPU)
+uv sync --extra cuda
 ```
 
 ## Usage
