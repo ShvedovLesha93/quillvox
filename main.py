@@ -29,7 +29,9 @@ def _run_app():
 
     logger = logging.getLogger(__name__)
 
-    result = configure_logging(console_level=logging.DEBUG, file_level=logging.DEBUG)
+    result = configure_logging(
+        multiprocessing_mode=True, console_level=logging.DEBUG, file_level=logging.DEBUG
+    )
     if result:
         log_queue, log_listener = result
         atexit.register(log_listener.stop)
