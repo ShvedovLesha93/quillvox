@@ -10,6 +10,14 @@ def main():
 
         hide_console()
 
+    try:
+        _run_app()
+    except Exception:
+        _show_crash_dialog()
+        raise
+
+
+def _run_app():
     from PySide6.QtWidgets import QApplication
     from app.config.general_config import GeneralConfig
     from app.models.main_model import MainModel
@@ -28,6 +36,13 @@ def main():
     else:
         log_queue = None
         log_listener = None
+
+    if sys.platform == "win32":
+        try:
+            multiprocessing.set_start_method("spawn", force=True)
+        except RuntimeError:
+            pass
+        logger.debug("set_start_method: spawn")
 
     app = QApplication([])
     app.setStyle("Fusion")
@@ -51,6 +66,53 @@ def main():
     view.show()
 
     sys.exit(app.exec())
+
+
+def _show_crash_dialog():
+    """Show a crash dialog when the app fails to start."""
+    import traceback
+
+    # Get the full traceback as a string
+    error_text = traceback.format_exc()
+
+    # Log it to a file first (always, regardless of what happens next)
+    try:
+        with open("crash.log", "w", encoding="utf-8") as f:
+            f.write(error_text)
+    except Exception:
+        pass
+
+    # Try to show a GUI crash dialog
+    try:
+        # Try to show a Qt message box
+        from PySide6.QtWidgets import QApplication, QMessageBox
+        from PySide6.QtCore import Qt
+
+        # QApplication may or may not exist at this point
+        app = QApplication.instance() or QApplication(sys.argv)
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setWindowTitle("QuillVox - Startup Error")
+        msg.setText("QuillVox failed to start due to an unexpected error.")
+        msg.setInformativeText("A crash log has been saved to:\n" "crash.log")
+        msg.setDetailedText(error_text)
+        msg.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        msg.exec()
+
+    except Exception:
+        # Qt itself failed - last resort: show the console with the error
+        if getattr(sys, "frozen", False):
+            try:
+                from app.console_hider import show_console
+
+                show_console()
+            except Exception:
+                pass
+
+        print("QuillVox crashed during startup:", file=sys.__stderr__ or sys.stderr)
+        print(error_text, file=sys.__stderr__ or sys.stderr)
+        input("Press Enter to exit...")  # Keep console open so user can read it
 
 
 if __name__ == "__main__":
