@@ -5,12 +5,7 @@ block_cipher = None
 binaries = []
 
 # Collect all data files
-datas = [
-    ('app/locales', 'app/locales'),
-    ('app/resources/icons', 'app/resources/icons'),
-    ('app/resources/resources.qrc', 'app/resources'),
-]
-
+datas = []
 
 # Collect data files from dependencies
 try:
@@ -24,20 +19,17 @@ a = Analysis(
     pathex=[],
     binaries=binaries,
     datas=datas,
-    # hiddenimports=hiddenimports,
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
-    excludes=[
-        'matplotlib',  # Exclude if not needed
-        'PIL',  # Exclude if not needed
-    ],
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
     noarchive=False,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure, a.zipped_data)
 
 exe = EXE(
     pyz,
@@ -49,19 +41,20 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,  # Set to True if you want a console window for debugging
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    contents_directory='runtime',
     # icon='app/resources/icons/app_icon.ico',  # Uncomment and add your app icon
 )
 
 coll = COLLECT(
     exe,
     a.binaries,
-    a.zipfiles,
+    # a.zipfiles,
     a.datas,
     strip=False,
     upx=True,

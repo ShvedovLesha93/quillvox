@@ -1,27 +1,29 @@
 import logging
 import multiprocessing
 import sys
-from PySide6.QtWidgets import QApplication
-from app.config.general_config import GeneralConfig
-from app.models.main_model import MainModel
-from app.utils.logging_config import configure_logging
-from app.theme_manager import ThemeManager
-from app.view_model.main_vm import MainViewModel
-from app.views.main_window import MainWindow
-
-from app.translator import language_manager
-
-
 import atexit
 
 
 def main():
-    multiprocessing.freeze_support()
+    if getattr(sys, "frozen", False):
+        from app.console_hider import hide_console
 
-    result = configure_logging(console_level=logging.DEBUG)
+        hide_console()
+
+    from PySide6.QtWidgets import QApplication
+    from app.config.general_config import GeneralConfig
+    from app.models.main_model import MainModel
+    from app.utils.logging_config import configure_logging
+    from app.theme_manager import ThemeManager
+    from app.view_model.main_vm import MainViewModel
+    from app.views.main_window import MainWindow
+    from app.translator import language_manager
+
+    logger = logging.getLogger(__name__)
+
+    result = configure_logging(console_level=logging.DEBUG, file_level=logging.DEBUG)
     if result:
         log_queue, log_listener = result
-        # Ensure listener stops even on unexpected exit
         atexit.register(log_listener.stop)
     else:
         log_queue = None
@@ -52,4 +54,12 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
+
+    if sys.platform == "win32":
+        try:
+            multiprocessing.set_start_method("spawn", force=True)
+        except RuntimeError:
+            pass
+
     main()

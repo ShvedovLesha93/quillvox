@@ -1,6 +1,7 @@
 from pathlib import Path
+import sys
 
-from app.constants import ThemeMode
+from app.constants import FrozenPath, ThemeMode
 
 import logging
 
@@ -31,10 +32,16 @@ class StyleLoader:
         else:
             theme_ = "light"
 
-        import app.resources.styles as styles
+        if getattr(sys, "frozen", False):
+            styles_folder = Path(FrozenPath.STYLES.value)
+            style_path = styles_folder / f"{theme_}.qss"
+        else:
+            import app.resources.styles as styles
 
-        styles_folder = Path(styles.__file__).parent
-        style_path = styles_folder / f"{theme_}.qss"
+            styles_folder = Path(styles.__file__).parent
+            style_path = styles_folder / f"{theme_}.qss"
+
+        logger.debug("Styles folder: %s", styles_folder)
 
         if not style_path.exists():
             logger.error("Theme file not found: %s", style_path)
