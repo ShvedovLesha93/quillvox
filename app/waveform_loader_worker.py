@@ -1,11 +1,29 @@
 from pathlib import Path
 import subprocess
+import sys
 import traceback
 import numpy as np
 import logging
 from PySide6.QtCore import QObject, Signal
 
 logger = logging.getLogger(__name__)
+
+
+def get_subprocess_startup_info():
+    """Get startup info to hide console windows on Windows."""
+    if sys.platform == "win32":
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        return startupinfo
+    return None
+
+
+def get_creation_flags():
+    """Get creation flags to hide console windows on Windows."""
+    if sys.platform == "win32":
+        return subprocess.CREATE_NO_WINDOW
+    return 0
 
 
 class WaveformLoaderWorker(QObject):
@@ -39,7 +57,12 @@ class WaveformLoaderWorker(QObject):
             ]
 
             probe = subprocess.run(
-                probe_cmd, capture_output=True, text=True, check=True
+                probe_cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+                creationflags=get_creation_flags(),
+                startupinfo=get_subprocess_startup_info(),
             )
 
             lines = probe.stdout.strip().split("\n")
@@ -67,7 +90,12 @@ class WaveformLoaderWorker(QObject):
             ]
 
             process = subprocess.Popen(
-                ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=4096
+                ffmpeg_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                bufsize=4096,
+                creationflags=get_creation_flags(),
+                startupinfo=get_subprocess_startup_info(),
             )
 
             # --- 3. Streaming min/max extraction ---
