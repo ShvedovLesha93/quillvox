@@ -110,10 +110,7 @@ class NotificationsView(QWidget):
 
     @Slot()
     def toggle_wrap(self):
-        print("Toggled")
-        print(f"before self.wrap_enabled: {self.wrap_enabled}")
         self.wrap_enabled = not self.wrap_enabled
-        print(f"after self.wrap_enabled: {self.wrap_enabled}")
         self.set_wrap_state(self.wrap_enabled)
 
     def setVisible(self, visible: bool) -> None:
