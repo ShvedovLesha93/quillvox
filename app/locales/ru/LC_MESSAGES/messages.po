@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.8\n"
 
-#: app\views\audio_player.py:160
+#: app\views\audio_player_view.py:179
 msgid "No file opened"
 msgstr "Файл не открыт"
 
@@ -34,113 +34,231 @@ msgstr "Открыть медиа"
 msgid "Settings"
 msgstr "Настройки"
 
-#: app\views\transcript_controls.py:76
+#: app\views\transcript_controls_view.py:96
 msgid "Transcribe"
 msgstr "Транскрибировать"
 
-#: app\views\settings\general_settings.py:75
-#: app\views\settings\settings.py:233
+#: app\views\settings\general_settings_view.py:116
+#: app\views\settings\settings_view.py:195
 msgid "General"
 msgstr "Общие"
 
-#: app\views\settings\general_settings.py:76
-msgid "Language"
-msgstr "Язык"
-
-#: app\views\settings\general_settings.py:77
+#: app\views\settings\general_settings_view.py:115
 msgid "Theme"
 msgstr "Тема"
 
-#: app\views\settings\settings.py:234 app\views\settings\stt_settings.py:59
+#: app\views\settings\settings_view.py:196
+#: app\views\settings\stt_settings_view.py:125
 msgid "Transcription"
 msgstr "Транскрипция"
 
-#: app\views\settings\settings.py:235
-msgid "Save"
-msgstr "Сохранить"
-
-#: app\view_model\settings_vm.py:49
-msgid "English"
-msgstr "Английский"
-
-#: app\view_model\settings_vm.py:50
-msgid "Russian"
-msgstr "Русский"
-
-#: app\view_model\file_selector.py:48
+#: app\view_model\file_selector_vm.py:50
 msgid "Audio Files"
 msgstr "Аудио файлы"
 
-#: app\view_model\file_selector.py:49
+#: app\view_model\file_selector_vm.py:51
 msgid "Video Files"
 msgstr "Видео файлы"
 
-#: app\view_model\file_selector.py:50
+#: app\view_model\file_selector_vm.py:52
 msgid "All Media Files"
 msgstr "Все медиафайлы"
 
-#: app\view_model\file_selector.py:59
+#: app\view_model\file_selector_vm.py:61
 msgid "File not found"
 msgstr "Файл не найден"
 
-#: app\view_model\file_selector.py:82
+#: app\view_model\file_selector_vm.py:87
 #, python-brace-format
 msgid "File '{file}' has been opened"
 msgstr "Файл '{file}' открыт"
 
-#: app\view_model\file_selector.py:91
+#: app\view_model\file_selector_vm.py:92
 msgid "No selected file"
 msgstr "Файл не выбран"
 
-#: app\views\main_window.py:133
+#: app\views\main_window.py:235
 msgid "Open media file"
 msgstr "Открыть медиафайл"
 
-#: app\stt_worker.py:58
-#, python-brace-format
-msgid "\"{model_name}\" model has been loaded"
-msgstr "Модель \"{model_name}\" загружена"
-
-#: app\view_model\settings_vm.py:53
-msgid "Dark"
-msgstr "Темная"
-
-#: app\view_model\settings_vm.py:54
-msgid "Light"
-msgstr "Светлая"
-
-#: app\view_model\settings_vm.py:55
-msgid "System"
-msgstr "Система"
-
-#: app\stt_worker.py:82
+#: app\stt_worker.py:166
 #, python-brace-format
 msgid "Transcription completed in {duration}"
 msgstr "Транскрипция выполнена за {duration}"
 
+#: app\stt_worker.py:95
 #, python-brace-format
-#~ msgid "\"Transcription completed. Time taken: {duration}\""
-#~ msgstr ""
+msgid "Starting load model: {model_name}"
+msgstr "Начинается загрузка модели: {model_name}"
 
-#~ msgid "Play"
-#~ msgstr "Воспроизвести"
-
-#~ msgid "Stop"
-#~ msgstr "Стоп"
-
-#~ msgid "Volume:"
-#~ msgstr "Громкость:"
-
-#~ msgid "Speed:"
-#~ msgstr "Скорость:"
-
-#~ msgid "Pause"
-#~ msgstr "Пауза"
-
+#: app\stt_worker.py:114
 #, python-brace-format
-#~ msgid "Error: {msg}"
-#~ msgstr "Ошибка: {msg}"
+msgid "Successfully loaded {model_name}"
+msgstr "Модель {model_name} успешно загружена"
 
+#: app\stt_worker.py:148
+msgid "Transcription in process..."
+msgstr "Транскрипция в процессе..."
+
+#: app\stt_worker.py:178
+msgid "Error occurred during transcription: "
+msgstr "Ошибка во время транскрипции: "
+
+#: app\views\main_window.py:38 app\views\main_window.py:250
+#: app\views\transcript_controls_view.py:119
+msgid "Transcription in Progress"
+msgstr "Транскрипция в процессе"
+
+#: app\views\main_window.py:47
+msgid "Terminating transcription process..."
+msgstr "Завершение процесса транскрипции..."
+
+#: app\views\main_window.py:138
+msgid "See all notifications"
+msgstr "Посмотреть все уведомления"
+
+#: app\views\main_window.py:252
+msgid "Transcription is currently running. Do you want to stop it and exit?"
+msgstr ""
+"В данный момент выполняется транскрипция. Вы хотите остановить её и выйти?"
+
+#: app\views\main_window.py:274 app\views\settings\settings_view.py:242
+msgid "Exit Confirmation"
+msgstr "Подтверждение выхода"
+
+#: app\views\main_window.py:275
+msgid "Are you sure you want to exit?"
+msgstr "Вы уверены, что хотите выйти?"
+
+#: app\views\notifications_view.py:107
+msgid "Disable text wrapping"
+msgstr "Отключить перенос текста"
+
+#: app\views\notifications_view.py:109
+msgid "Enable text wrapping"
+msgstr "Включить перенос текста"
+
+#: app\views\transcript_controls_view.py:102
+msgid "Transcript exists"
+msgstr "Транскрипция уже существует"
+
+#: app\views\transcript_controls_view.py:103
+msgid "Transcription is already exist. Do you want to rewrite it?"
+msgstr "Транскрипция уже существует. Вы хотите перезаписать её?"
+
+#: app\views\transcript_controls_view.py:120
+msgid "Transcription is currently running. Do you want to stop it?"
+msgstr "В данный момент выполняется транскрипция. Вы хотите остановить её?"
+
+#: app\view_model\file_selector_vm.py:65
 #, python-brace-format
-#~ msgid "Warning: {msg}"
-#~ msgstr "Внимание: {msg}"
+msgid "File '{file}' already opened"
+msgstr "Файл '{file}' уже открыт"
+
+#: app\view_model\stt_worker_vm.py:180
+msgid "Transcription is terminated"
+msgstr "Транскрипция прервана"
+
+#: app\view_model\transcript_vm.py:133
+#, python-brace-format
+msgid "The JSON file is corrupted: {e}"
+msgstr "JSON-файл поврежден: {e}"
+
+#: app\view_model\transcript_vm.py:138
+#, python-brace-format
+msgid "Failed to load JSON file: {file}"
+msgstr "Не удалось загрузить JSON-файл: {file}"
+
+#: app\views\settings\general_settings_view.py:113
+msgid "Interface language"
+msgstr "Язык интерфейса"
+
+#: app\views\settings\settings_view.py:38
+msgid "Settings was changed"
+msgstr "Настройки изменены"
+
+#: app\views\settings\settings_view.py:197
+msgid "Reset"
+msgstr "Сбросить"
+
+#: app\views\settings\settings_view.py:198
+msgid "Apply"
+msgstr "Применить"
+
+#: app\views\settings\settings_view.py:199
+msgid "Ok"
+msgstr "ОК"
+
+#: app\views\settings\settings_view.py:214
+msgid "Reset all settings"
+msgstr "Сбросить все настройки"
+
+#: app\views\settings\settings_view.py:215
+msgid "Are you sure you want to reset the changed settings?"
+msgstr "Вы уверены, что хотите сбросить измененные настройки?"
+
+#: app\views\settings\settings_view.py:243
+msgid "Settings not saved. Save changes?"
+msgstr "Настройки не сохранены. Сохранить изменения?"
+
+#: app\views\settings\stt_settings_view.py:116
+msgid "Model"
+msgstr "Модель"
+
+#: app\views\settings\stt_settings_view.py:118
+msgid "Device"
+msgstr "Устройство"
+
+#: app\views\settings\stt_settings_view.py:120
+msgid "Compute type"
+msgstr "Тип вычислений"
+
+#: app\views\settings\stt_settings_view.py:122
+msgid "Batch size"
+msgstr "Размер пакета"
+
+#: app\views\settings\stt_settings_view.py:124
+msgid "Transcription language"
+msgstr "Язык транскрипции"
+
+#: app\views\settings\stt_settings_view.py:193
+#: app\views\settings\stt_settings_view.py:198
+msgid "Please wait… Transcription in progress"
+msgstr "Пожалуйста, подождите... Транскрипция в процессе"
+
+#: app\stt_worker.py:78
+msgid ""
+"Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
+msgstr ""
+"Невозможно использовать ускорение GPU. Пожалуйста, установите драйверы CUDA "
+"для видеокарт NVIDIA."
+
+#: main.py:97
+msgid "QuillVox - Startup Error"
+msgstr "QuillVox - Ошибка запуска"
+
+#: main.py:98
+msgid "QuillVox failed to start due to an unexpected error."
+msgstr "QuillVox не удалось запустить из-за непредвиденной ошибки."
+
+#: main.py:115
+msgid "QuillVox crashed during startup:"
+msgstr "QuillVox аварийно завершил работу во время запуска:"
+
+#: main.py:117
+msgid "Press Enter to exit..."
+msgstr "Нажмите Enter для выхода..."
+
+#: app\views\splash_screen.py:33
+msgid "Starting..."
+msgstr "Запуск..."
+
+#: main.py:100
+#, python-brace-format
+msgid ""
+"A crash log has been saved to:\n"
+"{log_path}"
+msgstr ""
+"Отчёт о сбое сохранён по пути:\n"
+"{log_path}"
+

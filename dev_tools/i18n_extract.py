@@ -2,7 +2,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 APP_DIR = Path("app")
 LOCALES_DIR = APP_DIR / "locales"
 POT_FILE = LOCALES_DIR / "messages.pot"
@@ -13,6 +12,7 @@ def main() -> None:
 
     # Collect all .py files under app/
     py_files = [str(p) for p in APP_DIR.rglob("*.py") if "__pycache__" not in p.parts]
+    py_files.append("main.py")
 
     if not py_files:
         print("No Python files found under app/", file=sys.stderr)

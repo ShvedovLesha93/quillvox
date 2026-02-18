@@ -5,7 +5,7 @@ dist/
 wheels/
 *.egg-info
 tests/_local/
-app.log*
+*.log
 sandbox/
 
 # Virtual environments

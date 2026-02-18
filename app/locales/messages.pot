@@ -8,31 +8,74 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-16 11:58+0300\n"
+"POT-Creation-Date: 2026-02-18 09:57+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: app\stt_worker.py:58
-#, python-brace-format
-msgid "\"{model_name}\" model has been loaded"
+#: app\stt_worker.py:78
+msgid ""
+"Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
 msgstr ""
 
-#: app\stt_worker.py:82
+#: app\stt_worker.py:95
+#, python-brace-format
+msgid "Starting load model: {model_name}"
+msgstr ""
+
+#: app\stt_worker.py:114
+#, python-brace-format
+msgid "Successfully loaded {model_name}"
+msgstr ""
+
+#: app\stt_worker.py:148
+msgid "Transcription in process..."
+msgstr ""
+
+#: app\stt_worker.py:166
 #, python-brace-format
 msgid "Transcription completed in {duration}"
 msgstr ""
 
-#: app\views\audio_player.py:160
+#: app\stt_worker.py:178
+msgid "Error occurred during transcription: "
+msgstr ""
+
+#: app\views\audio_player_view.py:179
 msgid "No file opened"
 msgstr ""
 
-#: app\views\main_window.py:133
+#: app\views\main_window.py:38 app\views\main_window.py:250
+#: app\views\transcript_controls_view.py:119
+msgid "Transcription in Progress"
+msgstr ""
+
+#: app\views\main_window.py:47
+msgid "Terminating transcription process..."
+msgstr ""
+
+#: app\views\main_window.py:138
+msgid "See all notifications"
+msgstr ""
+
+#: app\views\main_window.py:235
 msgid "Open media file"
+msgstr ""
+
+#: app\views\main_window.py:252
+msgid "Transcription is currently running. Do you want to stop it and exit?"
+msgstr ""
+
+#: app\views\main_window.py:274 app\views\settings\settings_view.py:242
+msgid "Exit Confirmation"
+msgstr ""
+
+#: app\views\main_window.py:275
+msgid "Are you sure you want to exit?"
 msgstr ""
 
 #: app\views\menu_bar.py:35
@@ -47,71 +90,168 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: app\views\transcript_controls.py:76
+#: app\views\notifications_view.py:107
+msgid "Disable text wrapping"
+msgstr ""
+
+#: app\views\notifications_view.py:109
+msgid "Enable text wrapping"
+msgstr ""
+
+#: app\views\splash_screen.py:33
+msgid "Starting..."
+msgstr ""
+
+#: app\views\transcript_controls_view.py:96
 msgid "Transcribe"
 msgstr ""
 
-#: app\view_model\file_selector.py:48
+#: app\views\transcript_controls_view.py:102
+msgid "Transcript exists"
+msgstr ""
+
+#: app\views\transcript_controls_view.py:103
+msgid "Transcription is already exist. Do you want to rewrite it?"
+msgstr ""
+
+#: app\views\transcript_controls_view.py:120
+msgid "Transcription is currently running. Do you want to stop it?"
+msgstr ""
+
+#: app\view_model\file_selector_vm.py:50
 msgid "Audio Files"
 msgstr ""
 
-#: app\view_model\file_selector.py:49
+#: app\view_model\file_selector_vm.py:51
 msgid "Video Files"
 msgstr ""
 
-#: app\view_model\file_selector.py:50
+#: app\view_model\file_selector_vm.py:52
 msgid "All Media Files"
 msgstr ""
 
-#: app\view_model\file_selector.py:59
+#: app\view_model\file_selector_vm.py:61
 msgid "File not found"
 msgstr ""
 
-#: app\view_model\file_selector.py:82
+#: app\view_model\file_selector_vm.py:65
+#, python-brace-format
+msgid "File '{file}' already opened"
+msgstr ""
+
+#: app\view_model\file_selector_vm.py:87
 #, python-brace-format
 msgid "File '{file}' has been opened"
 msgstr ""
 
-#: app\view_model\file_selector.py:91
+#: app\view_model\file_selector_vm.py:92
 msgid "No selected file"
 msgstr ""
 
-#: app\view_model\settings_vm.py:49
-msgid "English"
+#: app\view_model\stt_worker_vm.py:180
+msgid "Transcription is terminated"
 msgstr ""
 
-#: app\view_model\settings_vm.py:50
-msgid "Russian"
+#: app\view_model\transcript_vm.py:133
+#, python-brace-format
+msgid "The JSON file is corrupted: {e}"
 msgstr ""
 
-#: app\view_model\settings_vm.py:53
-msgid "Dark"
+#: app\view_model\transcript_vm.py:138
+#, python-brace-format
+msgid "Failed to load JSON file: {file}"
 msgstr ""
 
-#: app\view_model\settings_vm.py:54
-msgid "Light"
+#: app\views\settings\general_settings_view.py:113
+msgid "Interface language"
 msgstr ""
 
-#: app\view_model\settings_vm.py:55
-msgid "System"
-msgstr ""
-
-#: app\views\settings\general_settings.py:75 app\views\settings\settings.py:233
-msgid "General"
-msgstr ""
-
-#: app\views\settings\general_settings.py:76
-msgid "Language"
-msgstr ""
-
-#: app\views\settings\general_settings.py:77
+#: app\views\settings\general_settings_view.py:115
 msgid "Theme"
 msgstr ""
 
-#: app\views\settings\settings.py:234 app\views\settings\stt_settings.py:59
+#: app\views\settings\general_settings_view.py:116
+#: app\views\settings\settings_view.py:195
+msgid "General"
+msgstr ""
+
+#: app\views\settings\settings_view.py:38
+msgid "Settings was changed"
+msgstr ""
+
+#: app\views\settings\settings_view.py:196
+#: app\views\settings\stt_settings_view.py:125
 msgid "Transcription"
 msgstr ""
 
-#: app\views\settings\settings.py:235
-msgid "Save"
+#: app\views\settings\settings_view.py:197
+msgid "Reset"
+msgstr ""
+
+#: app\views\settings\settings_view.py:198
+msgid "Apply"
+msgstr ""
+
+#: app\views\settings\settings_view.py:199
+msgid "Ok"
+msgstr ""
+
+#: app\views\settings\settings_view.py:214
+msgid "Reset all settings"
+msgstr ""
+
+#: app\views\settings\settings_view.py:215
+msgid "Are you sure you want to reset the changed settings?"
+msgstr ""
+
+#: app\views\settings\settings_view.py:243
+msgid "Settings not saved. Save changes?"
+msgstr ""
+
+#: app\views\settings\stt_settings_view.py:116
+msgid "Model"
+msgstr ""
+
+#: app\views\settings\stt_settings_view.py:118
+msgid "Device"
+msgstr ""
+
+#: app\views\settings\stt_settings_view.py:120
+msgid "Compute type"
+msgstr ""
+
+#: app\views\settings\stt_settings_view.py:122
+msgid "Batch size"
+msgstr ""
+
+#: app\views\settings\stt_settings_view.py:124
+msgid "Transcription language"
+msgstr ""
+
+#: app\views\settings\stt_settings_view.py:193
+#: app\views\settings\stt_settings_view.py:198
+msgid "Please wait… Transcription in progress"
+msgstr ""
+
+#: main.py:97
+msgid "QuillVox - Startup Error"
+msgstr ""
+
+#: main.py:98
+msgid "QuillVox failed to start due to an unexpected error."
+msgstr ""
+
+#: main.py:100
+#, python-brace-format
+msgid ""
+"A crash log has been saved to:\n"
+"{log_path}"
+msgstr ""
+
+#: main.py:115
+msgid "QuillVox crashed during startup:"
+msgstr ""
+
+#: main.py:117
+msgid "Press Enter to exit..."
 msgstr ""
