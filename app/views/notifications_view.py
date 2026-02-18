@@ -116,13 +116,13 @@ class NotificationsView(QWidget):
         print(f"after self.wrap_enabled: {self.wrap_enabled}")
         self.set_wrap_state(self.wrap_enabled)
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        if self.main_window is not None:
+    def setVisible(self, visible: bool) -> None:
+        if visible and self.main_window is not None:
             main_center = self.main_window.frameGeometry().center()
             geom = self.frameGeometry()
             geom.moveCenter(main_center)
             self.move(geom.topLeft())
+        super().setVisible(visible)
 
 
 # ============ TEST ============
