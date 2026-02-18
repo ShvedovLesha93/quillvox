@@ -1,4 +1,7 @@
 from __future__ import annotations
+from pathlib import Path
+from app.config.general_config import GeneralConfig
+from app.translator import language_manager, _
 import logging
 import multiprocessing
 import sys
@@ -15,6 +18,8 @@ def main():
 
         hide_console()
 
+    general_config = GeneralConfig()
+    language_manager.set_language(general_config.language)
     splash = None
 
     try:
@@ -26,7 +31,7 @@ def main():
         splash = create_splash()
         splash.show()
 
-        _run_app(app=app, splash=splash)
+        _run_app(app=app, splash=splash, general_config=general_config)
     except Exception:
         if splash:
             splash.hide()
@@ -34,16 +39,14 @@ def main():
         raise
 
 
-def _run_app(app: QApplication, splash: QSplashScreen) -> None:
-    from app.config.general_config import GeneralConfig
+def _run_app(
+    app: QApplication, splash: QSplashScreen, general_config: GeneralConfig
+) -> None:
     from app.models.main_model import MainModel
     from app.utils.logging_config import configure_logging
     from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
     from app.views.main_window import MainWindow
-    from app.translator import language_manager
-
-    logger = logging.getLogger(__name__)
 
     result = configure_logging(
         multiprocessing_mode=True, console_level=logging.DEBUG, file_level=logging.DEBUG
@@ -54,16 +57,6 @@ def _run_app(app: QApplication, splash: QSplashScreen) -> None:
     else:
         log_queue = None
         log_listener = None
-
-    if sys.platform == "win32":
-        try:
-            multiprocessing.set_start_method("spawn", force=True)
-        except RuntimeError:
-            pass
-        logger.debug("set_start_method: spawn")
-
-    general_config = GeneralConfig()
-    language_manager.set_language(general_config.language)
 
     main_model = MainModel()
     theme_manager = ThemeManager(app, initial_theme=general_config.theme)
@@ -93,9 +86,11 @@ def _show_crash_dialog():
     error_text = traceback.format_exc()
 
     # Log it to a file first (always, regardless of what happens next)
+    log_path = None
     try:
         with open("crash.log", "w", encoding="utf-8") as f:
             f.write(error_text)
+            log_path = Path(f.name).absolute()
     except Exception:
         pass
 
@@ -110,9 +105,11 @@ def _show_crash_dialog():
 
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Icon.Critical)
-        msg.setWindowTitle("QuillVox - Startup Error")
-        msg.setText("QuillVox failed to start due to an unexpected error.")
-        msg.setInformativeText("A crash log has been saved to:\n" "crash.log")
+        msg.setWindowTitle(_("QuillVox - Startup Error"))
+        msg.setText(_("QuillVox failed to start due to an unexpected error."))
+        msg.setInformativeText(
+            _("A crash log has been saved to:\n{log_path}").format(log_path=log_path)
+        )
         msg.setDetailedText(error_text)
         msg.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         msg.exec()
@@ -127,9 +124,9 @@ def _show_crash_dialog():
             except Exception:
                 pass
 
-        print("QuillVox crashed during startup:", file=sys.__stderr__ or sys.stderr)
+        print(_("QuillVox crashed during startup:"), file=sys.__stderr__ or sys.stderr)
         print(error_text, file=sys.__stderr__ or sys.stderr)
-        input("Press Enter to exit...")  # Keep console open so user can read it
+        input(_("Press Enter to exit..."))
 
 
 if __name__ == "__main__":

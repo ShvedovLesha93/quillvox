@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import QSplashScreen
+from app.translator import _
 
 
 def create_splash() -> QSplashScreen:
@@ -29,7 +30,7 @@ def create_splash() -> QSplashScreen:
     font.setWeight(QFont.Weight.Normal)
     painter.setFont(font)
     painter.setPen(QColor("#999999"))
-    painter.drawText(0, 90, width, 40, Qt.AlignmentFlag.AlignCenter, "Starting...")
+    painter.drawText(0, 90, width, 40, Qt.AlignmentFlag.AlignCenter, _("Starting..."))
 
     painter.end()
 
