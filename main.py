@@ -1,4 +1,5 @@
 from __future__ import annotations
+import argparse
 from pathlib import Path
 from app.config.general_config import GeneralConfig
 from app.translator import language_manager, _
@@ -10,9 +11,19 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QApplication, QSplashScreen
+    from multiprocessing import Queue
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Audio transcription desktop app")
+
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging",
+    )
+    args = parser.parse_args()
+
     if getattr(sys, "frozen", False):
         from app.console_hider import hide_console
 
@@ -31,7 +42,9 @@ def main():
         splash = create_splash()
         splash.show()
 
-        _run_app(app=app, splash=splash, general_config=general_config)
+        _run_app(
+            app=app, splash=splash, general_config=general_config, debug=args.debug
+        )
     except Exception:
         if splash:
             splash.hide()
@@ -39,25 +52,36 @@ def main():
         raise
 
 
-def _run_app(
-    app: QApplication, splash: QSplashScreen, general_config: GeneralConfig
-) -> None:
-    from app.models.main_model import MainModel
+def init_logging(level: int) -> Queue | None:
     from app.utils.logging_config import configure_logging
-    from app.theme_manager import ThemeManager
-    from app.view_model.main_vm import MainViewModel
-    from app.views.main_window import MainWindow
 
     result = configure_logging(
-        multiprocessing_mode=True, console_level=logging.DEBUG, file_level=logging.DEBUG
+        multiprocessing_mode=True, console_level=level, file_level=level
     )
     if result:
         log_queue, log_listener = result
         atexit.register(log_listener.stop)
+        return log_queue
     else:
         log_queue = None
         log_listener = None
+        return log_queue
 
+
+def _run_app(
+    app: QApplication, splash: QSplashScreen, general_config: GeneralConfig, debug=False
+) -> None:
+    from app.models.main_model import MainModel
+    from app.theme_manager import ThemeManager
+    from app.view_model.main_vm import MainViewModel
+    from app.views.main_window import MainWindow
+
+    if debug:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+
+    queue = init_logging(level)
     main_model = MainModel()
     theme_manager = ThemeManager(app, initial_theme=general_config.theme)
 
@@ -66,7 +90,7 @@ def _run_app(
         general_config=general_config,
         main_model=main_model,
         theme_manager=theme_manager,
-        log_queue=log_queue,
+        log_queue=queue,
     )
 
     view = MainWindow(app=app, theme_manager=theme_manager, main_vm=main_vm)
