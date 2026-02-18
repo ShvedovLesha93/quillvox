@@ -1,7 +1,12 @@
+from __future__ import annotations
 import logging
 import multiprocessing
 import sys
 import atexit
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QApplication, QSplashScreen
 
 
 def main():
@@ -10,15 +15,26 @@ def main():
 
         hide_console()
 
+    splash = None
+
     try:
-        _run_app()
+        from PySide6.QtWidgets import QApplication
+        from app.views.splash_screen import create_splash
+
+        app = QApplication([])
+        app.setStyle("Fusion")
+        splash = create_splash()
+        splash.show()
+
+        _run_app(app=app, splash=splash)
     except Exception:
+        if splash:
+            splash.hide()
         _show_crash_dialog()
         raise
 
 
-def _run_app():
-    from PySide6.QtWidgets import QApplication
+def _run_app(app: QApplication, splash: QSplashScreen) -> None:
     from app.config.general_config import GeneralConfig
     from app.models.main_model import MainModel
     from app.utils.logging_config import configure_logging
@@ -46,9 +62,6 @@ def _run_app():
             pass
         logger.debug("set_start_method: spawn")
 
-    app = QApplication([])
-    app.setStyle("Fusion")
-
     general_config = GeneralConfig()
     language_manager.set_language(general_config.language)
 
@@ -66,6 +79,8 @@ def _run_app():
     view = MainWindow(app=app, theme_manager=theme_manager, main_vm=main_vm)
     view.move(1020, 200)
     view.show()
+
+    splash.finish(view)  # Waits for view to appear before closing splash
 
     sys.exit(app.exec())
 
