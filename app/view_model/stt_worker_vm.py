@@ -168,10 +168,10 @@ class STTWorkerViewModel(QObject):
                     if os.name == "nt":  # Windows
                         # On Windows, os.kill with SIGTERM calls TerminateProcess (hard kill)
                         os.kill(self.process.pid, signal.SIGTERM)  # type: ignore
-                        print("The process was killed (Windows)")
+                        logger.info("The process was killed (Windows)")
                     else:  # Unix/Linux/Mac
                         os.kill(self.process.pid, signal.SIGKILL)
-                        print("The process was killed (Unix)")
+                        logger.info("The process was killed (Unix)")
                     self.process.join()
 
         self.finished.emit()
