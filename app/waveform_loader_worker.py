@@ -42,7 +42,7 @@ class WaveformLoaderWorker(QObject):
 
     def run(self) -> None:
         try:
-            logger.info(f"Loading waveform (streaming) for: {self.file.name}")
+            logger.info("Loading waveform (streaming) for: %s", self.file.name)
 
             # --- 1. Probe audio info ---
             probe_cmd = [
@@ -67,9 +67,6 @@ class WaveformLoaderWorker(QObject):
 
             lines = probe.stdout.strip().split("\n")
             sample_rate = int(lines[0])
-            channels = int(lines[1])
-
-            logger.info(f"Audio: {sample_rate} Hz, {channels} ch")
 
             # --- 2. Start ffmpeg PCM stream ---
             ffmpeg_cmd = [
@@ -149,11 +146,11 @@ class WaveformLoaderWorker(QObject):
             x_data[0::2] = positions
             x_data[1::2] = positions
 
-            logger.info(f"Generated {len(waveform)} envelope points")
+            logger.info("Generated %s envelope points", len(waveform))
 
             self.finished.emit(x_data, waveform)
 
         except Exception as e:
-            logger.error(f"Waveform error: {e}")
+            logger.error("Waveform error: %s", e)
             logger.debug(traceback.format_exc())
             self.error.emit(str(e))
