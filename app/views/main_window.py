@@ -142,10 +142,10 @@ class MainWindow(QMainWindow):
 
         if level == MessageLevel.ERROR:
             palette.setColor(QPalette.ColorRole.WindowText, QColor("red"))
-            self.status_message.setText(f"Error: {message}")
+            self.status_message.setText(message)
         elif level == MessageLevel.WARNING:
             palette.setColor(QPalette.ColorRole.WindowText, QColor("orange"))
-            self.status_message.setText(f"Warning: {message}")
+            self.status_message.setText(message)
         else:  # INFO
             palette.setColor(
                 QPalette.ColorRole.WindowText,
@@ -164,7 +164,9 @@ class MainWindow(QMainWindow):
             self.notifications_view.append_message(f"{time} | Error: {message}", "red")
         elif level == MessageLevel.WARNING:
             self.notifications_view.append_message(
-                f"{time} | Warning: {message}", "orange"
+                # fmt: off
+                f"{time} | {message}", "orange"
+                # fmt: on
             )
         else:  # INFO
             self.notifications_view.append_message(
