@@ -17,25 +17,37 @@ A user-friendly desktop application for transcribing audio files with automatic 
 - faster-whisper
 
 ## Installation
-
 ```bash
-# Clone the repository
 git clone https://github.com/ShvedovLesha93/quillvox.git
 cd quillvox
-
-# Install dependencies
-## CPU version
-uv sync --extra cpu
-
-## CUDA version (GPU)
-uv sync --extra cuda
 ```
 
-## Usage
+## Run
 
+### CPU version
 ```bash
+uv sync
 uv run main.py
 ```
+
+### CUDA version
+
+**Option A: With a dedicated virtual environment (recommended)**
+```bash
+uv venv .venv-cuda
+.venv-cuda\Scripts\activate
+uv sync --extra cuda --active
+uv run --active main.py
+```
+
+**Option B: Switch existing environment to CUDA**
+```bash
+uv sync --extra cuda
+uv run main.py
+```
+> ⚠️ Switching between CPU and CUDA will reinstall torch each time.
+
+## Usage
 
 1. Launch the application
 2. Select your audio file
