@@ -9,7 +9,6 @@ import time
 from typing import TYPE_CHECKING, Any, Mapping
 
 from faster_whisper import WhisperModel
-import torch
 
 from app.user_message import MessageLevel
 
@@ -69,19 +68,18 @@ def stt_worker(
     if language == "auto":
         language = None
 
-    if device == "cuda":
-        if not torch.cuda.is_available():
-            message_queue.put(
-                STTUserMessage(
-                    level=MessageLevel.ERROR,
-                    message=_(
-                        "Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
-                    ),
-                )
+    if device == "cuda" and not has_cuda_support():
+        message_queue.put(
+            STTUserMessage(
+                level=MessageLevel.ERROR,
+                message=_(
+                    "Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
+                ),
             )
+        )
 
-            logger.error("CUDA not available")
-            return
+        logger.error("CUDA not available")
+        return
 
     try:
         if terminate_event.is_set():
@@ -183,7 +181,8 @@ def stt_worker(
         # Clean up GPU memory
         if device == "cuda":
             try:
-                if torch.cuda.is_available():
+                if has_cuda_support():
+                    import torch
 
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug(
@@ -203,6 +202,15 @@ def stt_worker(
                 logger.warning("Failed to clean GPU memory: %s", e)
         else:
             logger.debug("Memory cleanup: Using %s, no GPU cache to clear", device)
+
+
+def has_cuda_support() -> bool:
+    try:
+        import torch
+
+        return torch.cuda.is_available()
+    except Exception:
+        return False
 
 
 def format_duration(seconds: float) -> str:
