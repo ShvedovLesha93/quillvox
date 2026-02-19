@@ -74,13 +74,7 @@ class STTWorkerViewModel(QObject):
         self.started.emit()
 
     def _check_result(self):
-        # Check if process is still running
-        if not self.process.is_alive():  # pyright: ignore
-            self.timer.stop()  # pyright: ignore
-            self.process.join()  # pyright: ignore
-            self.finished.emit()
-            logger.info("STT process completed")
-            return
+        process_done = not self.process.is_alive()  # pyright: ignore
 
         if self.segment_started_event.is_set():
             self.segment_started_event.clear()
@@ -110,6 +104,12 @@ class STTWorkerViewModel(QObject):
                 self._send_user_message(msg)
         except Empty:
             pass
+
+        if process_done:
+            self.timer.stop()  # pyright: ignore
+            self.process.join()  # pyright: ignore
+            self.finished.emit()
+            logger.info("STT process completed")
 
     def _send_user_message(self, msg: STTUserMessage) -> None:
         if msg.params:
