@@ -1,63 +1,25 @@
-import sys
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_all
 
-block_cipher = None
-binaries = []
-
-# Collect all data files
-datas = []
-
-# Collect data files from dependencies
-try:
-    datas += collect_data_files('faster_whisper', include_py_files=False)
-except Exception:
-    pass
-
+rich_datas, rich_binaries, rich_hiddenimports = collect_all("rich")
 
 a = Analysis(
-    ['main.py'],
+    ["launcher.py"],
     pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=[],
+    binaries=rich_binaries,
+    datas=rich_datas,
+    hiddenimports=rich_hiddenimports,
     hookspath=[],
-    hooksconfig={},
+    runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False,
 )
-
-pyz = PYZ(a.pure, a.zipped_data)
-
+pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    [],
-    exclude_binaries=True,
-    name='QuillVox',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    contents_directory='runtime',
-    # icon='app/resources/icons/app_icon.ico',  # Uncomment and add your app icon
-)
-
-coll = COLLECT(
-    exe,
     a.binaries,
-    # a.zipfiles,
     a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='QuillVox',
+    name="QuillVox",
+    debug=False,
+    console=True,
+    onefile=True,
 )

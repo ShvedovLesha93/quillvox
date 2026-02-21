@@ -1,12 +1,9 @@
 import gettext
 from pathlib import Path
-import sys
 
 from PySide6.QtCore import QObject, Signal
 
 import logging
-
-from app.constants import FrozenPath
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +14,7 @@ class LanguageManager(QObject):
     def __init__(self):
         super().__init__()
 
-        # Detect if running from PyInstaller bundle
-        if getattr(sys, "frozen", False):
-            self.locales_dir = Path(FrozenPath.LOCALES.value)
-        else:
-            # Running in normal Python environment
-            self.locales_dir = Path("app/locales")
+        self.locales_dir = Path("app/locales")
 
         logger.info(f"Locales directory: {self.locales_dir}")
 

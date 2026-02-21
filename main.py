@@ -24,11 +24,6 @@ def main():
     )
     args = parser.parse_args()
 
-    if getattr(sys, "frozen", False):
-        from app.console_hider import hide_console
-
-        hide_console()
-
     general_config = GeneralConfig()
     language_manager.set_language(general_config.language)
     splash = None
@@ -140,13 +135,12 @@ def _show_crash_dialog():
 
     except Exception:
         # Qt itself failed - last resort: show the console with the error
-        if getattr(sys, "frozen", False):
-            try:
-                from app.console_hider import show_console
+        try:
+            from app.console_hider import show_console
 
-                show_console()
-            except Exception:
-                pass
+            show_console()
+        except Exception:
+            pass
 
         print(_("QuillVox crashed during startup:"), file=sys.__stderr__ or sys.stderr)
         print(error_text, file=sys.__stderr__ or sys.stderr)

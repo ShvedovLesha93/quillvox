@@ -1,11 +1,6 @@
 from enum import Enum, auto
 
 
-class FrozenPath(Enum):
-    LOCALES = "locales"
-    STYLES = "styles"
-
-
 class PlaybackState(Enum):
     STOPPED = auto()
     PLAYING = auto()
