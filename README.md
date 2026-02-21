@@ -10,29 +10,45 @@ A user-friendly desktop application for transcribing audio files with automatic 
 - ⚡ Fast processing with local inference
 - 🔄 Support for multiple audio formats
 
-## Requirements
+## Usage
 
-- Python 3.12+
-- PySide6
-- faster-whisper
+1. Launch the application
+2. Select your audio file
+3. Click transcribe
+4. The transcript will be automatically saved as a JSON file
 
-## Installation
+## For Developers
+
+### Requirements
+
+See [pyproject.toml](pyproject.toml) for the full dependency list.
+
+### Installation
 ```bash
 git clone https://github.com/ShvedovLesha93/quillvox.git
 cd quillvox
 ```
 
-## Run
+### Run
 
-### CPU version
+#### CPU version
 ```bash
 uv sync
 uv run main.py
 ```
 
-### CUDA version
+#### CUDA version
 
-**Option A: With a dedicated virtual environment (recommended)**
+**Option A: Switch existing environment to CUDA**
+```bash
+uv sync --extra cuda
+uv run main.py
+```
+> ⚠️ Switching between CPU and CUDA will reinstall torch each time.
+
+**Option B: With a dedicated virtual environment**
+
+On Windows:
 ```bash
 uv venv .venv-cuda
 .venv-cuda\Scripts\activate
@@ -40,19 +56,13 @@ uv sync --extra cuda --active
 uv run --active main.py
 ```
 
-**Option B: Switch existing environment to CUDA**
+On Linux/macOS:
 ```bash
-uv sync --extra cuda
-uv run main.py
+uv venv .venv-cuda
+source .venv-cuda/bin/activate
+uv sync --extra cuda --active
+uv run --active main.py
 ```
-> ⚠️ Switching between CPU and CUDA will reinstall torch each time.
-
-## Usage
-
-1. Launch the application
-2. Select your audio file
-3. Click transcribe
-4. The transcript will be automatically saved as a JSON file
 
 ## License
 
