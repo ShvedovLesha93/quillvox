@@ -1,8 +1,8 @@
 from pathlib import Path
-import sys
 
-from app.constants import FrozenPath, ThemeMode
+from app.constants import ThemeMode
 
+import app.resources.styles as styles
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,14 +32,8 @@ class StyleLoader:
         else:
             theme_ = "light"
 
-        if getattr(sys, "frozen", False):
-            styles_folder = Path(FrozenPath.STYLES.value)
-            style_path = styles_folder / f"{theme_}.qss"
-        else:
-            import app.resources.styles as styles
-
-            styles_folder = Path(styles.__file__).parent
-            style_path = styles_folder / f"{theme_}.qss"
+        styles_folder = Path(styles.__file__).parent
+        style_path = styles_folder / f"{theme_}.qss"
 
         logger.debug("Styles folder: %s", styles_folder)
 

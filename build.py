@@ -3,15 +3,14 @@ import shutil
 from pathlib import Path
 import subprocess
 
-from app.constants import FrozenPath
-
 from app.utils.logging_config import configure_logging
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-DIST_PATH = Path("dist/QuillVox")
+APP_PATH = Path("app")
+DIST_PATH = Path("dist")
 
 
 def run_pyinstaller() -> tuple[bool, str | None]:
@@ -34,25 +33,15 @@ def run_pyinstaller() -> tuple[bool, str | None]:
         return (False, str(e))
 
 
-def copy_files(copy_from: Path, to_folder: str, include: str) -> None:
-    for f in copy_from.rglob(include):
-        relative = f.relative_to(copy_from)
-        target = DIST_PATH / to_folder / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(f, target)
+def collect_files() -> None:
+    shutil.copytree(
+        APP_PATH,
+        DIST_PATH / "app",
+        ignore=shutil.ignore_patterns("__pycache__", "*.po", "*.pot", "*.pyc"),
+    )
 
-
-def copy_manager() -> None:
-    import app.resources.styles as styles
-    import app.locales as locales
-
-    styles_path = Path(styles.__file__).parent
-    locales_path = Path(locales.__file__).parent
-
-    copy_files(styles_path, to_folder=FrozenPath.STYLES.value, include="*.qss")
-    logger.info("*.qss files copied")
-    copy_files(locales_path, to_folder=FrozenPath.LOCALES.value, include="*.mo")
-    logger.info("locales copied")
+    for file in ["main.py", "uv.lock", "pyproject.toml"]:
+        shutil.copy(file, DIST_PATH / file)
 
 
 def clean() -> bool:
@@ -95,7 +84,7 @@ def main() -> None:
     result, err = run_pyinstaller()
     if result:
         logger.info("PyInstaller build complete")
-        copy_manager()
+        collect_files()
     else:
         logger.critical("Build failed: %s,", err)
 
