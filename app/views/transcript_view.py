@@ -1,5 +1,5 @@
 from PySide6.QtCore import Slot
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 
 from app.view_model.transcript_vm import TranscriptViewModel
@@ -60,6 +60,7 @@ class TranscriptView(QWidget):
     def _populate_transcript(self, text: str) -> None:
         """Load transcript segments into the text editor."""
         cursor = self.text_edit.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
 
         cursor.insertText(text)
         cursor.insertBlock()
