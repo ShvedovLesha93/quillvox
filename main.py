@@ -15,14 +15,23 @@ if TYPE_CHECKING:
 
 
 def main():
+    crash_dialog_enabled = True
     parser = argparse.ArgumentParser(description="Audio transcription desktop app")
 
     parser.add_argument(
-        "--debug",
+        "--debug-logging",
         action="store_true",
-        help="Enable debug logging",
+        help="Enable debug logging (sets log level to DEBUG)",
+    )
+    parser.add_argument(
+        "--no-crash-dialog",
+        action="store_true",
+        help="Disable crash dialog on fatal error",
     )
     args = parser.parse_args()
+
+    crash_dialog_enabled = not args.no_crash_dialog
+    debug_logging_enabled = args.debug_logging
 
     general_config = GeneralConfig()
     language_manager.set_language(general_config.language)
@@ -38,12 +47,16 @@ def main():
         splash.show()
 
         _run_app(
-            app=app, splash=splash, general_config=general_config, debug=args.debug
+            app=app,
+            splash=splash,
+            general_config=general_config,
+            debug=debug_logging_enabled,
         )
     except Exception:
         if splash:
             splash.hide()
-        _show_crash_dialog()
+        if crash_dialog_enabled:
+            _show_crash_dialog()
         raise
 
 
