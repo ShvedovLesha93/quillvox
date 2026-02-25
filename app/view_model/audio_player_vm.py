@@ -71,12 +71,15 @@ class AudioPlayerViewModel(QObject):
         logger.info("Playback: seek started")
 
     def end_seek(self, pos: int):
-        self.player.setPosition(pos)
+        self.set_position(pos)
         if self._was_playing:
             self.player.play()
 
         logger.info("Playback: seek finished")
         logger.debug("Current position: %s", pos)
+
+    def set_position(self, pos: int) -> None:
+        self.player.setPosition(pos)
 
     def seek_to(self, pos: int):
         self._on_position_changed(pos)
