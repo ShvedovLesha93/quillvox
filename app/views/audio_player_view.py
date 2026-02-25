@@ -9,12 +9,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QSlider,
-    QToolTip,
 )
 from PySide6.QtCore import Qt, Signal, Slot
 
 from app.translator import language_manager, _
 from app.constants import PlaybackState, ThemeMode
+from app.utils.time_format import format_time
 from app.views.waveform_view import WaveformView
 from .ui_utils.icons import IconButton, IconLabel
 
@@ -31,12 +31,51 @@ class TimelineSlider(QSlider):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._mouse_pressed = False
+        self.time_label: QLabel | None = None
+        self._label_parent: QWidget | None = None
+
+    def set_time_label(self, label: QLabel) -> None:
+        """Set external time label"""
+        self.time_label = label
+        parent = label.parent()
+        if isinstance(parent, QWidget):
+            self._label_parent = parent
 
     def mouseMoveEvent(self, event) -> None:
         super().mouseMoveEvent(event)
 
+        if self.time_label is None or self._label_parent is None:
+            return
+
         value = self._value_from_position(event.position())
-        QToolTip.showText(QCursor.pos(), self._format_time(value), self)
+
+        # Update label text and position
+        self.time_label.setText(format_time(value, show_ms=True))
+        self.time_label.adjustSize()
+
+        # Calculate position with edge detection
+        pos = event.position()
+        label_width = self.time_label.width()
+        slider_width = self.width()
+
+        # Horizontal offset
+        if pos.x() + 15 + label_width > slider_width:
+            x_offset = -(label_width + 15)  # Left of cursor
+        else:
+            x_offset = 15  # Right of cursor
+
+        # Vertical offset (always above slider handle)
+        y_offset = 10
+
+        # Map position from slider to parent widget coordinates
+        global_pos = self.mapTo(self._label_parent, event.position().toPoint())
+
+        self.time_label.move(
+            int(global_pos.x() + x_offset), int(global_pos.y() + y_offset)
+        )
+        self.time_label.raise_()
+        self.time_label.setVisible(True)
+
         if not self._mouse_pressed:
             self.hoverValueChanged.emit(value)
 
@@ -49,25 +88,15 @@ class TimelineSlider(QSlider):
         super().mouseReleaseEvent(event)
 
     def leaveEvent(self, event) -> None:
+        if self.time_label:
+            self.time_label.setVisible(False)
         self.hoverLeft.emit()
         return super().leaveEvent(event)
 
     def _value_from_position(self, pos) -> int:
         ratio = pos.x() / self.width()
-
         value = self.minimum() + ratio * (self.maximum() - self.minimum())
         return int(value)
-
-    def _format_time(self, ms: int) -> str:
-        total_seconds = ms // 1000
-        milliseconds = ms % 1000
-        seconds = total_seconds % 60
-        minutes = (total_seconds // 60) % 60
-        hours = total_seconds // 3600
-
-        if hours > 0:
-            return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{milliseconds:03d}"
-        return f"{minutes:02d}:{seconds:02d}:{milliseconds:03d}"
 
 
 class TruncatingLabel(QLabel):
@@ -167,6 +196,16 @@ class AudioPlayer(QWidget):
         self.timeline_slider = TimelineSlider(Qt.Orientation.Horizontal)
         self.timeline_slider.setRange(0, 0)
         self.timeline_slider.setMouseTracking(False)
+
+        self.timeline_label = QLabel(self)
+        self.timeline_label.setObjectName("timelineLabel")
+        self.timeline_label.raise_()
+        self.timeline_label.setVisible(False)
+        self.timeline_label.setAttribute(
+            Qt.WidgetAttribute.WA_TransparentForMouseEvents
+        )
+
+        self.timeline_slider.set_time_label(self.timeline_label)
 
         # Time labels
         self.current_time_label = QLabel("00:00")
@@ -268,6 +307,10 @@ class AudioPlayer(QWidget):
         # =========== WaveformViewModel → UI ===========
         self.waveform_vm.waveform_loaded.connect(self.waveform_view.load_waveform)
         self.waveform_view.position_changed.connect(self.audio_player_vm.set_position)
+        self.waveform_view.hover_position_changed.connect(
+            self.audio_player_vm.hover_seek_to
+        )
+        self.waveform_view.hover_left.connect(self.audio_player_vm.hover_end_seek)
 
     @Slot(int)
     def _on_duration_changed(self, value: int) -> None:
@@ -338,7 +381,7 @@ if __name__ == "__main__":
 
     waveform_vm = WaveformViewModel()
     audio_player_vm = AudioPlayerViewModel(waveform_vm)
-    theme_manager = ThemeManager(app, ThemeMode.LIGHT)
+    theme_manager = ThemeManager(app, ThemeMode.DARK)
 
     view = AudioPlayer(
         audio_player_vm=audio_player_vm,

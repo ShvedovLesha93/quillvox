@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout
 
 from app.constants import ThemeMode
 from app.theme_manager import ThemeManager
+from app.utils.time_format import format_time
 
 if TYPE_CHECKING:
     from numpy import ndarray
@@ -24,6 +25,8 @@ class WaveformView(QWidget):
 
     position_changed = Signal(int)
     loading_finished = Signal()
+    hover_position_changed = Signal(int)
+    hover_left = Signal()
 
     def __init__(
         self, waveform_vm: WaveformViewModel, theme_manager: ThemeManager, parent=None
@@ -46,9 +49,20 @@ class WaveformView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        # Time label for hover position
+        self.position_label = QLabel()
+        self.position_label.setObjectName("timelineLabel")
+        self.position_label.setVisible(False)
+        self.position_label.setAttribute(
+            Qt.WidgetAttribute.WA_TransparentForMouseEvents
+        )  # Don't block mouse events
+
         # Plot widget
         self.plot_widget = pg.PlotWidget()
         self.plot_widget.setMouseTracking(True)
+
+        self.position_label.setParent(self.plot_widget)
+        self.position_label.raise_()
 
         # Configure axes
         self.plot_widget.showGrid(x=False, y=False)
@@ -180,10 +194,39 @@ class WaveformView(QWidget):
             return
 
         position = self._get_position_from_scene(pos)
-
         hover_x = position * self.original_length
+        hover_pos_sample = int(position * self.duration)
+
+        # Update label position and text
+        self.position_label.setText(format_time(hover_pos_sample, show_ms=True))
+        self.position_label.adjustSize()
+
+        # Position label near cursor (with offset to not block view)
+        widget_pos = self.plot_widget.mapFromScene(pos)
+
+        # Check if label would go off the right edge
+        widget_width = self.plot_widget.width()
+        label_width = self.position_label.width()
+
+        # If too close to right edge, shift label to the left of cursor
+        if widget_pos.x() + 15 + label_width > widget_width:
+            x_offset = -(label_width + 15)  # Left of cursor
+        else:
+            x_offset = 15  # Right of cursor (default)
+
+        # If too close to top, shift label below cursor instead of above
+        if widget_pos.y() - 25 < 0:
+            y_offset = 15
+        else:
+            y_offset = -25
+
+        self.position_label.move(widget_pos.x() + x_offset, widget_pos.y() + y_offset)
+        self.position_label.setVisible(True)
+
         self.hover_line.setPos(hover_x)
         self.hover_line.setVisible(True)
+
+        self.hover_position_changed.emit(hover_pos_sample)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def _on_mouse_click(self, event: MouseClickEvent) -> None:
@@ -203,4 +246,6 @@ class WaveformView(QWidget):
     def leaveEvent(self, event) -> None:
         """Hide hover line when mouse leaves"""
         self.hover_line.setVisible(False)
+        self.hover_left.emit()
+        self.position_label.setVisible(False)
         self.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
