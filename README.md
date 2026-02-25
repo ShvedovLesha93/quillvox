@@ -64,6 +64,13 @@ uv sync --extra cuda --active
 uv run --active main.py
 ```
 
+#### Args
+
+| Argument            | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `--debug-logging`   | Enable debug logging (sets log level to DEBUG) |
+| `--no-crash-dialog` | Disable crash dialog on fatal error            |
+
 ## License
 
 MIT
