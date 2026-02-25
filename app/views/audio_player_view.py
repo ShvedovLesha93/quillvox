@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from PySide6.QtGui import QFontMetrics
+from PySide6.QtGui import QFontMetrics, QCursor
 from PySide6.QtWidgets import (
     QSizePolicy,
     QWidget,
@@ -9,8 +9,9 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QSlider,
+    QToolTip,
 )
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import Qt, Signal, Slot
 
 from app.translator import language_manager, _
 from app.constants import PlaybackState, ThemeMode
@@ -21,6 +22,37 @@ if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
     from app.view_model.waveform_vm import WaveformViewModel
     from app.view_model.audio_player_vm import AudioPlayerViewModel
+
+
+class TimelineSlider(QSlider):
+    hoverValueChanged = Signal(int)
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    def mouseMoveEvent(self, event) -> None:
+        super().mouseMoveEvent(event)
+
+        value = self._value_from_position(event.position())
+        self.hoverValueChanged.emit(value)
+        QToolTip.showText(QCursor.pos(), self._format_time(value), self)
+
+    def _value_from_position(self, pos) -> int:
+        ratio = pos.x() / self.width()
+
+        value = self.minimum() + ratio * (self.maximum() - self.minimum())
+        return int(value)
+
+    def _format_time(self, ms: int) -> str:
+        total_seconds = ms // 1000
+        milliseconds = ms % 1000
+        seconds = total_seconds % 60
+        minutes = (total_seconds // 60) % 60
+        hours = total_seconds // 3600
+
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}:{milliseconds:03d}"
+        return f"{minutes:02d}:{seconds:02d}:{milliseconds:03d}"
 
 
 class TruncatingLabel(QLabel):
@@ -120,8 +152,9 @@ class AudioPlayer(QWidget):
         timeline_layout.addLayout(btn_layout)
 
         # Timeline slider
-        self.timeline_slider = QSlider(Qt.Orientation.Horizontal)
+        self.timeline_slider = TimelineSlider(Qt.Orientation.Horizontal)
         self.timeline_slider.setRange(0, 0)
+        self.timeline_slider.setMouseTracking(False)
 
         # Time labels
         self.current_time_label = QLabel("00:00")
@@ -225,6 +258,12 @@ class AudioPlayer(QWidget):
         # =========== WaveformViewModel → UI ===========
         self.waveform_vm.waveform_loaded.connect(self.waveform_view.load_waveform)
 
+    @Slot(int)
+    def _on_position_changed(self, value: int) -> None:
+        if not self.timeline_slider.isSliderDown():
+            self.timeline_slider.setValue(value)
+            self.timeline_slider.setToolTipDuration(value)
+
     def _on_volume_clicked(self, value: int) -> None:
         def set_slider_volume(value: int) -> None:
             self.volume_slider.blockSignals(True)
@@ -248,6 +287,7 @@ class AudioPlayer(QWidget):
         self.volume_btn.set_icon(icon)
 
     def _on_file_loaded(self, file: str) -> None:
+        self.timeline_slider.setMouseTracking(True)
         self.file_name.setText(file)
         self.play_btn.setEnabled(True)
 
