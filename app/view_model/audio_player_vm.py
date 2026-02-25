@@ -1,5 +1,4 @@
 from pathlib import Path
-from weakref import WeakValueDictionary
 from PySide6.QtCore import QObject, Signal, QUrl
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
@@ -16,6 +15,8 @@ class AudioPlayerViewModel(QObject):
     playback_state_changed = Signal(PlaybackState)
     duration_changed = Signal(int)
     position_changed = Signal(int)
+    hover_position_changed = Signal(int)
+    hover_position_left = Signal()
     file_loaded = Signal(str)
     str_speed_changed = Signal(str)
     str_current_time_changed = Signal(str)
@@ -79,6 +80,13 @@ class AudioPlayerViewModel(QObject):
 
     def seek_to(self, pos: int):
         self._on_position_changed(pos)
+        self.hover_position_left.emit()
+
+    def hover_seek_to(self, pos: int) -> None:
+        self.hover_position_changed.emit(pos)
+
+    def hover_end_seek(self) -> None:
+        self.hover_position_left.emit()
 
     def _on_qt_state_changed(self, qt_state):
         if qt_state == QMediaPlayer.PlaybackState.PlayingState:
