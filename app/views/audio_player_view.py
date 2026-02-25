@@ -26,16 +26,31 @@ if TYPE_CHECKING:
 
 class TimelineSlider(QSlider):
     hoverValueChanged = Signal(int)
+    hoverLeft = Signal()
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self._mouse_pressed = False
 
     def mouseMoveEvent(self, event) -> None:
         super().mouseMoveEvent(event)
 
         value = self._value_from_position(event.position())
-        self.hoverValueChanged.emit(value)
         QToolTip.showText(QCursor.pos(), self._format_time(value), self)
+        if not self._mouse_pressed:
+            self.hoverValueChanged.emit(value)
+
+    def mousePressEvent(self, event) -> None:
+        self._mouse_pressed = True
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        self._mouse_pressed = False
+        super().mouseReleaseEvent(event)
+
+    def leaveEvent(self, event) -> None:
+        self.hoverLeft.emit()
+        return super().leaveEvent(event)
 
     def _value_from_position(self, pos) -> int:
         ratio = pos.x() / self.width()
@@ -226,6 +241,10 @@ class AudioPlayer(QWidget):
         )
         self.timeline_slider.sliderMoved.connect(self.audio_player_vm.seek_to)
         self.timeline_slider.valueChanged.connect(self._update_visualizer_position)
+        self.timeline_slider.hoverValueChanged.connect(
+            self.audio_player_vm.hover_seek_to
+        )
+        self.timeline_slider.hoverLeft.connect(self.audio_player_vm.hover_end_seek)
 
         # Controls
 

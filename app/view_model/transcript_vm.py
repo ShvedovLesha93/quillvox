@@ -24,6 +24,8 @@ class TranscriptViewModel(QObject):
     clear_requested = Signal()
     transcript_loaded = Signal(str)
     block_index_changed = Signal(int)
+    hover_block_index_changed = Signal(int)
+    hover_block_reset = Signal()
 
     def __init__(
         self, main_vm: MainViewModel, transcript: Transcript, stt_config: STTConfig
@@ -40,12 +42,22 @@ class TranscriptViewModel(QObject):
     def _connect_signals(self) -> None:
         self.main_vm.file_selector_vm.file_opened.connect(self._on_file_opened)
         self.main_vm.audio_player_vm.position_changed.connect(self._on_position_changed)
+        self.main_vm.audio_player_vm.hover_position_changed.connect(
+            self._on_hover_position_changed
+        )
+        self.main_vm.audio_player_vm.hover_position_left.connect(self.hover_block_reset)
 
     @Slot(int)
     def _on_position_changed(self, pos: int) -> None:
         pos_seconds = pos / 1000.0
         idx = self.find_block_at_position(pos_seconds)
         self.block_index_changed.emit(idx)
+
+    @Slot(int)
+    def _on_hover_position_changed(self, pos: int) -> None:
+        pos_seconds = pos / 1000.0
+        idx = self.find_block_at_position(pos_seconds)
+        self.hover_block_index_changed.emit(idx)
 
     @Slot()
     def _on_file_opened(self) -> None:
