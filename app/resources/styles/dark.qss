@@ -51,3 +51,12 @@ QFrame#separator {
   background-color: #404040;
   border: none
 }
+
+/* Timeline label */
+QLabel#timelineLabel {
+  background-color: rgba(0, 0, 0, 220);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 14px;
+}

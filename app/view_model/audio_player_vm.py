@@ -6,6 +6,7 @@ from app.constants import PlaybackState
 
 import logging
 
+from app.utils.time_format import format_time
 from app.view_model.waveform_vm import WaveformViewModel
 
 logger = logging.getLogger(__name__)
@@ -128,19 +129,8 @@ class AudioPlayerViewModel(QObject):
 
     def _on_duration_changed(self, duration: int):
         self.duration_changed.emit(duration)
-        self.str_total_time_changed.emit(self._format_time(duration))
+        self.str_total_time_changed.emit(format_time(duration))
 
     def _on_position_changed(self, pos: int):
         self.position_changed.emit(pos)
-        self.str_current_time_changed.emit(self._format_time(pos))
-
-    @staticmethod
-    def _format_time(ms: int) -> str:
-        total_seconds = ms // 1000
-        seconds = total_seconds % 60
-        minutes = (total_seconds // 60) % 60
-        hours = total_seconds // 3600
-
-        if hours > 0:
-            return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-        return f"{minutes:02d}:{seconds:02d}"
+        self.str_current_time_changed.emit(format_time(pos))
