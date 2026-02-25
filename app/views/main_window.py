@@ -8,9 +8,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
+    QProgressBar,
     QPushButton,
+    QSizePolicy,
     QSlider,
     QSplitter,
+    QStackedWidget,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -105,15 +108,28 @@ class MainWindow(QMainWindow):
         user_msg.message.connect(self.append_status_message)
         self.main_vm.stt_worker_vm.started.connect(self.on_transcription_started)
         self.main_vm.stt_worker_vm.finished.connect(self.on_transcription_finished)
+        self.main_vm.stt_worker_vm.progress_updated.connect(self.progress_bar.setValue)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
+
+        self.status_stack = QStackedWidget()
+
         self.status_message = QLabel()
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+
+        self.status_stack.addWidget(self.status_message)
+        self.status_stack.addWidget(self.progress_bar)
+
         self.user_logger_btn = IconButton("format_align_justify", scale=0.8)
         self.user_logger_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
         status_bar.addWidget(self.user_logger_btn)
-        status_bar.addWidget(self.status_message)
+        status_bar.addWidget(self.status_stack, 1)
 
     def _setup_ui(self) -> None:
         central_widget = QWidget()
@@ -176,6 +192,7 @@ class MainWindow(QMainWindow):
         self.status_message.setPalette(palette)
 
     def on_transcription_started(self) -> None:
+        self.status_stack.setCurrentIndex(1)
         self.is_process_alive = True
         self.transcript_controls.start_transcript_btn.setEnabled(False)
         self.transcript_controls.start_transcript_btn.start_spinner()
@@ -185,6 +202,7 @@ class MainWindow(QMainWindow):
         self.menu_bar.open_media.setEnabled(False)
 
     def on_transcription_finished(self) -> None:
+        self.status_stack.setCurrentIndex(0)
         self.is_process_alive = False
         self.transcript_controls.start_transcript_btn.setEnabled(True)
         self.transcript_controls.start_transcript_btn.stop_spinner()

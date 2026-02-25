@@ -37,6 +37,7 @@ def stt_worker(
     message_queue: Queue,
     terminate_event,
     log_queue: Queue | None,
+    progress_queue: Queue,
 ):
 
     if log_queue:
@@ -153,6 +154,9 @@ def stt_worker(
         for seg in segments:
             if terminate_event.is_set():
                 return
+            pct = round((seg.end / info.duration) * 100, 1)
+            progress_queue.put(min(pct, 100.0))
+
             segment_queue.put(seg)
 
         end = time.perf_counter()

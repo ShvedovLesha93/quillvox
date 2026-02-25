@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 class STTWorkerViewModel(QObject):
     finished = Signal()
     started = Signal()
+    progress_updated = Signal(int)
 
     def __init__(
         self,
@@ -51,6 +52,7 @@ class STTWorkerViewModel(QObject):
         self.segment_queue = Queue()
         self.segment_started_event = Event()
         self.message_queue = Queue()
+        self.progress_queue = Queue()
         self.terminate_event = Event()
 
         self.process = Process(
@@ -63,6 +65,7 @@ class STTWorkerViewModel(QObject):
                 self.message_queue,
                 self.terminate_event,
                 self.log_queue,
+                self.progress_queue,
             ),
         )
         self.process.start()
@@ -102,6 +105,14 @@ class STTWorkerViewModel(QObject):
             while True:
                 msg = self.message_queue.get_nowait()  # pyright: ignore
                 self._send_user_message(msg)
+        except Empty:
+            pass
+
+        # Progress
+        try:
+            while True:
+                pct = self.progress_queue.get_nowait()
+                self.progress_updated.emit(int(pct))
         except Empty:
             pass
 
