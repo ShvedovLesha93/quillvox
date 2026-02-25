@@ -22,11 +22,8 @@ logger = logging.getLogger(__name__)
 class WaveformView(QWidget):
     """High-performance waveform visualizer using PyQtGraph's built-in optimizations"""
 
-    seek_started = Signal()
-    position_moved = Signal(float)
-    seek_finished = Signal(float)
+    position_changed = Signal(int)
     loading_finished = Signal()
-    loading_error = Signal(str)
 
     def __init__(
         self, waveform_vm: WaveformViewModel, theme_manager: ThemeManager, parent=None
@@ -38,7 +35,7 @@ class WaveformView(QWidget):
         self.x_data = None
         self.original_length = 0
         self.current_position = 0.0
-        self.is_dragging = False
+        self.duration: int
 
         self._setup_ui()
         self.update_theme(self.theme_manager.applied_theme)
@@ -141,12 +138,10 @@ class WaveformView(QWidget):
 
     def set_position(self, position: float) -> None:
         """Set current playback position (0.0 to 1.0)"""
-        self.current_position = max(0.0, min(1.0, position))
-
-        if not self.is_dragging and self.original_length > 0:
-            # Just update position line - waveform stays stable
-            pos_sample = int(self.current_position * self.original_length)
-            self.position_line.setPos(pos_sample)
+        new_value = position / self.duration
+        self.current_position = max(0.0, min(1.0, new_value))
+        pos_sample = int(self.current_position * self.original_length)
+        self.position_line.setPos(pos_sample)
 
     def load_waveform(self, x_data: ndarray, waveform_data: ndarray) -> None:
         """Callback when waveform data is loaded"""
@@ -186,17 +181,10 @@ class WaveformView(QWidget):
 
         position = self._get_position_from_scene(pos)
 
-        if self.is_dragging:
-            self.current_position = position
-            pos_sample = int(position * self.original_length)
-            self.position_line.setPos(pos_sample)
-            self.position_moved.emit(position)
-        else:
-            # Show hover line
-            hover_x = position * self.original_length
-            self.hover_line.setPos(hover_x)
-            self.hover_line.setVisible(True)
-            self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        hover_x = position * self.original_length
+        self.hover_line.setPos(hover_x)
+        self.hover_line.setVisible(True)
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def _on_mouse_click(self, event: MouseClickEvent) -> None:
         """Handle mouse clicks for seeking"""
@@ -206,20 +194,11 @@ class WaveformView(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             position = self._get_position_from_scene(event.scenePos())
 
-            self.is_dragging = True
             self.current_position = position
             pos_sample = int(position * self.original_length)
             self.position_line.setPos(pos_sample)
-            self.seek_started.emit()
-            self.position_moved.emit(position)
-            self.setCursor(QCursor(Qt.CursorShape.ClosedHandCursor))
-
-    def mouseReleaseEvent(self, event) -> None:
-        """Handle mouse release to finish seeking"""
-        if event.button() == Qt.MouseButton.LeftButton and self.is_dragging:
-            self.is_dragging = False
-            self.seek_finished.emit(self.current_position)
-            self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+            current_pos_sample = int(self.current_position * self.duration)
+            self.position_changed.emit(current_pos_sample)
 
     def leaveEvent(self, event) -> None:
         """Hide hover line when mouse leaves"""

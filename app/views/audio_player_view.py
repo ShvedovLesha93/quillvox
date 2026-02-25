@@ -128,7 +128,7 @@ class AudioPlayer(QWidget):
         self.volume_before_mute: int
 
         self._setup_ui()
-        self._bind_vm()
+        self._connect_signals()
 
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
@@ -150,9 +150,6 @@ class AudioPlayer(QWidget):
         self.waveform_view = WaveformView(
             waveform_vm=self.waveform_vm, theme_manager=self.theme_manager, parent=self
         )
-        self.waveform_view.seek_started.connect(self.audio_player_vm.begin_seek)
-        self.waveform_view.position_moved.connect(self._on_visualizer_position_moved)
-        self.waveform_view.seek_finished.connect(self._on_visualizer_seek_finished)
 
         # Playback buttons
         self.play_btn = IconButton(name="play_arrow", scale=0.8)
@@ -226,7 +223,7 @@ class AudioPlayer(QWidget):
     def retranslate(self) -> None:
         self.file_name.setText(_("No file opened"))
 
-    def _bind_vm(self) -> None:
+    def _connect_signals(self) -> None:
         # =========== UI → AudioPlayerViewModel ============
         self.play_btn.clicked.connect(self.audio_player_vm.toggle_play)
         self.stop_btn.clicked.connect(self.audio_player_vm.stop)
@@ -240,7 +237,6 @@ class AudioPlayer(QWidget):
             lambda: self.audio_player_vm.end_seek(self.timeline_slider.value())
         )
         self.timeline_slider.sliderMoved.connect(self.audio_player_vm.seek_to)
-        self.timeline_slider.valueChanged.connect(self._update_visualizer_position)
         self.timeline_slider.hoverValueChanged.connect(
             self.audio_player_vm.hover_seek_to
         )
@@ -256,13 +252,8 @@ class AudioPlayer(QWidget):
         self.speed_reset_btn.clicked.connect(self._on_speed_reset_btn_clicked)
 
         # =========== AudioPlayerViewModel → UI ===========
-        self.audio_player_vm.duration_changed.connect(
-            lambda d: self.timeline_slider.setRange(0, d)
-        )
-        self.audio_player_vm.position_changed.connect(
-            lambda p: not self.timeline_slider.isSliderDown()
-            and self.timeline_slider.setValue(p)
-        )
+        self.audio_player_vm.duration_changed.connect(self._on_duration_changed)
+        self.audio_player_vm.position_changed.connect(self._on_position_changed)
 
         self.audio_player_vm.str_current_time_changed.connect(
             self.current_time_label.setText
@@ -276,12 +267,18 @@ class AudioPlayer(QWidget):
 
         # =========== WaveformViewModel → UI ===========
         self.waveform_vm.waveform_loaded.connect(self.waveform_view.load_waveform)
+        self.waveform_view.position_changed.connect(self.audio_player_vm.set_position)
+
+    @Slot(int)
+    def _on_duration_changed(self, value: int) -> None:
+        self.timeline_slider.setRange(0, value)
+        self.waveform_view.duration = value
 
     @Slot(int)
     def _on_position_changed(self, value: int) -> None:
         if not self.timeline_slider.isSliderDown():
             self.timeline_slider.setValue(value)
-            self.timeline_slider.setToolTipDuration(value)
+            self.waveform_view.set_position(value)
 
     def _on_volume_clicked(self, value: int) -> None:
         def set_slider_volume(value: int) -> None:
@@ -326,30 +323,6 @@ class AudioPlayer(QWidget):
         else:
             self.play_btn.set_icon(icon="play_arrow")
             self.stop_btn.setEnabled(state != PlaybackState.STOPPED)
-
-    def _update_visualizer_position(self):
-        """Update visualizer position when timeline slider changes"""
-        if self.timeline_slider.maximum() > 0:
-            position = self.timeline_slider.value() / self.timeline_slider.maximum()
-            self.waveform_view.set_position(position)
-
-    def _on_visualizer_clicked(self, position):
-        """Handle clicks on the visualizer to seek"""
-        if self.timeline_slider.maximum() > 0:
-            new_value = int(position * self.timeline_slider.maximum())
-            self.timeline_slider.setValue(new_value)
-
-    def _on_visualizer_position_moved(self, position):
-        """Called while user is dragging on visualizer"""
-        if self.timeline_slider.maximum() > 0:
-            new_value = int(position * self.timeline_slider.maximum())
-            self.audio_player_vm.seek_to(new_value)
-
-    def _on_visualizer_seek_finished(self, position):
-        """Called when user releases drag on visualizer"""
-        if self.timeline_slider.maximum() > 0:
-            new_value = int(position * self.timeline_slider.maximum())
-            self.audio_player_vm.end_seek(new_value)
 
 
 # ============ TEST ============
