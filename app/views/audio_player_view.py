@@ -24,6 +24,20 @@ if TYPE_CHECKING:
     from app.view_model.audio_player_vm import AudioPlayerViewModel
 
 
+class ClickableSlider(QSlider):
+    def __init__(self, orientation=Qt.Orientation.Horizontal, parent=None):
+        super().__init__(orientation, parent)
+
+    def mousePressEvent(self, event):
+        value = (
+            self.minimum()
+            + (self.maximum() - self.minimum()) * event.position().x() / self.width()
+        )
+        self.setValue(int(value))
+
+        super().mousePressEvent(event)
+
+
 class TimelineSlider(QSlider):
     hoverValueChanged = Signal(int)
     hoverLeft = Signal()
@@ -81,6 +95,11 @@ class TimelineSlider(QSlider):
 
     def mousePressEvent(self, event) -> None:
         self._mouse_pressed = True
+        value = (
+            self.minimum()
+            + (self.maximum() - self.minimum()) * event.position().x() / self.width()
+        )
+        self.setValue(int(value))
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
@@ -219,7 +238,7 @@ class AudioPlayer(QWidget):
 
         # Volume control
         self.volume_btn = IconButton(name="volume_up")
-        self.volume_slider = QSlider(Qt.Orientation.Horizontal)
+        self.volume_slider = ClickableSlider()
         self.volume_slider.setRange(0, 100)
         self.volume_slider.setValue(50)
         self.volume_slider.setFixedWidth(150)
@@ -232,7 +251,7 @@ class AudioPlayer(QWidget):
 
         # Speed control
         self.speed_label = IconLabel("speed")
-        self.speed_slider = QSlider(Qt.Orientation.Horizontal)
+        self.speed_slider = ClickableSlider()
         self.speed_slider.setRange(25, 200)  # 0.25x to 2.0x speed
         self.speed_slider.setValue(100)  # Default speed 1.0x
         self.speed_slider.setFixedWidth(150)
