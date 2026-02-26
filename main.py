@@ -28,7 +28,18 @@ def main():
         action="store_true",
         help="Disable crash dialog on fatal error",
     )
+    # fmt: off
+    parser.add_argument(
+        "--audio",
+        type=Path,
+        help="Path to the audio file"
+
+    )
+    # fmt: on
     args = parser.parse_args()
+    audio: Path | None = args.audio
+    if audio and not audio.exists():
+        raise FileNotFoundError(f"File '{audio}' not found")
 
     crash_dialog_enabled = not args.no_crash_dialog
     debug_logging_enabled = args.debug_logging
@@ -51,6 +62,7 @@ def main():
             splash=splash,
             general_config=general_config,
             debug=debug_logging_enabled,
+            audio=audio,
         )
     except Exception:
         if splash:
@@ -77,7 +89,11 @@ def init_logging(level: int) -> Queue | None:
 
 
 def _run_app(
-    app: QApplication, splash: QSplashScreen, general_config: GeneralConfig, debug=False
+    app: QApplication,
+    splash: QSplashScreen,
+    general_config: GeneralConfig,
+    debug=False,
+    audio: Path | None = None,
 ) -> None:
     from app.models.main_model import MainModel
     from app.theme_manager import ThemeManager
@@ -104,6 +120,9 @@ def _run_app(
     view = MainWindow(app=app, theme_manager=theme_manager, main_vm=main_vm)
     view.move(1020, 200)
     view.show()
+
+    if audio:
+        main_vm.file_selector_vm.open_selected_file(audio)
 
     splash.finish(view)  # Waits for view to appear before closing splash
 
