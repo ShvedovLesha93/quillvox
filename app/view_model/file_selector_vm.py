@@ -34,8 +34,8 @@ class FileSelectorViewModel(QObject):
         self.audio_formats = self.file_formats.audio
         self.video_formats = self.file_formats.video
 
-        self._last_directory = Path.home()
-        self._last_filter = ""
+        self.last_dir = Path.home()
+        self.last_filter = ""
         self.filter = ""
 
         self.retranslate()
@@ -58,51 +58,38 @@ class FileSelectorViewModel(QObject):
 
     def _validate(self, path: Path) -> bool:
         if not path.exists():
-            user_msg.error(_("File not found"))
+            user_msg.error(_("File '{file}' not found").format(file=path.name))
+            logger.error("File not found: %s", path)
             return False
 
         if path == self.stt_config.audio:
-            user_msg.warning(_("File '{file}' already opened").format(file=path))
+            user_msg.warning(_("File '{file}' already opened").format(file=path.name))
+            logger.warning("File '%s' already opened", path)
             return False
 
         return True
 
-    def on_file_selected(self, opened_file: tuple[str, str] | None):
-        if opened_file:
-            file, filter = opened_file
-            file_path = Path(file)
+    def open_selected_file(self, file: Path | str, filter: str | None = None) -> None:
+        if not isinstance(file, Path):
+            file = Path(file)
 
-            if self._validate(file_path):
-                self.stt_config.audio = file_path
-                self.last_dir = file_path.parent
+        if self._validate(file):
+            self.stt_config.audio = file
+            self.last_dir = file.parent
+            self.audio_player_vm.load(file)
+            self.file_opened.emit()
+            if filter:
                 self.last_filter = filter
-                self.audio_player_vm.load(file_path)
-                self.file_opened.emit()
 
-                logger.info("Audio file opened: %s", file_path.name)
-                logger.info("Last directory: %s", self.last_dir)
-                logger.debug("Media file stored in memory: %s", file_path)
+            logger.info("Audio file opened: %s", file.name)
+            logger.info("Last directory: %s", self.last_dir)
+            logger.debug("Media file stored in memory: %s", file)
 
-                user_msg.info(
-                    _("File '{file}' has been opened").format(file=file_path.name)
-                )
+            user_msg.info(_("File '{file}' has been opened").format(file=file.name))
 
-        else:
-            logger.info("No selected file")
-            user_msg.warning(_("No selected file"))
-
-    @property
-    def last_dir(self) -> Path:
-        return self._last_directory
-
-    @last_dir.setter
-    def last_dir(self, path: Path):
-        self._last_directory = path
-
-    @property
-    def last_filter(self) -> str:
-        return self._last_filter
-
-    @last_filter.setter
-    def last_filter(self, filter: str):
-        self._last_filter = filter
+    def get_open_file_kwargs(self) -> dict:
+        return {
+            "filter": self.filter,
+            "selectedFilter": self.last_filter,
+            "dir": str(self.last_dir),
+        }

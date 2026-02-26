@@ -217,15 +217,15 @@ class MainWindow(QMainWindow):
             self._skip_exit_confirmation = True
             self.close()
 
-    def open_file(self) -> None:
-        filter = self.file_selector_vm.filter
-        last_filter = self.file_selector_vm.last_filter
-        last_dir = self.file_selector_vm.last_dir
-
-        opened_file = self._open_file_dialog(
-            filter=filter, last_filter=last_filter, last_dir=str(last_dir)
+    def open_file_dialog(self) -> None:
+        file_dialog = QFileDialog()
+        file, filter = file_dialog.getOpenFileName(
+            self,
+            caption=_("Open media file"),
+            **self.file_selector_vm.get_open_file_kwargs(),
         )
-        self.file_selector_vm.on_file_selected(opened_file)
+        if file:
+            self.file_selector_vm.open_selected_file(file, filter)
 
     def open_settings(self) -> None:
         if not self.settings.isVisible():
@@ -248,22 +248,6 @@ class MainWindow(QMainWindow):
 
         for child in widget.findChildren(QWidget):
             self._set_no_focus_recursive(child)
-
-    def _open_file_dialog(
-        self, filter: str, last_filter: str, last_dir: str
-    ) -> tuple[str, str] | None:
-        file_dialog = QFileDialog()
-        file, filter = file_dialog.getOpenFileName(
-            self,
-            caption=_("Open media file"),
-            filter=filter,
-            selectedFilter=last_filter,
-            dir=last_dir,
-        )
-        if file:
-            return file, filter
-        else:
-            return None
 
     def closeEvent(self, event):
         # If transcription is running, prevent immediate close
