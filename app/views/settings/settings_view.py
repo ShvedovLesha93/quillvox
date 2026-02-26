@@ -45,7 +45,6 @@ class Settings(QWidget):
     def __init__(
         self,
         settings_vm: SettingsViewModel,
-        theme_manager: ThemeManager,
         main_window: MainWindow | None = None,
     ):
         super().__init__(main_window)
@@ -53,7 +52,6 @@ class Settings(QWidget):
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint)
 
         self.main_window = main_window
-        self.theme_manager = theme_manager
         self.settings_vm = settings_vm
         self.general_settings = GeneralSettingsView(
             self.settings_vm.general_settings_vm
@@ -285,7 +283,6 @@ if __name__ == "__main__":
 
     view = Settings(
         settings_vm=settings_vm,
-        theme_manager=theme_manager,
     )
 
     view.resize(500, 400)

@@ -87,7 +87,6 @@ class MainWindow(QMainWindow):
         )
         self.settings = Settings(
             settings_vm=self.main_vm.settings_vm,
-            theme_manager=self.theme_manager,
             main_window=self,
         )
         self.notifications_view = NotificationsView(
