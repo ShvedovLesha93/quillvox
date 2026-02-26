@@ -24,7 +24,7 @@ class MenuBar(QObject):
         # Open media
         self.open_media = QAction()
         self.f_menu.addAction(self.open_media)
-        self.open_media.triggered.connect(self.main_window.open_file)
+        self.open_media.triggered.connect(self.main_window.open_file_dialog)
 
     def settings_menu(self) -> None:
         self.open_settings = QAction()
