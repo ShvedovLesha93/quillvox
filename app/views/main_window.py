@@ -74,7 +74,9 @@ class MainWindow(QMainWindow):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.menu_bar = MenuBar(self)
-        self.transcript_view = TranscriptView(self.main_vm.transcript_vm)
+        self.transcript_view = TranscriptView(
+            transcript_vm=self.main_vm.transcript_vm, theme_manager=self.theme_manager
+        )
         self.transcript_controls = TranscriptControls(
             main_vm=self.main_vm,
             file_selector_vm=self.main_vm.file_selector_vm,
