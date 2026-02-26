@@ -66,10 +66,12 @@ uv run --active main.py
 
 #### Args
 
-| Argument            | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `--debug-logging`   | Enable debug logging (sets log level to DEBUG) |
-| `--no-crash-dialog` | Disable crash dialog on fatal error            |
+| Argument            | Description                                                 |
+| ------------------- | ------------------------------------------------------------|
+| `--debug-logging`   | Enable debug logging (sets log level to DEBUG)              |
+| `--no-crash-dialog` | Disable crash dialog on fatal error                         |
+| `--audio`           | Path to the audio file                                      |
+| `--dev-restart`     | Enable the hard reset application using the Ctrl-R shortcut |
 
 ## License
 

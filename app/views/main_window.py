@@ -1,7 +1,9 @@
 from __future__ import annotations
+import os
+import sys
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -60,8 +62,10 @@ class MainWindow(QMainWindow):
         app: QApplication,
         theme_manager: ThemeManager,
         main_vm: MainViewModel,
+        dev_restart: bool,
     ) -> None:
         super().__init__()
+        self._is_dev_restarting = False
         self.app = app
         self.theme_manager = theme_manager
         self.main_vm = main_vm
@@ -103,6 +107,9 @@ class MainWindow(QMainWindow):
 
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
+
+        if dev_restart:
+            self.setup_shortcuts()
 
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
@@ -250,6 +257,10 @@ class MainWindow(QMainWindow):
             self._set_no_focus_recursive(child)
 
     def closeEvent(self, event):
+        if self._is_dev_restarting:
+            event.accept()
+            return
+
         # If transcription is running, prevent immediate close
         if self.is_process_alive:
             reply = QMessageBox.question(
@@ -300,3 +311,11 @@ class MainWindow(QMainWindow):
                 return
 
         super().keyPressEvent(event)
+
+    def setup_shortcuts(self) -> None:
+        restart_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
+        restart_shortcut.activated.connect(self.run_dev_restart)
+
+    def run_dev_restart(self) -> None:
+        self._is_dev_restarting = True
+        self.main_vm.restart_application()

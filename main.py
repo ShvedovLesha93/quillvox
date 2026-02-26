@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 from app.config.general_config import GeneralConfig
 from app.translator import language_manager, _
@@ -14,8 +15,15 @@ if TYPE_CHECKING:
     from multiprocessing import Queue
 
 
-def main():
-    crash_dialog_enabled = True
+@dataclass
+class AppConfig:
+    dev_restart: bool = False
+    debug_logging: bool = False
+    no_crash_dialog: bool = False
+    audio: Path | None = None
+
+
+def cli() -> AppConfig:
     parser = argparse.ArgumentParser(description="Audio transcription desktop app")
 
     parser.add_argument(
@@ -36,13 +44,26 @@ def main():
 
     )
     # fmt: on
+    parser.add_argument(
+        "--dev-restart",
+        action="store_true",
+        help="Enable the hard reset application using the Ctrl-R shortcut.",
+    )
     args = parser.parse_args()
-    audio: Path | None = args.audio
+
+    return AppConfig(
+        dev_restart=args.dev_restart,
+        debug_logging=args.debug_logging,
+        no_crash_dialog=args.no_crash_dialog,
+        audio=args.audio,
+    )
+
+
+def main():
+    app_config = cli()
+    audio = app_config.audio
     if audio and not audio.exists():
         raise FileNotFoundError(f"File '{audio}' not found")
-
-    crash_dialog_enabled = not args.no_crash_dialog
-    debug_logging_enabled = args.debug_logging
 
     general_config = GeneralConfig()
     language_manager.set_language(general_config.language)
@@ -61,13 +82,14 @@ def main():
             app=app,
             splash=splash,
             general_config=general_config,
-            debug=debug_logging_enabled,
+            debug=app_config.debug_logging,
             audio=audio,
+            dev_restart=app_config.dev_restart,
         )
     except Exception:
         if splash:
             splash.hide()
-        if crash_dialog_enabled:
+        if not app_config.no_crash_dialog:
             _show_crash_dialog()
         raise
 
@@ -92,8 +114,9 @@ def _run_app(
     app: QApplication,
     splash: QSplashScreen,
     general_config: GeneralConfig,
-    debug=False,
+    debug: bool = False,
     audio: Path | None = None,
+    dev_restart: bool = False,
 ) -> None:
     from app.models.main_model import MainModel
     from app.theme_manager import ThemeManager
@@ -117,7 +140,14 @@ def _run_app(
         log_queue=queue,
     )
 
-    view = MainWindow(app=app, theme_manager=theme_manager, main_vm=main_vm)
+    # fmt: off
+    view = MainWindow(
+        app=app,
+        theme_manager=theme_manager,
+        main_vm=main_vm,
+        dev_restart=dev_restart
+    )
+    # fmt: on
     view.move(1020, 200)
     view.show()
 
