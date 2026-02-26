@@ -1,5 +1,8 @@
 from __future__ import annotations
+import subprocess
+import sys
 from typing import TYPE_CHECKING
+
 
 from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
@@ -14,6 +17,10 @@ if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
     from PySide6.QtWidgets import QApplication
     from app.models.main_model import MainModel
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MainViewModel:
@@ -60,3 +67,8 @@ class MainViewModel:
 
     def has_transcript(self) -> bool:
         return True if self.transcript.segments else False
+
+    def restart_application(self):
+        logger.info("Restarting...")
+        subprocess.Popen([sys.executable] + sys.argv)
+        self.app.quit()
