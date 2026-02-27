@@ -11,6 +11,8 @@ from app.constants import ThemeMode
 import app.resources.resources_rc as _  # noqa: F401
 
 Icon = Literal[
+    "chevron_backward",
+    "chevron_right",
     "close",
     "format_align_justify",
     "format_text_overflow",

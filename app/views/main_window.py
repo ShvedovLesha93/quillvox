@@ -309,6 +309,12 @@ class MainWindow(QMainWindow):
                 self.audio_player_vm.toggle_play()
                 event.accept()
                 return
+        elif key == Qt.Key.Key_Left:
+            if self.audio_player_vm.is_file_loaded:
+                self.audio_player_vm.rewind()
+        elif key == Qt.Key.Key_Right:
+            if self.audio_player_vm.is_file_loaded:
+                self.audio_player_vm.forward()
 
         super().keyPressEvent(event)
 

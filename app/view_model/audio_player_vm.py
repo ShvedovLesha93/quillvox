@@ -79,6 +79,18 @@ class AudioPlayerViewModel(QObject):
         logger.info("Playback: seek finished")
         logger.debug("Current position: %s", pos)
 
+    def rewind(self, seconds: int = 5) -> None:
+        ms = seconds * 1000
+        val = self.player.position()
+        rewound = val - ms
+        self.player.setPosition(rewound)
+
+    def forward(self, seconds: int = 5) -> None:
+        ms = seconds * 1000
+        val = self.player.position()
+        rewound = val + ms
+        self.player.setPosition(rewound)
+
     def set_position(self, pos: int) -> None:
         self.player.setPosition(pos)
 

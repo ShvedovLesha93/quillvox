@@ -200,7 +200,7 @@ class AudioPlayer(QWidget):
         )
 
         # Playback buttons
-        self.play_btn = IconButton(name="play_arrow", scale=0.8)
+        self.play_btn = IconButton(name="play_arrow")
         self.play_btn.setEnabled(False)
 
         self.stop_btn = IconButton(name="stop")
@@ -230,9 +230,14 @@ class AudioPlayer(QWidget):
         self.current_time_label = QLabel("00:00")
         self.total_label = QLabel("00:00")
 
+        self.rewind_btn = IconButton(name="chevron_backward")
+        self.forward_btn = IconButton(name="chevron_right")
+
+        timeline_layout.addWidget(self.rewind_btn)
         timeline_layout.addWidget(self.current_time_label)
         timeline_layout.addWidget(self.timeline_slider)
         timeline_layout.addWidget(self.total_label)
+        timeline_layout.addWidget(self.forward_btn)
 
         # Playback controls
 
@@ -280,6 +285,8 @@ class AudioPlayer(QWidget):
 
     def retranslate(self) -> None:
         self.file_name.setText(_("No file opened"))
+        self.rewind_btn.setToolTip(_("Rewind 5s (Left Arrow)"))
+        self.forward_btn.setToolTip(_("Forward 5s (Right Arrow)"))
 
     def _connect_signals(self) -> None:
         # =========== UI → AudioPlayerViewModel ============
@@ -299,6 +306,11 @@ class AudioPlayer(QWidget):
             self.audio_player_vm.hover_seek_to
         )
         self.timeline_slider.hoverLeft.connect(self.audio_player_vm.hover_end_seek)
+
+        # Time controls
+
+        self.rewind_btn.clicked.connect(lambda _: self.audio_player_vm.rewind())
+        self.forward_btn.clicked.connect(lambda _: self.audio_player_vm.forward())
 
         # Controls
 
