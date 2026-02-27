@@ -1,6 +1,7 @@
 # QuillVox
 
-A user-friendly desktop application for transcribing audio files with automatic format conversion. Built with PySide6 and powered by faster-whisper for accurate speech-to-text transcription.
+A user-friendly desktop application for transcribing audio files with automatic format conversion.
+Built with PySide6 and powered by faster-whisper for accurate speech-to-text transcription.
 
 ## Features
 
@@ -19,11 +20,18 @@ A user-friendly desktop application for transcribing audio files with automatic 
 
 ## For Developers
 
+See [Development Tools](dev_tools/DEVELOPMENT.md) for:
+
+- Translation management workflow
+- Icon management and compilation
+- Development scripts usage
+
 ### Requirements
 
 See [pyproject.toml](pyproject.toml) for the full dependency list.
 
 ### Installation
+
 ```bash
 git clone https://github.com/ShvedovLesha93/quillvox.git
 cd quillvox
@@ -32,6 +40,7 @@ cd quillvox
 ### Run
 
 #### CPU version
+
 ```bash
 uv sync
 uv run main.py
@@ -39,16 +48,19 @@ uv run main.py
 
 #### CUDA version
 
-**Option A: Switch existing environment to CUDA**
+Option A: Switch existing environment to CUDA
+
 ```bash
 uv sync --extra cuda
 uv run main.py
 ```
+
 > ⚠️ Switching between CPU and CUDA will reinstall torch each time.
 
-**Option B: With a dedicated virtual environment**
+Option B: With a dedicated virtual environment
 
 On Windows:
+
 ```bash
 uv venv .venv-cuda
 .venv-cuda\Scripts\activate
@@ -57,6 +69,7 @@ uv run --active main.py
 ```
 
 On Linux/macOS:
+
 ```bash
 uv venv .venv-cuda
 source .venv-cuda/bin/activate
