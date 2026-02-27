@@ -66,7 +66,9 @@ if __name__ == "__main__":
             print(f"Error: File not found: {file_path}")
             return False
 
-        content = file_path.read_text(encoding="utf-8")
+        # Read with newline='' to preserve original line endings
+        with open(file_path, "r", encoding="utf-8", newline="") as f:
+            content = f.read()
 
         pattern = r'(class Theme\(str, Enum\):)\s*\n(?:    [A-Z_]+ = "[^"]+"\s*\n)+'
 
@@ -81,7 +83,10 @@ if __name__ == "__main__":
             print("✓ No changes needed - Theme enum is up to date.")
             return False
 
-        file_path.write_text(new_content, encoding="utf-8")
+        # Write with newline='' to preserve line endings
+        with open(file_path, "w", encoding="utf-8", newline="") as f:
+            f.write(new_content)
+
         return True
 
     def update_icon_literal(file_path: Path, new_members: str) -> bool:
@@ -90,7 +95,9 @@ if __name__ == "__main__":
             print(f"Error: File not found: {file_path}")
             return False
 
-        content = file_path.read_text(encoding="utf-8")
+        # Read with newline='' to preserve original line endings
+        with open(file_path, "r", encoding="utf-8", newline="") as f:
+            content = f.read()
 
         pattern = r"(Icon = Literal\[)\n(?:\s+\"[^\"]+\",?\s*\n)+(\])"
 
@@ -106,7 +113,10 @@ if __name__ == "__main__":
             print("✓ No changes needed - IconName enum is up to date.")
             return False
 
-        file_path.write_text(new_content, encoding="utf-8")
+        # Write with newline='' to preserve line endings
+        with open(file_path, "w", encoding="utf-8", newline="") as f:
+            f.write(new_content)
+
         return True
 
     def update_qrc_file(qrc_path: Path, icons_dir: Path) -> bool:
@@ -117,7 +127,9 @@ if __name__ == "__main__":
             create_new_qrc_file(qrc_path, icons_dir)
             return True
 
-        content = qrc_path.read_text(encoding="utf-8")
+        # Read with newline='' to preserve original line endings
+        with open(qrc_path, "r", encoding="utf-8", newline="") as f:
+            content = f.read()
 
         pattern = r'(<qresource prefix="/icons">)\s*\n((?:\s*<file>.*?</file>\s*\n)*)\s*(</qresource>)'
 
@@ -133,7 +145,10 @@ if __name__ == "__main__":
             print("✓ No changes needed - resources.qrc is up to date.")
             return False
 
-        qrc_path.write_text(new_content, encoding="utf-8")
+        # Write with newline='' to preserve line endings
+        with open(qrc_path, "w", encoding="utf-8", newline="") as f:
+            f.write(new_content)
+
         return True
 
     def create_new_qrc_file(qrc_path: Path, icons_dir: Path) -> None:
@@ -149,7 +164,11 @@ if __name__ == "__main__":
 """
 
         qrc_path.parent.mkdir(parents=True, exist_ok=True)
-        qrc_path.write_text(qrc_content, encoding="utf-8")
+
+        # Write with newline='' to use LF line endings
+        with open(qrc_path, "w", encoding="utf-8", newline="") as f:
+            f.write(qrc_content)
+
         print("✓ Created new resources.qrc file")
 
     # Main execution
