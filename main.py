@@ -209,13 +209,30 @@ def _show_crash_dialog():
         input(_("Press Enter to exit..."))
 
 
-if __name__ == "__main__":
-    multiprocessing.freeze_support()
+def _ensure_nvidia_libs():
+    import sysconfig
+    import os
+    site_packages = Path(sysconfig.get_path("purelib"))
+    nvidia = site_packages / "nvidia"
+    paths = [
+        str(nvidia / "cudnn/lib"),
+        str(nvidia / "cublas/lib"),
+    ]
+    current = os.environ.get("LD_LIBRARY_PATH", "")
+    needed = ":".join(paths)
+    if not all(p in current for p in paths):
+        os.environ["LD_LIBRARY_PATH"] = f"{needed}:{current}"
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
-    if sys.platform == "win32":
-        try:
-            multiprocessing.set_start_method("spawn", force=True)
-        except RuntimeError:
-            pass
+
+if __name__ == "__main__":
+    # multiprocessing.freeze_support()
+    if sys.platform == "linux":
+        _ensure_nvidia_libs()
+
+    try:
+        multiprocessing.set_start_method("spawn", force=True)
+    except RuntimeError:
+        pass
 
     main()

@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "faster-whisper>=1.2.1",
+    "nvidia-cublas-cu12>=12.6.4.1; sys_platform == 'linux'",
+    "nvidia-cudnn-cu12>=9.10.2.21; sys_platform == 'linux'",
     "polib>=1.2.0",
     "pyqtgraph>=0.14.0",
     "pyside6>=6.10.1",
