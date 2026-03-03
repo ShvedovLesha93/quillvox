@@ -34,6 +34,12 @@ def create_splash() -> QSplashScreen:
 
     painter.end()
 
-    splash = QSplashScreen(pixmap, Qt.WindowType.WindowStaysOnTopHint)
-    splash.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+    # Use X11BypassWindowManagerHint on Linux for reliable display
+    flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+    import sys
+
+    if sys.platform.startswith("linux"):
+        flags |= Qt.WindowType.X11BypassWindowManagerHint
+
+    splash = QSplashScreen(pixmap, flags)
     return splash

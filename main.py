@@ -77,6 +77,7 @@ def main():
         app.setStyle("Fusion")
         splash = create_splash()
         splash.show()
+        app.processEvents()
 
         _run_app(
             app=app,
@@ -212,6 +213,7 @@ def _show_crash_dialog():
 def _ensure_nvidia_libs():
     import sysconfig
     import os
+
     site_packages = Path(sysconfig.get_path("purelib"))
     nvidia = site_packages / "nvidia"
     paths = [
