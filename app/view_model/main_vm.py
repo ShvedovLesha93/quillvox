@@ -4,6 +4,7 @@ import sys
 from typing import TYPE_CHECKING
 
 
+from app.config import config_manager
 from app.config.stt_config import STTConfig
 from app.view_model.audio_player_vm import AudioPlayerViewModel
 from app.view_model.file_selector_vm import FileSelectorViewModel
@@ -36,7 +37,12 @@ class MainViewModel:
         self.main_model = main_model
         self.theme_manager = theme_manager
 
-        self.stt_config = STTConfig()
+        stt_config_json = config_manager.load_stt_config()
+        if stt_config_json:
+            self.stt_config = STTConfig().from_dict(stt_config_json) or STTConfig()
+        else:
+            self.stt_config = STTConfig()
+
         self.general_config = general_config
         self.transcript = self.main_model.stt_transcript
 

@@ -5,6 +5,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generic, TypeVar
 
 from PySide6.QtCore import QObject, Signal, Slot
+from app.config import config_manager
 from app.translator import language_manager
 
 from app.constants import SettingsCategory, ThemeMode
@@ -143,6 +144,7 @@ class GeneralSettingsViewModel(QObject):
             setattr(self._config, field.name, snapshot_value)
         self.saved.emit()
         self._emit_change_status()
+        config_manager.save_general_config(self._config.as_dict())
 
         logger.info("General settings saved: %s", asdict(self._config))
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+from app.config import config_manager
 from app.config.general_config import GeneralConfig
 from app.translator import language_manager, _
 import logging
@@ -65,7 +66,14 @@ def main():
     if audio and not audio.exists():
         raise FileNotFoundError(f"File '{audio}' not found")
 
-    general_config = GeneralConfig()
+    general_config_json = config_manager.load_general_config()
+    if general_config_json:
+        general_config = (
+            GeneralConfig().from_dict(general_config_json) or GeneralConfig()
+        )
+    else:
+        general_config = GeneralConfig()
+
     language_manager.set_language(general_config.language)
     splash = None
 

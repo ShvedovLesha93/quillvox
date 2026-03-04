@@ -1,6 +1,9 @@
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Literal, get_args
+
+logger = logging.getLogger(__name__)
 
 ModelKey = Literal[
     "tiny",
@@ -62,7 +65,6 @@ class STTRunConfig:
 
 @dataclass
 class STTConfig:
-
     # Parameters for UI
     model: ModelKey = "base"
     device: DeviceKey = "cpu"
@@ -82,17 +84,49 @@ class STTConfig:
             "compute_type": self.compute_type,
             "batch_size": self.batch_size,
             "language": self.language,
-            "audio": self.audio,
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "STTConfig":
+    def from_dict(cls, data: dict) -> "STTConfig | None":
         """Deserialize from a plain dict with validation."""
-        return cls(
-            model=data.get("model", "base"),
-            device=data.get("device", "cpu"),
-            compute_type=data.get("compute_type", "int8"),
-            batch_size=data.get("batch_size", 2),
-            language=data.get("language", "auto"),
-            audio=data.get("audio", None),
-        )
+        try:
+            model = data.get("model", "base")
+            if model not in get_args(ModelKey):
+                raise ValueError(
+                    f"Invalid 'model' value: {model!r}. Expected one of {get_args(ModelKey)}"
+                )
+
+            device = data.get("device", "cpu")
+            if device not in get_args(DeviceKey):
+                raise ValueError(
+                    f"Invalid 'device' value: {device!r}. Expected one of {get_args(DeviceKey)}"
+                )
+
+            compute_type = data.get("compute_type", "int8")
+            if compute_type not in get_args(ComputeTypeKey):
+                raise ValueError(
+                    f"Invalid 'compute_type' value: {compute_type!r}. Expected one of {get_args(ComputeTypeKey)}"
+                )
+
+            batch_size = data.get("batch_size", 2)
+            if batch_size not in get_args(BatchSizeKey):
+                raise ValueError(
+                    f"Invalid 'batch_size' value: {batch_size!r}. Expected one of {get_args(BatchSizeKey)}"
+                )
+
+            language = data.get("language", "auto")
+            if language not in get_args(LanguageKey):
+                raise ValueError(
+                    f"Invalid 'language' value: {language!r}. Expected one of {get_args(LanguageKey)}"
+                )
+
+            return cls(
+                model=model,
+                device=device,
+                compute_type=compute_type,
+                batch_size=batch_size,
+                language=language,
+            )
+        except ValueError as e:
+            logger.error("STT config is corrupted — %s", e)
+            return None
