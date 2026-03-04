@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import List
+
+from app.constants import SubtitleFormat
 
 
 @dataclass(slots=True)
@@ -56,3 +59,58 @@ class Transcript:
             return False, f"Type error: {e}"
         except Exception as e:
             return False, f"Error: {e}"
+
+    @staticmethod
+    def _format_srt_timestamp(seconds: float) -> str:
+        timestamp = timedelta(seconds=seconds)
+        return str(timestamp)[:-3].replace(".", ",")
+
+    @staticmethod
+    def _format_vtt_timestamp(seconds: float) -> str:
+        timestamp = timedelta(seconds=seconds)
+        return str(timestamp)[:-3]
+
+    def convert(self, format: SubtitleFormat) -> str:
+        """Convert the transcript to the specified subtitle format.
+
+        Args:
+            format: The target subtitle format (SRT, VTT, or TXT).
+
+        Returns:
+            The transcript as a formatted string in the requested format.
+
+        Raises:
+            KeyError: If the format is not supported.
+        """
+        funcs = {
+            SubtitleFormat.SRT: self._to_srt,
+            SubtitleFormat.VTT: self._to_vtt,
+            SubtitleFormat.TXT: self._to_txt,
+        }
+
+        return funcs[format]()
+
+    def _to_srt(self) -> str:
+        """Convert transcript to SRT string."""
+        lines = []
+        for i, segment in enumerate(self.segments, start=1):
+            start = self._format_srt_timestamp(segment.start)
+            end = self._format_srt_timestamp(segment.end)
+            lines.extend([str(i), f"{start} --> {end}", segment.text.strip(), ""])
+        return "\n".join(lines)
+
+    def _to_vtt(self) -> str:
+        """Convert transcript to VTT string."""
+        lines = []
+        for segment in self.segments:
+            start = self._format_vtt_timestamp(segment.start)
+            end = self._format_vtt_timestamp(segment.end)
+            lines.extend([f"{start} --> {end}", segment.text.strip(), ""])
+        return "\n".join(lines)
+
+    def _to_txt(self) -> str:
+        """Convert transcript to TXT string."""
+        lines = []
+        for segment in self.segments:
+            lines.extend([segment.text.strip(), ""])
+        return "\n".join(lines)

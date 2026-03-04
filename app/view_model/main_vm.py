@@ -3,6 +3,8 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QObject, Signal
+
 
 from app.config import config_manager
 from app.config.stt_config import STTConfig
@@ -24,7 +26,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class MainViewModel:
+class MainViewModel(QObject):
+    export_request = Signal(object)
+
     def __init__(
         self,
         app: QApplication,
@@ -33,6 +37,7 @@ class MainViewModel:
         theme_manager: ThemeManager,
         log_queue,
     ):
+        super().__init__()
         self.app = app
         self.main_model = main_model
         self.theme_manager = theme_manager

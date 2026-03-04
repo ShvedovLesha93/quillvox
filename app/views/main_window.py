@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 import sys
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
@@ -121,6 +121,7 @@ class MainWindow(QMainWindow):
         self.main_vm.stt_worker_vm.segment_finished.connect(self.on_segment_finished)
         self.main_vm.stt_worker_vm.progress_updated.connect(self.progress_bar.setValue)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
+        self.main_vm.transcript_vm.replace_request.connect(self.confirm_replace)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -272,6 +273,21 @@ class MainWindow(QMainWindow):
 
         for child in widget.findChildren(QWidget):
             self._set_no_focus_recursive(child)
+
+    @Slot(str)
+    def confirm_replace(self, file: str) -> None:
+        reply = QMessageBox.question(
+            self,
+            _("Transcription in Progress"),
+            _("The file '{file}' already exists, continue anyway?").format(file=file),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.main_vm.transcript_vm.replace_confirmed.emit()
+        else:
+            return
 
     def closeEvent(self, event):
         if self._is_dev_restarting:

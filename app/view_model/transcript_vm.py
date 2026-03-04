@@ -1,18 +1,23 @@
 from __future__ import annotations
+
+import json
+from bisect import bisect_right
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 from PySide6.QtCore import QObject, Signal, Slot
-import json
-from app.user_message import user_msg
+
+from app.constants import SubtitleFormat
 from app.models.transcript import STTSegment
 from app.translator import _
-from bisect import bisect_right
+from app.user_message import user_msg
 
 if TYPE_CHECKING:
-    from app.view_model.main_vm import MainViewModel
-    from app.config.stt_config import STTConfig
     from faster_whisper.transcribe import Segment, TranscriptionInfo
+
+    from app.config.stt_config import STTConfig
     from app.models.transcript import Transcript
+    from app.view_model.main_vm import MainViewModel
 
 import logging
 
@@ -20,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class TranscriptViewModel(QObject):
+    replace_confirmed = Signal()
+    replace_request = Signal(str)
     segment_str = Signal(str)
     clear_requested = Signal()
     transcript_loaded = Signal(str)
@@ -46,6 +53,35 @@ class TranscriptViewModel(QObject):
             self._on_hover_position_changed
         )
         self.main_vm.audio_player_vm.hover_position_left.connect(self.hover_block_reset)
+        self.main_vm.export_request.connect(self.export)
+
+    @Slot(object)
+    def export(self, format: SubtitleFormat) -> None:
+        audio = self.stt_config.audio
+
+        if audio:
+            suffix = "." + format.value
+            data = self.transcript.convert(format)
+            self.save_file(suffix=suffix, path=audio, data=data)
+
+    def save_file(self, suffix: str, path: Path, data: str) -> None:
+        out_file = path.with_suffix(suffix)
+        if out_file.exists():
+            self.replace_request.emit(out_file.name)
+            self.replace_confirmed.connect(lambda: self._write_file(out_file, data))
+            return
+
+        self._write_file(out_file, data)
+
+    def _write_file(self, out_file: Path, data: str) -> None:
+        self.replace_confirmed.disconnect()
+        try:
+            with open(out_file, "w", encoding="utf-8") as f:
+                f.write(data)
+            user_msg.info(_("'{file}' saved").format(file=out_file.name))
+            logger.info("File saved: %s", out_file)
+        except OSError as e:
+            logger.error("Failed to save file %s: %s", out_file, e)
 
     @Slot(int)
     def _on_position_changed(self, pos: int) -> None:
