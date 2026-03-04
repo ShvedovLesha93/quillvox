@@ -79,6 +79,9 @@ uv run --active main.py
 
 #### Args
 
+These arguments are supported by both the `launcher.py` and the `app.py` itself.
+When using the launcher binary, all arguments are forwarded to the app transparently.
+
 | Argument            | Description                                                 |
 | ------------------- | ------------------------------------------------------------|
 | `--debug-logging`   | Enable debug logging (sets log level to DEBUG)              |

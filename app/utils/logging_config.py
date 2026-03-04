@@ -21,7 +21,7 @@ def configure_logging(
     rich_handler = RichHandler(
         rich_tracebacks=True,
         markup=True,
-        show_time=True,
+        show_time=False,
         show_level=True,
         show_path=True,
     )

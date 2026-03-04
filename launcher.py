@@ -1,28 +1,26 @@
-import platform
-import sys
-import tarfile
-from app.console_hider import hide_console, show_console
-import time
 import io
 import logging
+import platform
 import subprocess
+import sys
+import tarfile
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
 
-from rich.logging import RichHandler
+from app.console_hider import hide_console, show_console
+from app.utils.logging_config import configure_logging
 
 IS_FROZEN = getattr(sys, "frozen", False)
 
 if IS_FROZEN:
     hide_console()
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True)],
-)
+# parse --debug-logging before full logging setup
+_debug = "--debug-logging" in sys.argv
+
+configure_logging(console_level=logging.DEBUG if _debug else logging.INFO)
 log = logging.getLogger("launcher")
 
 if getattr(sys, "frozen", False):
@@ -169,7 +167,7 @@ def main():
             hide_console()
 
         log.info(f"Launching: {PYTHON} {APP_DIR / 'main.py'}")
-        result = subprocess.run([PYTHON, APP_DIR / "main.py"])
+        result = subprocess.run([PYTHON, APP_DIR / "main.py"] + sys.argv[1:])
 
         if result.returncode != 0:
             if IS_FROZEN:
