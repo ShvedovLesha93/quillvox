@@ -139,9 +139,9 @@ class STTWorkerViewModel(QObject):
             text = _(msg.message)
 
         user_msg_funcs: dict[MessageLevel, Callable[[str], None]] = {
-            MessageLevel.INFO: user_msg.info,
-            MessageLevel.ERROR: user_msg.error,
-            MessageLevel.WARNING: user_msg.warning,
+            MessageLevel.INFO_: user_msg.info,
+            MessageLevel.ERROR_: user_msg.error,
+            MessageLevel.WARNING_: user_msg.warning,
         }
 
         user_msg_funcs[msg.level](text)

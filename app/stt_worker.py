@@ -73,7 +73,7 @@ def stt_worker(
     if device == "cuda" and not has_cuda_support():
         message_queue.put(
             STTUserMessage(
-                level=MessageLevel.ERROR,
+                level=MessageLevel.ERROR_,
                 message=_(
                     "Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
                 ),
@@ -91,7 +91,7 @@ def stt_worker(
 
         message_queue.put(
             STTUserMessage(
-                level=MessageLevel.INFO,
+                level=MessageLevel.INFO_,
                 message=_("Starting load model: {model_name}"),
                 params={"model_name": model_name},
             )
@@ -110,7 +110,7 @@ def stt_worker(
 
         message_queue.put(
             STTUserMessage(
-                level=MessageLevel.INFO,
+                level=MessageLevel.INFO_,
                 message=_("Successfully loaded {model_name}"),
                 params={"model_name": model_name},
             )
@@ -144,7 +144,7 @@ def stt_worker(
 
         message_queue.put(
             STTUserMessage(
-                level=MessageLevel.INFO,
+                level=MessageLevel.INFO_,
                 message=_("Transcription in process..."),
             )
         )
@@ -168,7 +168,7 @@ def stt_worker(
 
         message_queue.put(
             STTUserMessage(
-                level=MessageLevel.INFO,
+                level=MessageLevel.INFO_,
                 message=_("Transcription completed in {duration}"),
                 params={"duration": duration},
             )
@@ -180,7 +180,7 @@ def stt_worker(
         logger.error("Error occurred during transcription: %s", e)
         message_queue.put(
             STTUserMessage(
-                level=MessageLevel.ERROR,
+                level=MessageLevel.ERROR_,
                 message=_("Error occurred during transcription: "),
             )
         )

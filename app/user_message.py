@@ -5,9 +5,9 @@ from PySide6.QtCore import QObject, Signal
 
 
 class MessageLevel(Enum):
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
+    INFO_ = "info"
+    WARNING_ = "warning"
+    ERROR_ = "error"
 
 
 class UserMessage(QObject):
@@ -22,13 +22,13 @@ class UserMessage(QObject):
         super().__init__()
 
     def info(self, message: str) -> None:
-        self.message.emit(MessageLevel.INFO, message, self.current_time())
+        self.message.emit(MessageLevel.INFO_, message, self.current_time())
 
     def warning(self, message: str) -> None:
-        self.message.emit(MessageLevel.WARNING, message, self.current_time())
+        self.message.emit(MessageLevel.WARNING_, message, self.current_time())
 
     def error(self, message: str) -> None:
-        self.message.emit(MessageLevel.ERROR, message, self.current_time())
+        self.message.emit(MessageLevel.ERROR_, message, self.current_time())
 
     def current_time(self) -> str:
         now = datetime.now()
