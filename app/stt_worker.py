@@ -34,6 +34,7 @@ def stt_worker(
     info_queue: Queue,
     segment_queue: Queue,
     segment_started_event,
+    segment_finished_event,
     message_queue: Queue,
     terminate_event,
     log_queue: Queue | None,
@@ -160,6 +161,9 @@ def stt_worker(
             segment_queue.put(seg)
 
         end = time.perf_counter()
+
+        segment_finished_event.set()
+
         duration = format_duration(end - start)
 
         message_queue.put(
