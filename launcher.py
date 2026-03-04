@@ -1,4 +1,6 @@
+import platform
 import sys
+import tarfile
 from app.console_hider import hide_console, show_console
 import time
 import io
@@ -23,17 +25,33 @@ logging.basicConfig(
 )
 log = logging.getLogger("launcher")
 
-APP_DIR = Path(sys.executable).parent
-UV = APP_DIR / "uv.exe"
+if getattr(sys, "frozen", False):
+    APP_DIR = Path(sys.executable).resolve().parent
+else:
+    APP_DIR = Path(__file__).resolve().parent
+
 VENV = APP_DIR / ".venv"
-if sys.platform == "win32":
+
+_system = platform.system()
+_machine = platform.machine().lower()
+
+if _system == "Windows":
+    UV = APP_DIR / "uv.exe"
     PYTHON = VENV / "Scripts" / "python.exe"
 else:
+    UV = APP_DIR / "uv"
     PYTHON = VENV / "bin" / "python"
 
 UV_VERSION = "0.10.4"
-UV_URL = f"https://github.com/astral-sh/uv/releases/download/{UV_VERSION}/uv-x86_64-pc-windows-msvc.zip"
 UV_MIN_SIZE = 5 * 1024 * 1024  # 5 MB — uv.exe is ~10 MB
+
+if _system == "Windows":
+    UV_URL = f"https://github.com/astral-sh/uv/releases/download/{UV_VERSION}/uv-x86_64-pc-windows-msvc.zip"
+elif _system == "Linux":
+    _arch = "aarch64" if _machine == "aarch64" else "x86_64"
+    UV_URL = f"https://github.com/astral-sh/uv/releases/download/{UV_VERSION}/uv-{_arch}-unknown-linux-gnu.tar.gz"
+else:
+    raise RuntimeError(f"Unsupported platform: {_system}")
 
 UV_DOWNLOAD_TIMEOUT = 30  # seconds
 UV_DOWNLOAD_RETRIES = 3
@@ -64,18 +82,31 @@ def download_uv() -> None:
                 f"Archive downloaded, size: {len(zip_data.getvalue()) / 1024 / 1024:.1f} MB"
             )
 
-            with zipfile.ZipFile(zip_data) as zf:
-                log.debug(f"Archive contents: {zf.namelist()}")
-                with zf.open("uv.exe") as src, open(UV, "wb") as dst:
-                    dst.write(src.read())
+            if _system == "Windows":
+                with zipfile.ZipFile(zip_data) as zf:
+                    log.debug(f"Archive contents: {zf.namelist()}")
+                    with zf.open("uv.exe") as src, open(UV, "wb") as dst:
+                        dst.write(src.read())
+
+            else:
+                with tarfile.open(fileobj=zip_data, mode="r:gz") as tf:
+                    log.debug(f"Archive contents: {tf.getnames()}")
+                    member = tf.extractfile(f"uv-{_arch}-unknown-linux-gnu/uv")
+                    if member is None:
+                        raise RuntimeError("uv binary not found in archive")
+                    with open(UV, "wb") as dst:
+                        dst.write(member.read())
+                UV.chmod(0o755)
 
             size = UV.stat().st_size
-            log.debug(f"uv.exe written to: {UV} ({size / 1024 / 1024:.1f} MB)")
+            log.debug(
+                f"{UV.name} written to: {UV.absolute()} ({size / 1024 / 1024:.1f} MB)"
+            )
 
             if size < UV_MIN_SIZE:
                 UV.unlink()
                 raise RuntimeError(
-                    f"uv.exe is suspiciously small ({size} bytes), download may be corrupt. File removed."
+                    f"{UV.name} is suspiciously small ({size} bytes), download may be corrupt. File removed."
                 )
 
             log.info("uv.exe downloaded successfully")
@@ -85,7 +116,7 @@ def download_uv() -> None:
             log.warning(f"Attempt {attempt} failed: {e}")
             if UV.exists():
                 UV.unlink()
-                log.debug("Removed incomplete uv.exe")
+                log.debug(f"Removed incomplete {UV.name}")
             if attempt < UV_DOWNLOAD_RETRIES:
                 log.info(f"Retrying in {UV_DOWNLOAD_RETRY_DELAY} seconds...")
                 time.sleep(UV_DOWNLOAD_RETRY_DELAY)
