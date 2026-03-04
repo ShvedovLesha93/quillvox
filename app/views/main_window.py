@@ -115,8 +115,10 @@ class MainWindow(QMainWindow):
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
         user_msg.message.connect(self.append_status_message)
-        self.main_vm.stt_worker_vm.started.connect(self.on_transcription_started)
-        self.main_vm.stt_worker_vm.finished.connect(self.on_transcription_finished)
+        self.main_vm.stt_worker_vm.started.connect(self.on_stt_worker_started)
+        self.main_vm.stt_worker_vm.finished.connect(self.on_stt_worker_finished)
+        self.main_vm.stt_worker_vm.segment_started.connect(self.on_segment_started)
+        self.main_vm.stt_worker_vm.segment_finished.connect(self.on_segment_finished)
         self.main_vm.stt_worker_vm.progress_updated.connect(self.progress_bar.setValue)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
 
@@ -209,8 +211,14 @@ class MainWindow(QMainWindow):
 
         self.status_message.setPalette(palette)
 
-    def on_transcription_started(self) -> None:
+    def on_segment_started(self) -> None:
         self.status_stack.setCurrentIndex(1)
+
+    def on_segment_finished(self) -> None:
+        self.progress_bar.setValue(0)
+        self.status_stack.setCurrentIndex(0)
+
+    def on_stt_worker_started(self) -> None:
         self.is_process_alive = True
         self.transcript_controls.start_transcript_btn.setEnabled(False)
         self.transcript_controls.start_transcript_btn.start_spinner()
@@ -219,9 +227,7 @@ class MainWindow(QMainWindow):
         self.settings.stt_settings.set_enabled(False)
         self.menu_bar.open_media.setEnabled(False)
 
-    def on_transcription_finished(self) -> None:
-        self.progress_bar.setValue(0)
-        self.status_stack.setCurrentIndex(0)
+    def on_stt_worker_finished(self) -> None:
         self.is_process_alive = False
         self.transcript_controls.start_transcript_btn.setEnabled(True)
         self.transcript_controls.start_transcript_btn.stop_spinner()
