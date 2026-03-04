@@ -1,6 +1,12 @@
 from enum import Enum, auto
 
 
+class SubtitleFormat(Enum):
+    SRT = "srt"
+    VTT = "vtt"
+    TXT = "txt"
+
+
 class PlaybackState(Enum):
     STOPPED = auto()
     PLAYING = auto()
