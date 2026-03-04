@@ -61,3 +61,17 @@ QLabel#timelineLabel {
   border-radius: 4px;
   font-size: 14px;
 }
+
+/* Progress Bar */
+QProgressBar {
+  background-color: #e0e0e0;
+  border: none;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0px;
+}
+
+QProgressBar::chunk {
+  background-color: palette(highlight);
+  border-radius: 6px;
+}

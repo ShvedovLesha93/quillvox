@@ -7,6 +7,7 @@ from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
+    QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -126,12 +127,20 @@ class MainWindow(QMainWindow):
 
         self.status_message = QLabel()
 
+        progress_container = QWidget()
+        container_layout = QHBoxLayout(progress_container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+
         self.progress_bar = QProgressBar()
+        self.progress_bar.setFixedHeight(18)
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
+        container_layout.addWidget(
+            self.progress_bar, alignment=Qt.AlignmentFlag.AlignVCenter
+        )
 
         self.status_stack.addWidget(self.status_message)
-        self.status_stack.addWidget(self.progress_bar)
+        self.status_stack.addWidget(progress_container)
 
         self.user_logger_btn = IconButton("format_align_justify", scale=0.8)
         self.user_logger_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -189,7 +198,8 @@ class MainWindow(QMainWindow):
         elif level == MessageLevel.WARNING:
             self.notifications_view.append_message(
                 # fmt: off
-                f"{time} | {message}", "orange"
+                f"{time} | {message}",
+                "orange",
                 # fmt: on
             )
         else:  # INFO
@@ -210,6 +220,7 @@ class MainWindow(QMainWindow):
         self.menu_bar.open_media.setEnabled(False)
 
     def on_transcription_finished(self) -> None:
+        self.progress_bar.setValue(0)
         self.status_stack.setCurrentIndex(0)
         self.is_process_alive = False
         self.transcript_controls.start_transcript_btn.setEnabled(True)
