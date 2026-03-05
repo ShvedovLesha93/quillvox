@@ -15,6 +15,7 @@ class MenuBar(QObject):
         self.menubar = main_window.menuBar()
         self.file_menu()
         self.settings_menu()
+        self.help_menu()
 
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
@@ -55,10 +56,20 @@ class MenuBar(QObject):
         self.menubar.addAction(self.open_settings)
         self.open_settings.triggered.connect(self.main_window.open_settings)
 
+    def help_menu(self) -> None:
+        self.h_menu = self.menubar.addMenu("")
+        self.check_upd = QAction()
+        self.h_menu.addAction(self.check_upd)
+        self.check_upd.triggered.connect(
+            self.main_window.main_vm.update_checker.check_for_updates
+        )
+
     def retranslate(self) -> None:
         self.f_menu.setTitle(_("File"))
         self.open_media.setText(_("Open Media"))
         self.open_settings.setText(_("Settings"))
+        self.h_menu.setTitle(_("Help"))
+        self.check_upd.setText(_("Check for update"))
         self.export_srt.setText(_("Export to SRT"))
         self.export_vtt.setText(_("Export to VTT"))
         self.export_txt.setText(_("Export to TXT"))

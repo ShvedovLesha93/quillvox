@@ -7,6 +7,7 @@ from app.config.general_config import GeneralConfig
 from app.translator import language_manager, _
 import logging
 import multiprocessing
+from PySide6.QtCore import QThread
 import sys
 import atexit
 from typing import TYPE_CHECKING
