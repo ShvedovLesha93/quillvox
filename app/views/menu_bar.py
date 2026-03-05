@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtGui import QAction
 from app.constants import SubtitleFormat
 from app.translator import _, language_manager
@@ -17,6 +17,8 @@ class MenuBar(QObject):
         self.settings_menu()
         self.help_menu()
 
+        self.enable_export(False)
+
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
 
@@ -30,12 +32,14 @@ class MenuBar(QObject):
 
         self.f_menu.addSeparator()
         # Export actions
+        self.export_actions: list[QAction] = []
         # SRT
         self.export_srt = QAction()
         self.f_menu.addAction(self.export_srt)
         self.export_srt.triggered.connect(
             lambda: self.main_window.main_vm.export_request.emit(SubtitleFormat.SRT)
         )
+        self.export_actions.append(self.export_srt)
 
         # VTT
         self.export_vtt = QAction()
@@ -43,6 +47,7 @@ class MenuBar(QObject):
         self.export_vtt.triggered.connect(
             lambda: self.main_window.main_vm.export_request.emit(SubtitleFormat.VTT)
         )
+        self.export_actions.append(self.export_vtt)
 
         # TXT
         self.export_txt = QAction()
@@ -50,6 +55,7 @@ class MenuBar(QObject):
         self.export_txt.triggered.connect(
             lambda: self.main_window.main_vm.export_request.emit(SubtitleFormat.TXT)
         )
+        self.export_actions.append(self.export_txt)
 
     def settings_menu(self) -> None:
         self.open_settings = QAction()
@@ -63,6 +69,11 @@ class MenuBar(QObject):
         self.check_upd.triggered.connect(
             self.main_window.main_vm.update_checker.check_for_updates
         )
+
+    @Slot(bool)
+    def enable_export(self, state: bool) -> None:
+        for act in self.export_actions:
+            act.setEnabled(state)
 
     def retranslate(self) -> None:
         self.f_menu.setTitle(_("File"))
