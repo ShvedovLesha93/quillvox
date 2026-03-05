@@ -1,6 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource prefix="/icons">
+    <qresource prefix="/">
         <file>icons/dark_theme/chevron_backward.svg</file>
         <file>icons/dark_theme/chevron_right.svg</file>
         <file>icons/dark_theme/close.svg</file>

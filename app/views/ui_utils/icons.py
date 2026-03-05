@@ -30,9 +30,9 @@ Icon = Literal[
 def get_icon(theme: ThemeMode, icon: str) -> QIcon:
     """Get icon from resources"""
     if theme == ThemeMode.DARK:
-        return QIcon(f":/icons/icons/dark_theme/{icon}.svg")
+        return QIcon(f":/icons/dark_theme/{icon}.svg")
     else:
-        return QIcon(f":/icons/icons/light_theme/{icon}.svg")
+        return QIcon(f":/icons/light_theme/{icon}.svg")
 
 
 class IconButton(QPushButton):

@@ -131,10 +131,10 @@ if __name__ == "__main__":
         with open(qrc_path, "r", encoding="utf-8", newline="") as f:
             content = f.read()
 
-        pattern = r'(<qresource prefix="/icons">)\s*\n((?:\s*<file>.*?</file>\s*\n)*)\s*(</qresource>)'
+        pattern = r'(<qresource prefix="/">)\s*\n((?:\s*<file>.*?</file>\s*\n)*)\s*(</qresource>)'
 
         if not re.search(pattern, content):
-            print(f'Error: Could not find <qresource prefix="/icons"> in {qrc_path}')
+            print(f'Error: Could not find <qresource prefix="/"> in {qrc_path}')
             return False
 
         new_entries = generate_qrc_file_entries(icons_dir)
