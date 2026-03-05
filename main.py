@@ -128,7 +128,6 @@ def _run_app(
     audio: Path | None = None,
     dev_restart: bool = False,
 ) -> None:
-    from app.models.main_model import MainModel
     from app.theme_manager import ThemeManager
     from app.view_model.main_vm import MainViewModel
     from app.views.main_window import MainWindow
@@ -139,13 +138,11 @@ def _run_app(
         level = logging.INFO
 
     queue = init_logging(level)
-    main_model = MainModel()
     theme_manager = ThemeManager(app, initial_theme=general_config.theme)
 
     main_vm = MainViewModel(
         app=app,
         general_config=general_config,
-        main_model=main_model,
         theme_manager=theme_manager,
         log_queue=queue,
     )

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal
 from pathlib import Path
@@ -8,7 +9,6 @@ from app.user_message import user_msg
 
 if TYPE_CHECKING:
     from app.config.stt_config import STTConfig
-    from app.models.main_model import MainModel
     from app.view_model.audio_player_vm import AudioPlayerViewModel
 
 import logging
@@ -16,21 +16,44 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class SupportedFormats:
+    audio: list[str] = field(
+        default_factory=lambda: [
+            "*.mp3",
+            "*.wav",
+            "*.ogg",
+            "*.flac",
+            "*.m4a",
+        ]  # TODO: Maybe switch to list? 2026-01-28 09:37
+    )
+    video: list[str] = field(
+        default_factory=lambda: [
+            "*.mp4",
+            "*.mkv",
+            "*.avi",
+            "*.mov",
+            "*.flv",
+            "*.webm",
+            "*.wmv",
+            "*.m4v",
+        ]
+    )
+
+
 class FileSelectorViewModel(QObject):
     file_opened = Signal()
 
     def __init__(
         self,
-        main_model: MainModel,
         audio_player_vm: AudioPlayerViewModel,
         stt_config: STTConfig,
     ):
         super().__init__()
-        self.main_model = main_model
         self.audio_player_vm = audio_player_vm
         self.stt_config = stt_config
 
-        self.file_formats = self.main_model.file_formats
+        self.file_formats = SupportedFormats()
         self.audio_formats = self.file_formats.audio
         self.video_formats = self.file_formats.video
 
