@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 APP_PATH = Path("app")
 DIST_PATH = Path("dist")
+INCLUDE = ["main.py", "uv.lock", "pyproject.toml", "version.json"]
 
 
 def run_pyinstaller() -> tuple[bool, str | None]:
@@ -40,7 +41,7 @@ def collect_files() -> None:
         ignore=shutil.ignore_patterns("__pycache__", "*.po", "*.pot", "*.pyc"),
     )
 
-    for file in ["main.py", "uv.lock", "pyproject.toml"]:
+    for file in INCLUDE:
         shutil.copy(file, DIST_PATH / file)
 
 
