@@ -9,7 +9,7 @@ tests/_local/
 sandbox/
 uv
 uv.exe
-user_config
+user_config.json
 
 # Virtual environments
 .venv
