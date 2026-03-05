@@ -7,6 +7,7 @@
         <file>icons/dark_theme/format_align_justify.svg</file>
         <file>icons/dark_theme/format_text_overflow.svg</file>
         <file>icons/dark_theme/format_text_wrap.svg</file>
+        <file>icons/dark_theme/keyboard_arrow_down.svg</file>
         <file>icons/dark_theme/pause.svg</file>
         <file>icons/dark_theme/play_arrow.svg</file>
         <file>icons/dark_theme/replay.svg</file>
@@ -20,6 +21,7 @@
         <file>icons/light_theme/format_align_justify.svg</file>
         <file>icons/light_theme/format_text_overflow.svg</file>
         <file>icons/light_theme/format_text_wrap.svg</file>
+        <file>icons/light_theme/keyboard_arrow_down.svg</file>
         <file>icons/light_theme/pause.svg</file>
         <file>icons/light_theme/play_arrow.svg</file>
         <file>icons/light_theme/replay.svg</file>

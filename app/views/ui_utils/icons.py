@@ -17,6 +17,7 @@ Icon = Literal[
     "format_align_justify",
     "format_text_overflow",
     "format_text_wrap",
+    "keyboard_arrow_down",
     "pause",
     "play_arrow",
     "replay",
