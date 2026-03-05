@@ -128,6 +128,31 @@ filenames. The SVG content differs only in color values to match the respective 
    This updates type hints in `app/views/ui_utils/icons.py` to provide autocomplete when assigning
    icons in code. It also updates `app/resources/resources.qrc` with the icon file references.
 
+## Dev Reloader
+
+A lightweight development tool for running and reloading the app
+
+### Usage
+
+```bash
+uv run dev_tools/dev_reloader.py <module>
+```
+
+### Example
+
+```bash
+uv run dev_tools/dev_reloader.py app.main
+```
+
+### Controls
+
+| Key                        | Action             |
+|----------------------------|--------------------|
+| `Ctrl-C`                   | Restart the module |
+| `Ctrl-C` twice (within 2s) | Stop the runner    |
+
+The runner will also exit automatically if the module crashes, propagating the exit code.
+
 ## Troubleshooting
 
 If you encounter the error `Failed to canonicalize script path` when running `compile_resources.py`,
