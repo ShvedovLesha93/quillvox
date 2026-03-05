@@ -3,11 +3,13 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
 
 from app.config import config_manager
 from app.config.stt_config import STTConfig
+from app.update_checker import UpdateChecker, UpdateStatus
+from app.user_message import user_msg, MessageLevel
 from app.view_model.audio_player_vm import AudioPlayerViewModel
 from app.view_model.file_selector_vm import FileSelectorViewModel
 from app.view_model.settings_vm import SettingsViewModel
@@ -42,6 +44,10 @@ class MainViewModel(QObject):
         self.main_model = main_model
         self.theme_manager = theme_manager
 
+        self.update_checker = UpdateChecker()
+        self.update_checker.check_for_updates()
+        self.update_checker.message.connect(self.check_for_updates)
+
         stt_config_json = config_manager.load_stt_config()
         if stt_config_json:
             self.stt_config = STTConfig().from_dict(stt_config_json) or STTConfig()
@@ -72,6 +78,16 @@ class MainViewModel(QObject):
             transcript_vm=self.transcript_vm,
             log_queue=log_queue,
         )
+
+    @Slot(UpdateStatus, str)
+    def check_for_updates(self, status: UpdateStatus, message: str) -> None:
+        match status:
+            case UpdateStatus.UPDATE_AVAILABLE:
+                user_msg.info(message)
+            case UpdateStatus.NO_UPDATE:
+                user_msg.info(message)
+            case UpdateStatus.ERROR:
+                user_msg.error(message)
 
     def stop_transcript(self) -> None:
         self.stt_worker_vm.terminate_process()
