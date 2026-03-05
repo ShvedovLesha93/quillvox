@@ -8,6 +8,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from app.config import config_manager
 from app.config.stt_config import STTConfig
+from app.transcript import Transcript
 from app.update_checker import UpdateChecker, UpdateStatus
 from app.user_message import user_msg, MessageLevel
 from app.view_model.audio_player_vm import AudioPlayerViewModel
@@ -21,7 +22,6 @@ if TYPE_CHECKING:
     from app.config.general_config import GeneralConfig
     from app.theme_manager import ThemeManager
     from PySide6.QtWidgets import QApplication
-    from app.models.main_model import MainModel
 
 import logging
 
@@ -35,13 +35,11 @@ class MainViewModel(QObject):
         self,
         app: QApplication,
         general_config: GeneralConfig,
-        main_model: MainModel,
         theme_manager: ThemeManager,
         log_queue,
     ):
         super().__init__()
         self.app = app
-        self.main_model = main_model
         self.theme_manager = theme_manager
 
         self.update_checker = UpdateChecker()
@@ -55,13 +53,12 @@ class MainViewModel(QObject):
             self.stt_config = STTConfig()
 
         self.general_config = general_config
-        self.transcript = self.main_model.stt_transcript
+        self.transcript = Transcript()
 
         self.waveform_vm = WaveformViewModel()
         self.audio_player_vm = AudioPlayerViewModel(self.waveform_vm)
         self.file_selector_vm = FileSelectorViewModel(
             stt_config=self.stt_config,
-            main_model=self.main_model,
             audio_player_vm=self.audio_player_vm,
         )
         self.settings_vm = SettingsViewModel(

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, Signal, Slot
 
 from app.constants import SubtitleFormat
-from app.models.transcript import STTSegment
+from app.transcript import STTSegment
 from app.translator import _
 from app.user_message import user_msg
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from faster_whisper.transcribe import Segment, TranscriptionInfo
 
     from app.config.stt_config import STTConfig
-    from app.models.transcript import Transcript
+    from app.transcript import Transcript
     from app.view_model.main_vm import MainViewModel
 
 import logging
