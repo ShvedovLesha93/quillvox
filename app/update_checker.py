@@ -6,13 +6,6 @@ from enum import IntEnum
 
 from app.translator import _
 
-import os
-
-TOKEN = os.getenv("GITHUB_TOKEN")
-
-if not TOKEN:
-    raise RuntimeError("GITHUB_TOKEN not set")
-
 
 class UpdateStatus(IntEnum):
     NO_UPDATE = 0
@@ -32,17 +25,16 @@ class UpdateCheckerWorker(QThread):
     error_occurred = Signal(str)  # Emits error message
     finished = Signal()
 
-    def __init__(self, current_version: str, update_url: str, headers):
+    def __init__(self, current_version: str, update_url: str):
         super().__init__()
         self.current_version = current_version
         self.update_url = update_url
-        self.headers = headers
 
     def run(self):
         """Run update check in background."""
         try:
             # Fetch latest version info
-            response = requests.get(self.update_url, headers=self.headers, timeout=5)
+            response = requests.get(self.update_url, timeout=5)
             response.raise_for_status()
 
             data = response.json()
@@ -76,10 +68,6 @@ class UpdateChecker(QObject):
         super().__init__()
         self._first_run = True
         self.url = "https://raw.githubusercontent.com/ShvedovLesha93/quillvox/refs/heads/main/version.json"
-        self.headers = {
-            "Authorization": f"Bearer {TOKEN}",
-            "Accept": "application/vnd.github.v3.raw",
-        }
         self._current_version = None
 
     @property
@@ -94,9 +82,7 @@ class UpdateChecker(QObject):
         if not self._current_version:
             self._current_version = self.current_version
 
-        self.update_checker = UpdateCheckerWorker(
-            self._current_version, self.url, self.headers
-        )
+        self.update_checker = UpdateCheckerWorker(self._current_version, self.url)
 
         # Connect signals
         self.update_checker.update_available.connect(self.on_update_available)
