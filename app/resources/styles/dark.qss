@@ -1,3 +1,77 @@
+/* /* Combo Box */
+QComboBox {
+  background-color: #3a3a3a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 1px 28px 1px 10px;
+  min-height: 28px;
+}
+
+QComboBox:hover {
+  background-color: #484848;
+}
+
+QComboBox:disabled {
+  background-color: #2e2e2e;
+  color: #666666;
+}
+
+QComboBox::drop-down {
+  border: none;
+  width: 28px;
+}
+
+QComboBox::down-arrow {
+  image: url(:/icons/dark_theme/keyboard_arrow_down.svg);
+  width: 14px;
+  height: 14px;
+}
+
+QComboBox QAbstractItemView {
+  background-color: #2e2e2e;
+  color: #ffffff;
+  border: 1px solid #969696;
+  selection-background-color: #484848;
+  selection-color: #ffffff;
+  outline: none;
+}
+
+/* Push Button */
+QPushButton {
+  background-color: #3a3a3a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+}
+
+QPushButton:hover {
+  background-color: #484848;
+}
+
+QPushButton:pressed {
+  background-color: #565656;
+}
+
+QPushButton:disabled {
+  background-color: #2e2e2e;
+  color: #666666;
+}
+
+QPushButton[primary="true"] {
+  background-color: #d6c1a9;
+  color: #1a1a1a;
+}
+
+QPushButton[primary="true"]:hover {
+  background-color: #e0cebc;
+}
+
+QPushButton[primary="true"]:pressed {
+  background-color: #c4aa8e;
+}
+
 /* Settings Category Button */
 QPushButton#settingsCategory {
   font: bold;

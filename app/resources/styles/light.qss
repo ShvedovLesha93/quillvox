@@ -1,3 +1,77 @@
+/* Combo Box */
+QComboBox {
+  background-color: #e0e0e0;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 8px;
+  padding: 1px 28px 1px 10px;
+  min-height: 28px;
+}
+
+QComboBox:hover {
+  background-color: #d4d4d4;
+}
+
+QComboBox:disabled {
+  background-color: #ebebeb;
+  color: #a0a0a0;
+}
+
+QComboBox::drop-down {
+  border: none;
+  width: 28px;
+}
+
+QComboBox::down-arrow {
+  image: url(:/icons/light_theme/keyboard_arrow_down.svg);
+  width: 14px;
+  height: 14px;
+}
+
+QComboBox QAbstractItemView {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #969696;
+  selection-background-color: #e5e5e5;
+  selection-color: #1a1a1a;
+  outline: none;
+}
+
+/* Push Button */
+QPushButton {
+  background-color: #e0e0e0;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+}
+
+QPushButton:hover {
+  background-color: #d4d4d4;
+}
+
+QPushButton:pressed {
+  background-color: #c4c4c4;
+}
+
+QPushButton:disabled {
+  background-color: #ebebeb;
+  color: #a0a0a0;
+}
+
+QPushButton[primary="true"] {
+  background-color: #644c30;
+  color: #ffffff;
+}
+
+QPushButton[primary="true"]:hover {
+  background-color: #7a5c3a;
+}
+
+QPushButton[primary="true"]:pressed {
+  background-color: #533e27;
+}
+
 /* Settings Category Button */
 QPushButton#settingsCategory {
   font: bold;
