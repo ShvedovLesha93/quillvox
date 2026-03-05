@@ -122,6 +122,9 @@ class MainWindow(QMainWindow):
         self.main_vm.stt_worker_vm.progress_updated.connect(self.progress_bar.setValue)
         self.user_logger_btn.clicked.connect(self.open_status_messages)
         self.main_vm.transcript_vm.replace_request.connect(self.confirm_replace)
+        self.main_vm.file_selector_vm.file_opened.connect(
+            lambda: self.menu_bar.enable_export(True)
+        )
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -227,6 +230,7 @@ class MainWindow(QMainWindow):
         self.transcript_view.text_edit.setReadOnly(True)
         self.settings.stt_settings.set_enabled(False)
         self.menu_bar.open_media.setEnabled(False)
+        self.menu_bar.enable_export(False)
 
     def on_stt_worker_finished(self) -> None:
         self.is_process_alive = False
@@ -236,6 +240,7 @@ class MainWindow(QMainWindow):
         self.transcript_view.text_edit.setReadOnly(False)
         self.settings.stt_settings.set_enabled(True)
         self.menu_bar.open_media.setEnabled(True)
+        self.menu_bar.enable_export(False)
 
         if hasattr(self, "termination_dialog") and self.termination_dialog:
             self.termination_dialog.close()
