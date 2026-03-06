@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
         self.transcript_controls.stop_transcript_btn.setEnabled(True)
         self.transcript_view.text_edit.setReadOnly(True)
         self.settings.stt_settings.set_enabled(False)
-        self.menu_bar.open_media.setEnabled(False)
+        self.menu_bar.open_audio.setEnabled(False)
         self.menu_bar.enable_export(False)
 
     def on_stt_worker_finished(self) -> None:
@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
         self.transcript_controls.stop_transcript_btn.setEnabled(False)
         self.transcript_view.text_edit.setReadOnly(False)
         self.settings.stt_settings.set_enabled(True)
-        self.menu_bar.open_media.setEnabled(True)
+        self.menu_bar.open_audio.setEnabled(True)
         self.menu_bar.enable_export(False)
 
         if hasattr(self, "termination_dialog") and self.termination_dialog:

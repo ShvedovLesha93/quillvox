@@ -25,7 +25,7 @@ class SupportedFormats:
             "*.ogg",
             "*.flac",
             "*.m4a",
-        ]  # TODO: Maybe switch to list? 2026-01-28 09:37
+        ]
     )
     video: list[str] = field(
         default_factory=lambda: [
@@ -55,7 +55,7 @@ class FileSelectorViewModel(QObject):
 
         self.file_formats = SupportedFormats()
         self.audio_formats = self.file_formats.audio
-        self.video_formats = self.file_formats.video
+        # self.video_formats = self.file_formats.video
 
         self.last_dir = Path.home()
         self.last_filter = ""
@@ -71,8 +71,8 @@ class FileSelectorViewModel(QObject):
         self.filter = ";;".join(
             [
                 fmt(_("Audio Files"), self.audio_formats),
-                fmt(_("Video Files"), self.video_formats),
-                fmt(_("All Media Files"), self.audio_formats + self.video_formats),
+                # fmt(_("Video Files"), self.video_formats),
+                # fmt(_("All Media Files"), self.audio_formats + self.video_formats),
             ]
         )
 
