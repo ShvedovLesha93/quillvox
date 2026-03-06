@@ -221,7 +221,15 @@ def main():
         sys.exit(1)
 
     log.info(f"Launching: {python} {app_dir / 'main.py'}")
-    os.execv(str(python), [str(python), str(app_dir / "main.py")] + sys.argv[1:])
+    if platform_ == "Windows":
+        proc = subprocess.Popen(
+            [str(python), str(app_dir / "main.py")] + sys.argv[1:],
+            cwd=str(app_dir),
+        )
+        proc.wait()
+        sys.exit(proc.returncode)
+    else:
+        os.execv(str(python), [str(python), str(app_dir / "main.py")] + sys.argv[1:])
 
 
 if __name__ == "__main__":
