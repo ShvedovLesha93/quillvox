@@ -26,9 +26,9 @@ class MenuBar(QObject):
         self.f_menu = self.menubar.addMenu("")
 
         # Open media
-        self.open_media = QAction()
-        self.f_menu.addAction(self.open_media)
-        self.open_media.triggered.connect(self.main_window.open_file_dialog)
+        self.open_audio = QAction()
+        self.f_menu.addAction(self.open_audio)
+        self.open_audio.triggered.connect(self.main_window.open_file_dialog)
 
         self.f_menu.addSeparator()
         # Export actions
@@ -77,7 +77,7 @@ class MenuBar(QObject):
 
     def retranslate(self) -> None:
         self.f_menu.setTitle(_("File"))
-        self.open_media.setText(_("Open Media"))
+        self.open_audio.setText(_("Open Audio"))
         self.open_settings.setText(_("Settings"))
         self.h_menu.setTitle(_("Help"))
         self.check_upd.setText(_("Check for update"))
