@@ -31,6 +31,7 @@ from app.user_message import user_msg, MessageLevel
 from app.views.notifications_view import NotificationsView
 from app.views.ui_utils.icons import IconButton
 from app.translator import _, language_manager
+import app.updater
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
@@ -125,6 +126,7 @@ class MainWindow(QMainWindow):
         self.main_vm.file_selector_vm.file_opened.connect(
             lambda: self.menu_bar.enable_export(True)
         )
+        self.main_vm.update_request.connect(self.confirm_update)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -278,6 +280,21 @@ class MainWindow(QMainWindow):
 
         for child in widget.findChildren(QWidget):
             self._set_no_focus_recursive(child)
+
+    @Slot(str)
+    def confirm_update(self, latest_version: str) -> None:
+        reply = QMessageBox.question(
+            self,
+            _("Update available"),
+            _("Download the update?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            app.updater.run(latest_version)
+        else:
+            return
 
     @Slot(str)
     def confirm_replace(self, file: str) -> None:
