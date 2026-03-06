@@ -1,14 +1,16 @@
+import sys
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import QSplashScreen
+
 from app.translator import _
 
+WIDTH, HEIGHT = 320, 160
 
-def create_splash() -> QSplashScreen:
-    """Create and return a simple splash screen."""
-    width, height = 320, 160
 
-    pixmap = QPixmap(width, height)
+def _build_pixmap(status_text: str) -> QPixmap:
+    pixmap = QPixmap(WIDTH, HEIGHT)
     pixmap.fill(Qt.GlobalColor.transparent)
 
     painter = QPainter(pixmap)
@@ -17,29 +19,34 @@ def create_splash() -> QSplashScreen:
     # Background
     painter.setBrush(QColor("#ffffff"))
     painter.setPen(QColor("#e0e0e0"))
-    painter.drawRoundedRect(0, 0, width, height, 12, 12)
+    painter.drawRoundedRect(0, 0, WIDTH, HEIGHT, 12, 12)
 
     # App name
-    font = QFont("Georgia", 26, QFont.Weight.Bold)
-    painter.setFont(font)
+    painter.setFont(QFont("Georgia", 26, QFont.Weight.Bold))
     painter.setPen(QColor("#1a1a1a"))
-    painter.drawText(0, 0, width, 100, Qt.AlignmentFlag.AlignCenter, "QuillVox")
+    painter.drawText(0, 0, WIDTH, 100, Qt.AlignmentFlag.AlignCenter, "QuillVox")
 
-    # Subtitle
-    font.setPointSize(10)
-    font.setWeight(QFont.Weight.Normal)
-    painter.setFont(font)
+    # Status text
+    painter.setFont(QFont("Georgia", 10, QFont.Weight.Normal))
     painter.setPen(QColor("#999999"))
-    painter.drawText(0, 90, width, 40, Qt.AlignmentFlag.AlignCenter, _("Starting..."))
+    painter.drawText(0, 90, WIDTH, 40, Qt.AlignmentFlag.AlignCenter, status_text)
 
     painter.end()
+    return pixmap
 
-    # Use X11BypassWindowManagerHint on Linux for reliable display
+
+def _make_flags() -> Qt.WindowType:
     flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
-    import sys
-
     if sys.platform.startswith("linux"):
         flags |= Qt.WindowType.X11BypassWindowManagerHint
+    return flags
 
-    splash = QSplashScreen(pixmap, flags)
+
+def create_splash() -> QSplashScreen:
+    splash = QSplashScreen(_build_pixmap(_("Starting...")), _make_flags())
     return splash
+
+
+def update_splash(splash: QSplashScreen, text: str) -> None:
+    """Redraw the splash with updated status text."""
+    splash.setPixmap(_build_pixmap(text))
