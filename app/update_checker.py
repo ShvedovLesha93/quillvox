@@ -62,7 +62,7 @@ class UpdateCheckerWorker(QThread):
 
 
 class UpdateChecker(QObject):
-    message = Signal(UpdateStatus, str)
+    message = Signal(UpdateStatus, str, str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -98,6 +98,7 @@ class UpdateChecker(QObject):
             _("Update available: {current} → {latest}").format(
                 current=self._current_version, latest=latest_version
             ),
+            latest_version,
         )
 
     def on_no_update(self):
@@ -105,10 +106,11 @@ class UpdateChecker(QObject):
             # Skip sending message on first run
             self._first_run = False
             return
-        self.message.emit(UpdateStatus.NO_UPDATE, _("You're up to date!"))
+        self.message.emit(UpdateStatus.NO_UPDATE, _("You're up to date!"), "")
 
     def on_error(self, error_msg: str):
         self.message.emit(
             UpdateStatus.ERROR,
             _("Update check failed: {error_msg}").format(error_msg=error_msg),
+            "",
         )

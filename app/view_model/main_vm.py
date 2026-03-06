@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class MainViewModel(QObject):
     export_request = Signal(object)
+    update_request = Signal(str)  # Latest available version
 
     def __init__(
         self,
@@ -77,10 +78,13 @@ class MainViewModel(QObject):
         )
 
     @Slot(UpdateStatus, str)
-    def check_for_updates(self, status: UpdateStatus, message: str) -> None:
+    def check_for_updates(
+        self, status: UpdateStatus, message: str, latest_version: str
+    ) -> None:
         match status:
             case UpdateStatus.UPDATE_AVAILABLE:
                 user_msg.info(message)
+                self.update_request.emit(latest_version)
             case UpdateStatus.NO_UPDATE:
                 user_msg.info(message)
             case UpdateStatus.ERROR:

@@ -31,6 +31,7 @@ from app.user_message import user_msg, MessageLevel
 from app.views.notifications_view import NotificationsView
 from app.views.ui_utils.icons import IconButton
 from app.translator import _, language_manager
+import app.updater
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
@@ -66,7 +67,7 @@ class MainWindow(QMainWindow):
         dev_restart: bool,
     ) -> None:
         super().__init__()
-        self._is_dev_restarting = False
+        self._is_force_restarting = False
         self.app = app
         self.theme_manager = theme_manager
         self.main_vm = main_vm
@@ -125,6 +126,7 @@ class MainWindow(QMainWindow):
         self.main_vm.file_selector_vm.file_opened.connect(
             lambda: self.menu_bar.enable_export(True)
         )
+        self.main_vm.update_request.connect(self.confirm_update)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -280,6 +282,22 @@ class MainWindow(QMainWindow):
             self._set_no_focus_recursive(child)
 
     @Slot(str)
+    def confirm_update(self, latest_version: str) -> None:
+        reply = QMessageBox.question(
+            self,
+            _("Update available"),
+            _("Download the update?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self._is_force_restarting = True
+            app.updater.run(latest_version, self.main_vm)
+        else:
+            return
+
+    @Slot(str)
     def confirm_replace(self, file: str) -> None:
         reply = QMessageBox.question(
             self,
@@ -295,7 +313,7 @@ class MainWindow(QMainWindow):
             return
 
     def closeEvent(self, event):
-        if self._is_dev_restarting:
+        if self._is_force_restarting:
             event.accept()
             return
 
@@ -361,5 +379,5 @@ class MainWindow(QMainWindow):
         restart_shortcut.activated.connect(self.run_dev_restart)
 
     def run_dev_restart(self) -> None:
-        self._is_dev_restarting = True
+        self._is_force_restarting = True
         self.main_vm.restart_application()
