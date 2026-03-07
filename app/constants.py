@@ -1,6 +1,10 @@
 from enum import Enum, auto
 
 
+class BuildConfig(Enum):
+    UV_VERSION = "0.10.4"
+
+
 class SubtitleFormat(Enum):
     SRT = "srt"
     VTT = "vtt"
