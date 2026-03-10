@@ -242,7 +242,7 @@ class MainWindow(QMainWindow):
         self.transcript_view.text_edit.setReadOnly(False)
         self.settings.stt_settings.set_enabled(True)
         self.menu_bar.open_audio.setEnabled(True)
-        self.menu_bar.enable_export(False)
+        self.menu_bar.enable_export(True)
 
         if hasattr(self, "termination_dialog") and self.termination_dialog:
             self.termination_dialog.close()

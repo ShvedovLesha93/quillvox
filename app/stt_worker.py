@@ -168,7 +168,8 @@ def stt_worker(
         message_queue.put(
             STTUserMessage(
                 level=MessageLevel.ERROR_,
-                message=_("Error occurred during transcription: "),
+                message=_("Error occurred during transcription: {e}"),
+                params={"e": str(e)},
             )
         )
 
