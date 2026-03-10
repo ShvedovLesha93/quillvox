@@ -4,7 +4,7 @@ import platform
 import zipfile
 
 
-EXCLUDED_FROM_ARCHIVE = {".venv", "uv.exe", "uv"}
+EXCLUDED_FROM_ARCHIVE = {".venv"}
 
 
 def create_archive() -> None:

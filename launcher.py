@@ -19,11 +19,15 @@ from app.translator import _
 
 IS_FROZEN = getattr(sys, "frozen", False)
 
-if IS_FROZEN:
-    hide_console()
 
 # parse --debug-logging before full logging setup
 _debug = "--debug-logging" in sys.argv
+
+if IS_FROZEN and not _debug:
+    hide_console()
+
+env = os.environ.copy()
+env["QUILLVOX_LAUNCHER_FROZEN"] = "1" if IS_FROZEN else "0"
 
 configure_logging(console_level=logging.DEBUG if _debug else logging.INFO)
 log = logging.getLogger("launcher")
@@ -131,11 +135,14 @@ def main():
         proc = subprocess.Popen(
             [str(python), str(app_dir / "main.py")] + sys.argv[1:],
             cwd=str(app_dir),
+            env=env,
         )
         proc.wait()
         sys.exit(proc.returncode)
     else:
-        os.execv(str(python), [str(python), str(app_dir / "main.py")] + sys.argv[1:])
+        os.execve(
+            str(python), [str(python), str(app_dir / "main.py")] + sys.argv[1:], env
+        )
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ class UpdateCheckerWorker(QThread):
             response = requests.get(self.update_url, timeout=5)
             response.raise_for_status()
 
-            latest = response.text
+            latest = response.text.strip()
 
             if not latest:
                 self.error_occurred.emit(_("No version found in response"))
@@ -73,7 +73,7 @@ class UpdateChecker(QObject):
     def current_version(self) -> str:
         # Load current version
         with open(".version", "r", encoding="utf-8") as v:
-            return v.read()
+            return v.readline().strip()
 
     def check_for_updates(self):
         """Start update check."""

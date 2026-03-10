@@ -1,5 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import logging
+import sys
 from typing import TYPE_CHECKING
 from PySide6.QtCore import QProcess, QObject, Signal, Slot
 
@@ -11,6 +13,8 @@ if TYPE_CHECKING:
     from app.config.general_config import GeneralConfig
     from app.config.stt_config import STTConfig
     from app.theme_manager import ThemeManager
+
+logger = logging.getLogger(__name__)
 
 
 class InstallCudaViewModel(QObject):
@@ -33,9 +37,22 @@ class InstallCudaViewModel(QObject):
             self._process.kill()
 
     def _find_uv(self) -> str:
+        import os
         import shutil
+        from pathlib import Path
 
-        return shutil.which("uv") or "uv"
+        launcher_frozen = os.getenv("LAUNCHER_FROZEN") == "1"
+
+        if launcher_frozen:
+            base = Path.cwd()
+            uv = base / ("uv.exe" if sys.platform == "win32" else "uv")
+            logger.debug("uv path: %s", uv)
+            if uv.exists():
+                return str(uv)
+
+        uv_path = shutil.which("uv") or "uv"
+        logger.debug("uv path: %s", uv_path)
+        return uv_path
 
     @Slot()
     def _on_output(self) -> None:

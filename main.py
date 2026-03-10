@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QApplication, QSplashScreen
     from multiprocessing import Queue
 
+RUNNING_FROM_LAUNCHER = os.getenv("QUILLVOX_LAUNCHER_FROZEN") == "1"
+
 
 @dataclass
 class AppConfig:
@@ -145,6 +147,9 @@ def _run_app(
         level = logging.INFO
 
     queue = init_logging(level)
+    logger = logging.getLogger(__name__)
+    logger.debug("RUNNING_FROM_LAUNCHER: %s", RUNNING_FROM_LAUNCHER)
+
     theme_manager = ThemeManager(app, initial_theme=general_config.theme)
 
     main_vm = MainViewModel(
