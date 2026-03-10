@@ -18,6 +18,9 @@ Built with PySide6 and powered by faster-whisper for accurate speech-to-text tra
 3. Click transcribe
 4. The transcript will be automatically saved as a JSON file
 
+> ⚠️ Note: Downloaded models are stored in the `.cache` folder in your home directory.
+> You should delete them manually if they are no longer needed to free up disk space.
+
 ## For Developers
 
 See [Development Tools](dev_tools/DEVELOPMENT.md) for:
