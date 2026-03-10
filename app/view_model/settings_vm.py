@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QProcess, QObject, Signal, Slot
 
 from app.constants import SettingsCategory
 from app.view_model.stt_settings_vm import STTSettingsViewModel
@@ -13,10 +13,45 @@ if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
 
 
+class InstallCudaViewModel(QObject):
+    install_finished = Signal(bool)  # True = success
+    install_output = Signal(str)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._process: QProcess | None = None
+
+    def start_install(self) -> None:
+        self._process = QProcess(self)
+        self._process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        self._process.readyReadStandardOutput.connect(self._on_output)
+        self._process.finished.connect(self._on_finished)
+        self._process.start(self._find_uv(), ["sync", "--extra", "cuda"])
+
+    def cancel_install(self) -> None:
+        if self._process and self._process.state() != QProcess.ProcessState.NotRunning:
+            self._process.kill()
+
+    def _find_uv(self) -> str:
+        import shutil
+
+        return shutil.which("uv") or "uv"
+
+    @Slot()
+    def _on_output(self) -> None:
+        output = self._process.readAllStandardOutput().data().decode(errors="replace")
+        self.install_output.emit(output.strip())
+
+    @Slot(int, QProcess.ExitStatus)
+    def _on_finished(self, exit_code: int, exit_status: QProcess.ExitStatus) -> None:
+        self.install_finished.emit(exit_code == 0)
+
+
 class SettingsViewModel(QObject):
     settings_changed = Signal()
     restore_requested = Signal()
     save_requested = Signal()
+    request_torch_cuda = Signal()
 
     def __init__(
         self,
@@ -25,6 +60,7 @@ class SettingsViewModel(QObject):
         theme_manager: ThemeManager,
     ) -> None:
         super().__init__()
+        self.install_cuda_vm = InstallCudaViewModel()
         self.stt_config = stt_config
         self.general_config = general_config
         self.theme_manager = theme_manager

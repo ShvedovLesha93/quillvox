@@ -1,9 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import QProcess, Qt, Slot
 from PySide6.QtWidgets import (
     QFrame,
     QMessageBox,
+    QProgressDialog,
     QSizePolicy,
     QWidget,
     QVBoxLayout,
@@ -41,7 +42,6 @@ class SettingsCategoryWidget(QPushButton):
 
 
 class Settings(QWidget):
-
     def __init__(
         self,
         settings_vm: SettingsViewModel,
@@ -74,6 +74,7 @@ class Settings(QWidget):
         self.btn_apply.clicked.connect(self.settings_vm.save_requested.emit)
         self.btn_apply.clicked.connect(self._reset_ui)
         self.btn_ok.clicked.connect(self._on_ok_clicked)
+        self.settings_vm.request_torch_cuda.connect(self.confirm_install_torch_cuda)
 
     def _setup_ui(self):
         self.resize(500, 350)
@@ -233,6 +234,25 @@ class Settings(QWidget):
             self.move(geom.topLeft())
         super().setVisible(visible)
 
+    @Slot()
+    def confirm_install_torch_cuda(self) -> None:
+        reply = QMessageBox.question(
+            self,
+            _("Speed Up Transcription"),
+            _(
+                "Your GPU can transcribe audio significantly faster than the CPU.\n\n"
+                "This requires a one-time download of ~2.5 GB. Continue?"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self._run_cuda_install()
+        else:
+            self.settings_vm.stt_settings_vm.to_cpu_request.emit()
+            return
+
     def closeEvent(self, event) -> None:
         if self.settings_vm.has_any_changes():
             reply = QMessageBox.question(
@@ -255,6 +275,51 @@ class Settings(QWidget):
 
             elif reply == QMessageBox.StandardButton.Cancel:
                 event.ignore()
+
+    def _run_cuda_install(self) -> None:
+        self._progress = QProgressDialog(
+            _("Setting up GPU acceleration…"), _("Cancel"), 0, 0, self
+        )
+        self._progress.setWindowTitle(_("Downloading"))
+        self._progress.setModal(True)
+        self._progress.canceled.connect(self._on_install_canceled)
+        self._progress.show()
+
+        self.install_vm = self.settings_vm.install_cuda_vm
+        self.install_vm.install_output.connect(self._on_install_output)
+        self.install_vm.install_finished.connect(self._on_install_finished)
+        self.install_vm.start_install()
+
+    @Slot(str)
+    def _on_install_output(self, output: str) -> None:
+        self._progress.setLabelText(output[-80:])
+
+    @Slot(bool)
+    def _on_install_finished(self, success: bool) -> None:
+        self._progress.close()
+
+        if success:
+            QMessageBox.information(
+                self,
+                _("Ready to go!"),
+                _(
+                    "GPU support installed successfully.\n\nPlease restart the app to apply changes."
+                ),
+            )
+        else:
+            QMessageBox.critical(
+                self,
+                _("Installation failed"),
+                _(
+                    "Something went wrong during the download.\n\nYou can try again later or continue using CPU."
+                ),
+            )
+            self.settings_vm.stt_settings_vm.to_cpu_request.emit()
+
+    @Slot()
+    def _on_install_canceled(self) -> None:
+        self.install_vm.cancel_install()
+        self.settings_vm.stt_settings_vm.restart_require.emit()
 
 
 # ============ TEST ============

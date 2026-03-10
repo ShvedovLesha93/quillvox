@@ -70,13 +70,14 @@ def stt_worker(
     if language == "auto":
         language = None
 
-    if device == "cuda" and not has_cuda_support():
+    is_cuda_support = has_cuda_support()
+
+    if device == "cuda" and not is_cuda_support[0]:
         message_queue.put(
             STTUserMessage(
                 level=MessageLevel.ERROR_,
-                message=_(
-                    "Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
-                ),
+                message=_("Unable to use GPU acceleration: {msg}"),
+                params={"msg": is_cuda_support[1]},
             )
         )
 
@@ -212,13 +213,13 @@ def stt_worker(
             logger.debug("Memory cleanup: Using %s, no GPU cache to clear", device)
 
 
-def has_cuda_support() -> bool:
+def has_cuda_support() -> tuple[bool, str]:
     try:
         import torch
 
-        return torch.cuda.is_available()
-    except Exception:
-        return False
+        return (torch.cuda.is_available(), "")
+    except Exception as e:
+        return (False, str(e))
 
 
 def format_duration(seconds: float) -> str:

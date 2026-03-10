@@ -34,7 +34,7 @@ class ResetButton(IconButton):
         self.setVisible(False)
         self.setFixedSize(25, 25)
         self.setToolTip("Reset to default")
-        self.clicked.connect(lambda: self._parent._discard_value(self.category))
+        self.clicked.connect(lambda: self._parent.restore_value(self.category))
 
     def create_container(self):
         """Create a container widget that reserves space for this button"""
@@ -98,6 +98,9 @@ class STTSettingsView(QWidget):
         self.add_option_row(4, STTSettingCategory.BATCH_SIZE)
         self.add_option_row(5, STTSettingCategory.LANGUAGE)
 
+        device_combo: QComboBox = self._row_options.combo[STTSettingCategory.DEVICE]
+        device_combo.setEnabled(self.vm.is_device_enabled)
+
         # ScrollArea
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -128,6 +131,8 @@ class STTSettingsView(QWidget):
         language_manager.language_changed.connect(self.retranslate)
         self.vm.settings_vm.restore_requested.connect(self.discard_settings)
         self.vm.saved.connect(self._reset_ui)
+        self.vm.to_cpu_request.connect(self.refresh_settings)
+        self.vm.restart_require.connect(lambda: self.set_cuda_message())
 
     @Slot()
     def _reset_ui(self) -> None:
@@ -138,13 +143,29 @@ class STTSettingsView(QWidget):
     @Slot(int, object)
     def _on_index_changed(self, category: STTSettingCategory, value) -> None:
         is_changed = self.vm.on_value_changed(category=category, new_value=value)
+        if (
+            category == STTSettingCategory.DEVICE
+            and value == "cuda"
+            and not self.vm.is_cuda_installed
+        ):
+            self.vm.settings_vm.request_torch_cuda.emit()
         reset_btn = self._row_options.reset_btn[category]
         reset_btn.setVisible(is_changed)
+        actual = self.vm.get_snapshot_value(category)
+        reset_btn.setVisible(self.vm.value_has_change(category, actual))
+
+    @Slot()
+    def set_cuda_message(self) -> None:
+        msg = _("Restart required")
+        combo: QComboBox = self._row_options.combo[STTSettingCategory.DEVICE]
+        idx = combo.findData("cuda")
+        combo.setItemText(idx, "CUDA  ⚠️")
+        combo.setToolTip(msg)
 
     @Slot(object)
-    def _discard_value(self, category: STTSettingCategory) -> None:
+    def restore_value(self, category: STTSettingCategory) -> None:
         current_key = self.vm.get_current_value(category)
-        combo = self._row_options.combo[category]
+        combo: QComboBox = self._row_options.combo[category]
         combo.setCurrentIndex(combo.findData(current_key))
 
     def add_option_row(self, row: int, category: STTSettingCategory) -> None:
@@ -185,6 +206,17 @@ class STTSettingsView(QWidget):
     def discard_settings(self) -> None:
         for category, combo in self._row_options.combo.items():
             combo.setCurrentIndex(combo.findData(self.vm.get_current_value(category)))
+
+    @Slot()
+    def refresh_settings(self) -> None:
+        for category, combo in self._row_options.combo.items():
+            combo.setCurrentIndex(combo.findData(self.vm.get_snapshot_value(category)))
+
+    @Slot()
+    def discard_value(self, category: STTSettingCategory) -> None:
+        combo: QComboBox = self._row_options.combo[category]
+        combo.setCurrentIndex(combo.findData(self.vm.get_current_value(category)))
+        print(f"discard_value\ncombo: {combo}\ncombo_value: {combo.currentData()}")
 
     def set_enabled(self, state: bool) -> None:
         for combo in self._row_options.combo.values():

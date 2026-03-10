@@ -107,13 +107,16 @@ class STTSettingsViewModel(QObject):
     changed = Signal(object, bool)  # SettingsCategory , bool
     discarded = Signal()
     saved = Signal()
+    to_cpu_request = Signal()
+    restart_require = Signal()
 
     def __init__(self, stt_config: STTConfig, settings_vm: SettingsViewModel) -> None:
         super().__init__()
         self.settings_vm = settings_vm
 
         # Saved configuration
-        self._config = stt_config
+        self.stt_config = stt_config
+        self._cuda_init_config()
 
         # For unsaved changes
         self._snapshot = self._make_shapshot()
@@ -122,14 +125,25 @@ class STTSettingsViewModel(QObject):
 
         self._connect_signals()
 
+    def _cuda_init_config(self) -> None:
+        if (
+            not self.stt_config.is_cuda_supported
+            or not self.stt_config.is_cuda_torch_installed
+        ):
+            self.stt_config.device = "cpu"
+
+    @property
+    def is_cuda_installed(self) -> bool:
+        return self.stt_config.is_cuda_torch_installed
+
     def _make_shapshot(self) -> STTConfig:
         snapshot = STTConfig()
 
-        for field in fields(self._config):
+        for field in fields(self.stt_config):
             if not field.metadata.get("save", True):
                 continue
 
-            snapshot_value = getattr(self._config, field.name)
+            snapshot_value = getattr(self.stt_config, field.name)
             setattr(snapshot, field.name, snapshot_value)
 
         logger.debug("Gerenated snapshot: %s", snapshot)
@@ -159,6 +173,10 @@ class STTSettingsViewModel(QObject):
     def _connect_signals(self) -> None:
         self.settings_vm.save_requested.connect(self.save)
         self.settings_vm.restore_requested.connect(self.discard)
+        self.to_cpu_request.connect(self.force_to_cpu)
+
+    def force_to_cpu(self) -> None:
+        self._snapshot.device = "cpu"
 
     @Slot(object)
     def get_labels(self, category: STTSettingCategory) -> dict:
@@ -169,14 +187,22 @@ class STTSettingsViewModel(QObject):
     def get_current_value(self, category: STTSettingCategory) -> str | int:
         """Get the currently saved value (not including unsaved changes)"""
         config = self._get_config(category)
-        return getattr(self._config, config.atr_name)
+        return getattr(self.stt_config, config.atr_name)
+
+    @Slot(object)
+    def get_snapshot_value(self, category: STTSettingCategory) -> str | int:
+        """Get the currently saved value (not including unsaved changes)"""
+        config = self._get_config(category)
+        return getattr(self._snapshot, config.atr_name)
+
+    @property
+    def is_device_enabled(self) -> bool:
+        return self.stt_config.is_cuda_supported
 
     # ============ Change Handling ============
 
     @Slot(object, object)
-    def on_value_changed(
-        self, category: STTSettingCategory, new_value: str | int
-    ) -> bool:
+    def on_value_changed(self, category, new_value):
         self.on_setting_changed(category, new_value)
         return self.value_has_change(category, new_value)
 
@@ -192,11 +218,11 @@ class STTSettingsViewModel(QObject):
         return value != current_saved
 
     def has_unsaved_changes(self) -> bool:
-        for f in fields(self._config):
+        for f in fields(self.stt_config):
             if not f.metadata.get("save", True):
                 continue
 
-            if getattr(self._snapshot, f.name) != getattr(self._config, f.name):
+            if getattr(self._snapshot, f.name) != getattr(self.stt_config, f.name):
                 return True
 
         return False
@@ -205,18 +231,18 @@ class STTSettingsViewModel(QObject):
 
     @Slot()
     def save(self) -> None:
-        for field in fields(self._config):
+        for field in fields(self.stt_config):
             if not field.metadata.get("save", True):
                 continue
 
             snapshot_value = getattr(self._snapshot, field.name)
-            setattr(self._config, field.name, snapshot_value)
+            setattr(self.stt_config, field.name, snapshot_value)
 
         self.saved.emit()
         self._emit_change_status()
-        config_manager.save_stt_config(self._config.as_dict())
+        config_manager.save_stt_config(self.stt_config.as_dict())
 
-        logger.info("General settings saved: %s", asdict(self._config))
+        logger.info("General settings saved: %s", asdict(self.stt_config))
 
     def discard(self) -> None:
         self._snapshot = self._make_shapshot()
