@@ -227,14 +227,25 @@ def set_nvidia_libs_env() -> None:
 
     site_packages = Path(sysconfig.get_path("purelib"))
     nvidia = site_packages / "nvidia"
-    paths = [
-        str(nvidia / "cudnn/lib"),
-        str(nvidia / "cublas/lib"),
-    ]
-    needed = ":".join(paths)
-    current = os.environ.get("LD_LIBRARY_PATH", "")
-    os.environ["LD_LIBRARY_PATH"] = f"{needed}:{current}"
-    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+    if sys.platform == "win32":
+        paths = [
+            str(nvidia / "cudnn" / "bin"),
+            str(nvidia / "cublas" / "bin"),
+        ]
+        needed = os.pathsep.join(paths)
+        current = os.environ.get("PATH", "")
+        os.environ["PATH"] = f"{needed}{os.pathsep}{current}"
+        # No restart needed — PATH is read before DLL load, which hasn't happened yet
+    else:
+        paths = [
+            str(nvidia / "cudnn" / "lib"),
+            str(nvidia / "cublas" / "lib"),
+        ]
+        needed = ":".join(paths)
+        current = os.environ.get("LD_LIBRARY_PATH", "")
+        os.environ["LD_LIBRARY_PATH"] = f"{needed}:{current}"
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 def _ensure_nvidia_libs() -> None:
@@ -246,7 +257,7 @@ def _ensure_nvidia_libs() -> None:
 
 if __name__ == "__main__":
     # multiprocessing.freeze_support()
-    if sys.platform == "linux" and has_cuda_support():
+    if has_cuda_support():
         _ensure_nvidia_libs()
 
     try:

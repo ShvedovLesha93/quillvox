@@ -15,8 +15,8 @@ dependencies = [
 
 [project.optional-dependencies]
 cuda = [
-  "nvidia-cublas-cu12>=12.6.4.1; sys_platform == 'linux'",
-  "nvidia-cudnn-cu12>=9.10.2.21; sys_platform == 'linux'",
+  "nvidia-cublas-cu12>=12.6.4.1",
+  "nvidia-cudnn-cu12>=9.10.2.21",
 ]
 
 
