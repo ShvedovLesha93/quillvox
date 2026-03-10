@@ -1,9 +1,9 @@
-import subprocess
-import shutil
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, get_args
+
+from app.utils import cuda_checker
 
 logger = logging.getLogger(__name__)
 
@@ -55,42 +55,6 @@ LanguageKey = Literal[
 VadFilterKey = Literal[True, False]
 
 
-def has_cuda_support() -> bool:
-    if shutil.which("nvidia-smi"):
-        try:
-            result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                return True
-        except Exception:
-            pass
-
-    if shutil.which("nvcc"):
-        try:
-            result = subprocess.run(
-                ["nvcc", "--version"], capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                return True
-        except Exception:
-            pass
-
-    return False
-
-
-def has_torch_cuda() -> bool:
-    try:
-        import torch
-
-        return torch.cuda.is_available()
-    except Exception:
-        return False
-
-
 @dataclass(frozen=True)
 class STTRunConfig:
     model: str
@@ -110,8 +74,12 @@ class STTConfig:
     batch_size: BatchSizeKey = 2
     language: LanguageKey = "auto"
     vad_filter: VadFilterKey = False
-    is_cuda_torch_installed: bool = field(default_factory=has_torch_cuda)
-    is_cuda_supported: bool = field(default_factory=has_cuda_support)
+    is_cuda_supported: bool = field(
+        default_factory=lambda: cuda_checker.has_cuda_support()
+    )
+    is_cuda_installed: bool = field(
+        default_factory=lambda: cuda_checker.has_nvidia_libs_installed()
+    )
 
     # Parameters are not used for UI
     audio: Path | None = field(default=None, metadata={"save": False})

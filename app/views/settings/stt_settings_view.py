@@ -99,7 +99,7 @@ class STTSettingsView(QWidget):
         self.add_option_row(5, STTSettingCategory.LANGUAGE)
 
         device_combo: QComboBox = self._row_options.combo[STTSettingCategory.DEVICE]
-        device_combo.setEnabled(self.vm.is_device_enabled)
+        device_combo.setEnabled(self.vm.is_cuda_supported)
 
         # ScrollArea
         scroll = QScrollArea()

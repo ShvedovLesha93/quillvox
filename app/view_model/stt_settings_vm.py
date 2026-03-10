@@ -127,14 +127,18 @@ class STTSettingsViewModel(QObject):
 
     def _cuda_init_config(self) -> None:
         if (
-            not self.stt_config.is_cuda_supported
-            or not self.stt_config.is_cuda_torch_installed
+            not self.stt_config.is_cuda_installed
+            or not self.stt_config.is_cuda_supported
         ):
             self.stt_config.device = "cpu"
 
     @property
     def is_cuda_installed(self) -> bool:
-        return self.stt_config.is_cuda_torch_installed
+        return self.stt_config.is_cuda_installed
+
+    @property
+    def is_cuda_supported(self) -> bool:
+        return self.stt_config.is_cuda_supported
 
     def _make_shapshot(self) -> STTConfig:
         snapshot = STTConfig()
@@ -194,10 +198,6 @@ class STTSettingsViewModel(QObject):
         """Get the currently saved value (not including unsaved changes)"""
         config = self._get_config(category)
         return getattr(self._snapshot, config.atr_name)
-
-    @property
-    def is_device_enabled(self) -> bool:
-        return self.stt_config.is_cuda_supported
 
     # ============ Change Handling ============
 

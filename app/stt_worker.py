@@ -70,20 +70,6 @@ def stt_worker(
     if language == "auto":
         language = None
 
-    is_cuda_support = has_cuda_support()
-
-    if device == "cuda" and not is_cuda_support[0]:
-        message_queue.put(
-            STTUserMessage(
-                level=MessageLevel.ERROR_,
-                message=_("Unable to use GPU acceleration: {msg}"),
-                params={"msg": is_cuda_support[1]},
-            )
-        )
-
-        logger.error("CUDA not available")
-        return
-
     try:
         if terminate_event.is_set():
             return  # Exit early if termination requested
@@ -185,41 +171,6 @@ def stt_worker(
                 message=_("Error occurred during transcription: "),
             )
         )
-
-    finally:
-        # Clean up GPU memory
-        if device == "cuda":
-            try:
-                if has_cuda_support():
-                    import torch
-
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(
-                            "GPU memory stats before cleanup: %s",
-                            torch.cuda.memory_allocated(),
-                        )
-
-                    torch.cuda.empty_cache()
-
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug(
-                            "GPU memory cleaned up. Device: %s",
-                            torch.cuda.get_device_name(),
-                        )
-
-            except Exception as e:
-                logger.warning("Failed to clean GPU memory: %s", e)
-        else:
-            logger.debug("Memory cleanup: Using %s, no GPU cache to clear", device)
-
-
-def has_cuda_support() -> tuple[bool, str]:
-    try:
-        import torch
-
-        return (torch.cuda.is_available(), "")
-    except Exception as e:
-        return (False, str(e))
 
 
 def format_duration(seconds: float) -> str:

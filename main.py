@@ -1,6 +1,7 @@
 from __future__ import annotations
 import argparse
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from app.config import config_manager
 from app.config.general_config import GeneralConfig
@@ -11,6 +12,12 @@ from PySide6.QtCore import QThread
 import sys
 import atexit
 from typing import TYPE_CHECKING
+
+from app.utils.cuda_checker import (
+    has_cuda_support,
+    has_nvidia_libs_in_env,
+    has_nvidia_libs_installed,
+)
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QApplication, QSplashScreen
@@ -215,9 +222,8 @@ def _show_crash_dialog():
         input(_("Press Enter to exit..."))
 
 
-def _ensure_nvidia_libs():
+def set_nvidia_libs_env() -> None:
     import sysconfig
-    import os
 
     site_packages = Path(sysconfig.get_path("purelib"))
     nvidia = site_packages / "nvidia"
@@ -225,16 +231,22 @@ def _ensure_nvidia_libs():
         str(nvidia / "cudnn/lib"),
         str(nvidia / "cublas/lib"),
     ]
-    current = os.environ.get("LD_LIBRARY_PATH", "")
     needed = ":".join(paths)
-    if not all(p in current for p in paths):
-        os.environ["LD_LIBRARY_PATH"] = f"{needed}:{current}"
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+    current = os.environ.get("LD_LIBRARY_PATH", "")
+    os.environ["LD_LIBRARY_PATH"] = f"{needed}:{current}"
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+def _ensure_nvidia_libs() -> None:
+    if not has_nvidia_libs_installed():
+        return  # libs not installed, nothing to set
+    if not has_nvidia_libs_in_env():
+        set_nvidia_libs_env()
 
 
 if __name__ == "__main__":
     # multiprocessing.freeze_support()
-    if sys.platform == "linux":
+    if sys.platform == "linux" and has_cuda_support():
         _ensure_nvidia_libs()
 
     try:
