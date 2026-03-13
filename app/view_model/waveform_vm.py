@@ -6,6 +6,11 @@ from app.waveform_loader_worker import WaveformLoaderWorker
 
 class WaveformViewModel(QObject):
     waveform_loaded = Signal(object, object)
+    changed_selected_segment = Signal(
+        int, float, float
+    )  # start (seconds), end (seconds)
+    start_selection_changed = Signal(int, float)
+    end_selection_changed = Signal(int, float)
 
     def __init__(self) -> None:
         super().__init__()

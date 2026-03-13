@@ -27,9 +27,8 @@ logger = logging.getLogger(__name__)
 class TranscriptViewModel(QObject):
     replace_confirmed = Signal()
     replace_request = Signal(str)
-    segment_str = Signal(str)
+    segment_sent = Signal(STTSegment)
     clear_requested = Signal()
-    transcript_loaded = Signal(str)
     block_index_changed = Signal(int)
     hover_block_index_changed = Signal(int)
     hover_block_reset = Signal()
@@ -54,6 +53,9 @@ class TranscriptViewModel(QObject):
         )
         self.main_vm.audio_player_vm.hover_position_left.connect(self.hover_block_reset)
         self.main_vm.export_request.connect(self.export)
+
+    def on_selected_segment_changed(self, id: int, start: float, end: float) -> None:
+        self.main_vm.waveform_vm.changed_selected_segment.emit(id, start, end)
 
     @Slot(object)
     def export(self, format: SubtitleFormat) -> None:
@@ -105,7 +107,7 @@ class TranscriptViewModel(QObject):
 
         if self._check_existing_json():
             if self.load_json():
-                self.transcript_loaded.emit(self.extract_text())
+                self.extract_text()
 
     def on_start_transcription(self) -> None:
         audio = self.stt_config.audio
@@ -145,7 +147,7 @@ class TranscriptViewModel(QObject):
             text=seg.text,
         )
         self.transcript.segments.append(segment)
-        self.segment_str.emit(segment.text.strip())
+        self.segment_sent.emit(segment)
         self._save_to_json()
 
     def clear_transcription(self) -> None:
@@ -188,9 +190,9 @@ class TranscriptViewModel(QObject):
             logger.error("Failed to load json: %s", e)
             return False
 
-    def extract_text(self) -> str:
-        segments = [segment.text.strip() for segment in self.transcript.segments]
-        return "\n".join(segments)
+    def extract_text(self) -> None:
+        for seg in self.transcript.segments:
+            self.segment_sent.emit(seg)
 
     def _clear_json(self) -> None:
         if self.json_path.exists():

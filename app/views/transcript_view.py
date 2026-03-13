@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from typing import TYPE_CHECKING, Dict
 from PySide6.QtCore import Slot
 from PySide6.QtGui import (
@@ -19,10 +20,19 @@ from PySide6.QtWidgets import (
 )
 
 from app.constants import ThemeMode
+from app.transcript import STTSegment
 from app.view_model.transcript_vm import TranscriptViewModel
 
 if TYPE_CHECKING:
     from app.theme_manager import ThemeManager
+
+logger = logging.getLogger(__name__)
+
+# fmt: off
+PROP_SEGMENT_ID = 0
+PROP_START      = 1
+PROP_END        = 2
+# fmt: on
 
 
 class MarkerScrollBar(QScrollBar):
@@ -186,18 +196,52 @@ class TranscriptView(QWidget):
         self.highlighter.recolor(self.highlight_color, self.hover_color)
 
     def _connect_signals(self) -> None:
-        self.vm.transcript_loaded.connect(self.text_edit.setPlainText)
-        self.vm.segment_str.connect(self._populate_transcript)
+        self.vm.segment_sent.connect(self._populate_transcript)
         self.vm.clear_requested.connect(self.text_edit.clear)
         self.vm.block_index_changed.connect(self.set_current_block)
         self.vm.hover_block_index_changed.connect(self.set_hover_block)
         self.vm.hover_block_reset.connect(self.reset_hover)
         self.theme_manager.theme_changed.connect(self.update_theme)
+        self.text_edit.cursorPositionChanged.connect(self._on_cursor_position_changed)
+
+    @Slot()
+    def _on_cursor_position_changed(self) -> None:
+        block = self.text_edit.textCursor().block()
+        block_num = block.blockNumber()
+        data = self.get_block_segment_data(block)  # ← use format
+
+        if data is not None:
+            segment_id, start, end = data
+            logger.debug(
+                "Cursor moved to block %d | segment_id=%d, start=%.3f, end=%.3f | text=%r",
+                block_num,
+                segment_id,
+                start,
+                end,
+                block.text(),
+            )
+            self.vm.on_selected_segment_changed(segment_id, start, end)
+        else:
+            logger.debug(
+                "Cursor moved to block %d | no segment data | text=%r",
+                block_num,
+                block.text(),
+            )
 
     @Slot(int)
     def set_current_block(self, block_index: int) -> None:
         self.highlighter.set_current_block(block_index)
         self.update_scroll_marker()
+
+    def get_block_segment_data(self, block) -> tuple[int, float, float] | None:
+        fmt = block.blockFormat()
+        if fmt.hasProperty(PROP_SEGMENT_ID):
+            return (
+                fmt.property(PROP_SEGMENT_ID),
+                fmt.property(PROP_START),
+                fmt.property(PROP_END),
+            )
+        return None
 
     @Slot(int)
     def set_hover_block(self, block_index: int) -> None:
@@ -212,11 +256,19 @@ class TranscriptView(QWidget):
             current_index=self.highlighter.current_block, total_blocks=block_count
         )
 
-    @Slot(str)
-    def _populate_transcript(self, text: str) -> None:
-        """Load transcript segments into the text editor."""
+    @Slot(STTSegment)
+    def _populate_transcript(self, seg: STTSegment) -> None:
         cursor = self.text_edit.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
-
-        cursor.insertText(text)
+        cursor.insertText(seg.text)
+        self.set_block_segment_data(cursor, seg.id, seg.start, seg.end)
         cursor.insertBlock()
+
+    def set_block_segment_data(
+        self, cursor: QTextCursor, segment_id: int, start: float, end: float
+    ) -> None:
+        fmt = cursor.blockFormat()
+        fmt.setProperty(PROP_SEGMENT_ID, segment_id)
+        fmt.setProperty(PROP_START, start)
+        fmt.setProperty(PROP_END, end)
+        cursor.setBlockFormat(fmt)
