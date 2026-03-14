@@ -9,8 +9,8 @@ class WaveformViewModel(QObject):
     changed_selected_segment = Signal(
         int, float, float
     )  # start (seconds), end (seconds)
-    start_selection_changed = Signal(int, float)
-    end_selection_changed = Signal(int, float)
+    start_selection_changed = Signal(int, float)  # index, seconds
+    end_selection_changed = Signal(int, float)  # index, seconds
 
     def __init__(self) -> None:
         super().__init__()

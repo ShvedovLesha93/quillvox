@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 class MainViewModel(QObject):
     export_request = Signal(object)
     update_request = Signal(str)  # Latest available version
+    segment_stream_finished = Signal()
+    start_segment_changed = Signal(int, float)  # index, seconds
+    end_segment_changed = Signal(int, float)  # index, seconds
 
     def __init__(
         self,
@@ -76,6 +79,14 @@ class MainViewModel(QObject):
             transcript_vm=self.transcript_vm,
             log_queue=log_queue,
         )
+
+        self._connect_signals()
+
+    def _connect_signals(self) -> None:
+        self.waveform_vm.start_selection_changed.connect(
+            self.start_segment_changed.emit
+        )
+        self.waveform_vm.end_selection_changed.connect(self.end_segment_changed.emit)
 
     @Slot(UpdateStatus, str)
     def check_for_updates(

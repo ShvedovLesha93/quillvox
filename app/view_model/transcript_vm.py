@@ -28,6 +28,7 @@ class TranscriptViewModel(QObject):
     replace_confirmed = Signal()
     replace_request = Signal(str)
     segment_sent = Signal(STTSegment)
+    populate_segment_finished = Signal()
     clear_requested = Signal()
     block_index_changed = Signal(int)
     hover_block_index_changed = Signal(int)
@@ -53,6 +54,9 @@ class TranscriptViewModel(QObject):
         )
         self.main_vm.audio_player_vm.hover_position_left.connect(self.hover_block_reset)
         self.main_vm.export_request.connect(self.export)
+        self.main_vm.segment_stream_finished.connect(
+            self.populate_segment_finished.emit
+        )
 
     def on_selected_segment_changed(self, id: int, start: float, end: float) -> None:
         self.main_vm.waveform_vm.changed_selected_segment.emit(id, start, end)
@@ -193,6 +197,7 @@ class TranscriptViewModel(QObject):
     def extract_text(self) -> None:
         for seg in self.transcript.segments:
             self.segment_sent.emit(seg)
+        self.populate_segment_finished.emit()
 
     def _clear_json(self) -> None:
         if self.json_path.exists():
