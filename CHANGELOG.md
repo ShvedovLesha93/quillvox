@@ -2,7 +2,7 @@
 
 ## 0.2.0
 
-- Added transcript editing functionality with saving to JSON
+- Added transcript editing functionality
 
 ## 0.1.0
 
