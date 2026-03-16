@@ -55,7 +55,6 @@ class SpinnerButton(QPushButton):
 
 
 class TranscriptControls(QWidget):
-
     def __init__(
         self,
         main_vm: MainViewModel,
@@ -94,6 +93,8 @@ class TranscriptControls(QWidget):
 
     def retranslate(self) -> None:
         self.start_transcript_btn.setText(_("Transcribe"))
+        self.start_transcript_btn.setToolTip(_("Start transcribing"))
+        self.stop_transcript_btn.setToolTip(_("Stop transcription"))
 
     def _on_start_transctipt_clicked(self) -> None:
         if self.main_vm.has_transcript():

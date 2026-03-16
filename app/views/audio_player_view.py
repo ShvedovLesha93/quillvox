@@ -289,7 +289,7 @@ class AudioPlayer(QWidget):
     def retranslate(self) -> None:
         self.file_name.setText(_("No file opened"))
         self.play_btn.setToolTip(
-            _("Toggle play ({key})").format(key=self.main_window.shortcut.play_payse)
+            _("Play/Pause ({key})").format(key=self.main_window.shortcut.play_payse)
         )
         self.rewind_btn.setToolTip(
             _("Rewind 5s ({key})").format(key=self.main_window.shortcut.rewind)
@@ -297,6 +297,9 @@ class AudioPlayer(QWidget):
         self.forward_btn.setToolTip(
             _("Forward 5s ({key})").format(key=self.main_window.shortcut.forward)
         )
+        self.stop_btn.setToolTip(_("Stop playback"))
+        self.volume_btn.setToolTip(_("Volume"))
+        self.speed_reset_btn.setToolTip(_("Reset playback speed"))
 
     def _connect_signals(self) -> None:
         # =========== UI → AudioPlayerViewModel ============
