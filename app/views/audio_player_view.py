@@ -19,6 +19,7 @@ from app.views.waveform_view import WaveformView
 from .ui_utils.icons import IconButton, IconLabel
 
 if TYPE_CHECKING:
+    from app.views.main_window import MainWindow
     from app.theme_manager import ThemeManager
     from app.view_model.waveform_vm import WaveformViewModel
     from app.view_model.audio_player_vm import AudioPlayerViewModel
@@ -164,11 +165,13 @@ class TruncatingLabel(QLabel):
 class AudioPlayer(QWidget):
     def __init__(
         self,
+        main_window: MainWindow,
         audio_player_vm: AudioPlayerViewModel,
         waveform_vm: WaveformViewModel,
         theme_manager: ThemeManager,
     ) -> None:
         super().__init__()
+        self.main_window = main_window
         self.audio_player_vm = audio_player_vm
         self.waveform_vm = waveform_vm
         self.theme_manager = theme_manager
@@ -285,8 +288,15 @@ class AudioPlayer(QWidget):
 
     def retranslate(self) -> None:
         self.file_name.setText(_("No file opened"))
-        self.rewind_btn.setToolTip(_("Rewind 5s (Left Arrow)"))
-        self.forward_btn.setToolTip(_("Forward 5s (Right Arrow)"))
+        self.play_btn.setToolTip(
+            _("Toggle play ({key})").format(key=self.main_window.shortcut.play_payse)
+        )
+        self.rewind_btn.setToolTip(
+            _("Rewind 5s ({key})").format(key=self.main_window.shortcut.rewind)
+        )
+        self.forward_btn.setToolTip(
+            _("Forward 5s ({key})").format(key=self.main_window.shortcut.forward)
+        )
 
     def _connect_signals(self) -> None:
         # =========== UI → AudioPlayerViewModel ============
@@ -397,37 +407,3 @@ class AudioPlayer(QWidget):
         else:
             self.play_btn.set_icon(icon="play_arrow")
             self.stop_btn.setEnabled(state != PlaybackState.STOPPED)
-
-
-# ============ TEST ============
-if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication
-    from pathlib import Path
-    from app.view_model.audio_player_vm import AudioPlayerViewModel
-    from app.view_model.waveform_vm import WaveformViewModel
-    from app.theme_manager import ThemeManager
-
-    app = QApplication([])
-    app.setStyle("Fusion")
-
-    waveform_vm = WaveformViewModel()
-    audio_player_vm = AudioPlayerViewModel(waveform_vm)
-    theme_manager = ThemeManager(app, ThemeMode.DARK)
-
-    view = AudioPlayer(
-        audio_player_vm=audio_player_vm,
-        waveform_vm=waveform_vm,
-        theme_manager=theme_manager,
-    )
-    view.resize(300, 150)
-    view.move(1020, 320)
-
-    audio = Path("tests/audio/LJ025-0076.wav")
-    long_audio = Path("tests/_local/long_audio.m4a")
-    if audio.exists():
-        view.audio_player_vm.load(audio)
-    else:
-        print(f"Error: File '{audio.name}' not found")
-
-    view.show()
-    app.exec()

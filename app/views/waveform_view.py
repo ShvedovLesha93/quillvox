@@ -271,13 +271,13 @@ class WaveformView(QWidget):
             start_sample = hover_x
             _, end_sample = self.selection_region.getRegion()
             self.selection_region.setRegion((start_sample, end_sample))
-            self._emit_selection_changed()
+            # self._emit_selection_changed()
             logger.debug("Dragging start handle to sample=%.1f", start_sample)
 
         elif self._drag_mode == "dragging_end":
             start_sample, _ = self.selection_region.getRegion()
             self.selection_region.setRegion((start_sample, hover_x))
-            self._emit_selection_changed()
+            # self._emit_selection_changed()
             logger.debug("Dragging end handle to sample=%.1f", hover_x)
 
         # --- Cursor shape based on proximity to handles ---

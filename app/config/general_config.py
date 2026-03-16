@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import Literal, get_args
 
@@ -12,9 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class Shortcuts:
+    forward = "Ctrl+."
+    rewind = "Ctrl+,"
+    play_payse = "Ctrl+Space"
+
+
+@dataclass
 class GeneralConfig:
     language: InterfaceLanguageKey = "ru"
     theme: ThemeKey = ThemeMode.SYSTEM
+    shortcuts: Shortcuts = field(default_factory=Shortcuts)
 
     def as_dict(self) -> dict:
         return {"language": self.language, "theme": self.theme.value}  # store int

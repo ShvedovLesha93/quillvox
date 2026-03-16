@@ -1,9 +1,11 @@
 from __future__ import annotations
+from bisect import bisect_right
 import logging
 from typing import TYPE_CHECKING
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtGui import (
     QColor,
+    QKeySequence,
     QPainter,
     QSyntaxHighlighter,
     QTextBlock,
@@ -13,6 +15,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QPlainTextEdit,
+    QPushButton,
     QScrollBar,
     QStyle,
     QStyleOptionSlider,
@@ -25,6 +28,7 @@ from app.transcript import STTSegment
 from app.view_model.transcript_vm import TranscriptViewModel
 
 if TYPE_CHECKING:
+    from app.views.main_window import MainWindow
     from app.theme_manager import ThemeManager
 
 
@@ -34,38 +38,16 @@ PROP_START = Qt.ItemDataRole.UserRole + 1
 PROP_END = Qt.ItemDataRole.UserRole + 2
 
 
-def block_get_times(block: QTextBlock) -> tuple[float, float]:
-    it = block.begin()
-    while not it.atEnd():
-        fmt = it.fragment().charFormat()
-        start = fmt.property(PROP_START)
-        end = fmt.property(PROP_END)
-        if start is not None:
-            return float(start), float(end)
-        it += 1
-    return 0.0, 0.0
-
-
-def block_set_times(cursor: QTextCursor, start: float, end: float) -> None:
-    """Write timestamps into the block's char format via a tracked cursor edit."""
-    fmt = QTextCharFormat()
-    fmt.setProperty(PROP_START, start)
-    fmt.setProperty(PROP_END, end)
-    # Select the whole block content and merge the format — Qt records this
-    # in its own undo stack automatically.
-    cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
-    cursor.mergeCharFormat(fmt)
-    cursor.clearSelection()
-
-
 class TranscriptTextEdit(QPlainTextEdit):
+    first_block = True
+
     @property
     def segments(self) -> list[STTSegment]:
         """Read current state directly from the document — O(n), cheap."""
         result = []
         block = self.document().begin()
         while block.isValid():
-            start, end = block_get_times(block)
+            start, end = self.block_get_times(block)
             result.append(
                 STTSegment(
                     id=block.blockNumber(), start=start, end=end, text=block.text()
@@ -75,7 +57,7 @@ class TranscriptTextEdit(QPlainTextEdit):
         return result
 
     def set_segment_start_time(self, block_number: int, start: float) -> None:
-        print(f"set start time: {block_number}, start: {start}")
+        logging.info("set start time: block_number %s, start %s", block_number, start)
         """Edit start timestamp for one segment; the change joins the undo stack."""
         block = self.document().findBlockByNumber(block_number)
         if not block.isValid():
@@ -90,7 +72,7 @@ class TranscriptTextEdit(QPlainTextEdit):
         cursor.clearSelection()
 
     def set_segment_end_time(self, block_number: int, end: float) -> None:
-        print(f"set end time: {block_number}, end: {end}")
+        logging.info("set end time: block_number %s, end %s", block_number, end)
         """Edit end timestamp for one segment; the change joins the undo stack."""
         block = self.document().findBlockByNumber(block_number)
         if not block.isValid():
@@ -104,48 +86,39 @@ class TranscriptTextEdit(QPlainTextEdit):
         cursor.mergeCharFormat(fmt)
         cursor.clearSelection()
 
-    def delete_segment(self, block_number: int) -> None:
-        """Delete a segment's block; undoable."""
-        block = self.document().findBlockByNumber(block_number)
-        if not block.isValid():
-            return
-        cursor = QTextCursor(block)
-        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
-        cursor.removeSelectedText()
-        # If this wasn't the last block, also remove the trailing newline
-        if block.next().isValid():
-            cursor.deleteChar()
-
-    def move_segment(self, block_number: int, direction: int) -> None:
-        """Move segment up (-1) or down (+1); undoable as one edit block."""
-        doc = self.document()
-        block_a = doc.findBlockByNumber(block_number)
-        block_b = doc.findBlockByNumber(block_number + direction)
-        if not block_a.isValid() or not block_b.isValid():
-            return
-
-        text_a, text_b = block_a.text(), block_b.text()
-        start_a, end_a = block_get_times(block_a)
-        start_b, end_b = block_get_times(block_b)
-
-        cursor = QTextCursor(doc)
+    def append_segment(self, seg: STTSegment) -> None:
+        self.document().setUndoRedoEnabled(False)  # pause during bulk insert
+        cursor = QTextCursor(self.document())
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.beginEditBlock()
 
-        # Overwrite block_a with block_b's content
-        c = QTextCursor(block_a)
-        c.select(QTextCursor.SelectionType.BlockUnderCursor)
-        c.removeSelectedText()
-        c.insertText(text_b)
-        block_set_times(c, start_b, end_b)
+        if not self.first_block:
+            cursor.insertBlock()
+        self.first_block = False
 
-        # Overwrite block_b with block_a's content
-        c = QTextCursor(doc.findBlockByNumber(block_number + direction))
-        c.select(QTextCursor.SelectionType.BlockUnderCursor)
-        c.removeSelectedText()
-        c.insertText(text_a)
-        block_set_times(c, start_a, end_a)
+        cursor.insertText(seg.text.lstrip())
+        # Stamp timestamps onto the newly inserted text
+        fmt = QTextCharFormat()
+        fmt.setProperty(PROP_START, seg.start)
+        fmt.setProperty(PROP_END, seg.end)
+        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+        cursor.mergeCharFormat(fmt)
+        cursor.clearSelection()
 
         cursor.endEditBlock()
+        self.document().setUndoRedoEnabled(True)
+        self.document().clearUndoRedoStacks()
+
+    def block_get_times(self, block: QTextBlock) -> tuple[float, float]:
+        it = block.begin()
+        while not it.atEnd():
+            fmt = it.fragment().charFormat()
+            start = fmt.property(PROP_START)
+            end = fmt.property(PROP_END)
+            if start is not None:
+                return float(start), float(end)
+            it += 1
+        return 0.0, 0.0
 
 
 class MarkerScrollBar(QScrollBar):
@@ -254,16 +227,19 @@ class TranscriptHighlighter(QSyntaxHighlighter):
 
 class TranscriptView(QWidget):
     def __init__(
-        self, transcript_vm: TranscriptViewModel, theme_manager: ThemeManager
+        self,
+        main_window: MainWindow,
+        transcript_vm: TranscriptViewModel,
+        theme_manager: ThemeManager,
     ) -> None:
         super().__init__()
+        self.main_window = main_window
         self.vm = transcript_vm
         self.theme_manager = theme_manager
         self.segment_positions = []
 
         self.highlight_color: str
         self.hover_color: str
-        self.first_block = True
 
         current_theme = self.theme_manager.applied_theme
         self.set_highlight_colors(current_theme)
@@ -287,6 +263,10 @@ class TranscriptView(QWidget):
         scrollbar = MarkerScrollBar(Qt.Orientation.Vertical)
         self.text_edit.setVerticalScrollBar(scrollbar)
         self.scrollbar = scrollbar
+        self.save_btn = QPushButton("Save")
+        layout.addWidget(self.save_btn)
+        self.save_btn.clicked.connect(self.save_transcript)
+        self.save_btn.setEnabled(False)
 
     def update_scroll_marker(self):
         block_count = self.text_edit.blockCount()
@@ -312,8 +292,6 @@ class TranscriptView(QWidget):
     def _connect_signals(self) -> None:
         self.vm.segment_sent.connect(self._populate_transcript)
         self.vm.clear_requested.connect(self.text_edit.clear)
-        self.vm.block_index_changed.connect(self.set_current_block)
-        self.vm.hover_block_index_changed.connect(self.set_hover_block)
         self.vm.hover_block_reset.connect(self.reset_hover)
         # fmt: off
         self.vm.main_vm.start_segment_changed.connect(
@@ -326,18 +304,23 @@ class TranscriptView(QWidget):
         self.theme_manager.theme_changed.connect(self.update_theme)
         self.vm.populate_segment_finished.connect(self._on_populate_segment_finished)
         self.text_edit.cursorPositionChanged.connect(self._on_cursor_position_changed)
+        self.text_edit.document().modificationChanged.connect(self.save_btn.setEnabled)
+        self.vm.current_position_changed.connect(self._on_position_changed)
+        self.vm.hover_position_changed.connect(self._on_hover_position_changed)
+        self.main_window.undo_pressed.connect(self._on_cursor_position_changed)
+        self.main_window.redo_pressed.connect(self._on_cursor_position_changed)
 
     def _on_populate_segment_finished(self) -> None:
-        self.first_block = True
+        self.text_edit.first_block = True
         logger.debug(
             "Populate semgent finished: self.first_block restored to %s",
-            self.first_block,
+            self.text_edit.first_block,
         )
 
     @Slot()
     def _on_cursor_position_changed(self) -> None:
         block = self.text_edit.textCursor().block()
-        data = block_get_times(block)
+        data = self.text_edit.block_get_times(block)
         start = data[0]
         end = data[1]
         logger.debug(
@@ -370,24 +353,34 @@ class TranscriptView(QWidget):
 
     @Slot(STTSegment)
     def _populate_transcript(self, seg: STTSegment) -> None:
-        self.text_edit.document().setUndoRedoEnabled(False)  # pause during bulk insert
-        cursor = QTextCursor(self.text_edit.document())
-        cursor.movePosition(QTextCursor.MoveOperation.End)
-        cursor.beginEditBlock()
+        self.text_edit.append_segment(seg)
+        self.text_edit.document().setModified(False)
 
-        if not self.first_block:
-            cursor.insertBlock()
-        self.first_block = False
+    def find_block_at_position(self, position: float) -> int:
+        """Find which block contains the given character position using binary search."""
+        idx = bisect_right(self.text_edit.segments, position, key=lambda seg: seg.start)
 
-        cursor.insertText(seg.text)
-        # Stamp timestamps onto the newly inserted text
-        fmt = QTextCharFormat()
-        fmt.setProperty(PROP_START, seg.start)
-        fmt.setProperty(PROP_END, seg.end)
-        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
-        cursor.mergeCharFormat(fmt)
-        cursor.clearSelection()
+        if idx == 0:
+            return -1  # Position is before the first segment
 
-        cursor.endEditBlock()
-        self.text_edit.document().setUndoRedoEnabled(True)
-        self.text_edit.document().clearUndoRedoStacks()
+        # Check if position falls within the previous segment
+        seg = self.text_edit.segments[idx - 1]
+        if seg.start <= position <= seg.end:
+            return idx - 1
+
+        return -1  # Position is in a gap between segments
+
+    @Slot(float)
+    def _on_position_changed(self, pos: float) -> None:
+        idx = self.find_block_at_position(pos)
+        self.set_current_block(idx)
+
+    @Slot(int)
+    def _on_hover_position_changed(self, pos: int) -> None:
+        idx = self.find_block_at_position(pos)
+        self.set_hover_block(idx)
+
+    def save_transcript(self) -> None:
+        self.vm.transcript.clear_all()
+        for seg in self.text_edit.segments:
+            self.vm.transcript.segments.append(seg)

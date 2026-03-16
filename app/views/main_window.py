@@ -59,6 +59,9 @@ class TerminationDialog(QDialog):
 
 
 class MainWindow(QMainWindow):
+    undo_pressed = Signal()
+    redo_pressed = Signal()
+
     def __init__(
         self,
         app: QApplication,
@@ -71,6 +74,7 @@ class MainWindow(QMainWindow):
         self.app = app
         self.theme_manager = theme_manager
         self.main_vm = main_vm
+        self.shortcut = self.main_vm.general_config.shortcuts
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
 
@@ -81,7 +85,9 @@ class MainWindow(QMainWindow):
 
         self.menu_bar = MenuBar(self)
         self.transcript_view = TranscriptView(
-            transcript_vm=self.main_vm.transcript_vm, theme_manager=self.theme_manager
+            main_window=self,
+            transcript_vm=self.main_vm.transcript_vm,
+            theme_manager=self.theme_manager,
         )
         self.transcript_controls = TranscriptControls(
             main_vm=self.main_vm,
@@ -89,6 +95,7 @@ class MainWindow(QMainWindow):
             main_window=self,
         )
         self.audio_player = AudioPlayer(
+            main_window=self,
             theme_manager=self.theme_manager,
             audio_player_vm=self.audio_player_vm,
             waveform_vm=self.main_vm.waveform_vm,
@@ -356,27 +363,46 @@ class MainWindow(QMainWindow):
             else:
                 event.ignore()
 
-    def keyPressEvent(self, event) -> None:
-        """Handle global keyboard shortcuts"""
-        key = event.key()
-
-        if key == Qt.Key.Key_Space:
-            if self.audio_player_vm.is_file_loaded:
-                self.audio_player_vm.toggle_play()
-                event.accept()
-                return
-        elif key == Qt.Key.Key_Left:
-            if self.audio_player_vm.is_file_loaded:
-                self.audio_player_vm.rewind()
-        elif key == Qt.Key.Key_Right:
-            if self.audio_player_vm.is_file_loaded:
-                self.audio_player_vm.forward()
-
-        super().keyPressEvent(event)
-
     def setup_shortcuts(self) -> None:
-        restart_shortcut = QShortcut(QKeySequence("Ctrl+R"), self)
-        restart_shortcut.activated.connect(self.run_dev_restart)
+        restart = QShortcut(QKeySequence("Ctrl+R"), self)
+        restart.activated.connect(self.run_dev_restart)
+
+        undo = QShortcut(QKeySequence.StandardKey.Undo, self)  # Ctrl+Z
+        undo.activated.connect(self.undo_activated)
+
+        redo = QShortcut(QKeySequence.StandardKey.Redo, self)  # Ctrl+Shift+Z
+        redo.activated.connect(self.redo_activated)
+
+        toggle_play = QShortcut(QKeySequence(self.shortcut.play_payse), self)
+        toggle_play.activated.connect(self._on_toggle_play_activated)
+
+        forward = QShortcut(QKeySequence(self.shortcut.forward), self)
+        forward.activated.connect(self._on_forward_activated)
+        rewind = QShortcut(QKeySequence(self.shortcut.rewind), self)
+        rewind.activated.connect(self._on_rewind_activated)
+
+    @Slot()
+    def _on_forward_activated(self) -> None:
+        if self.audio_player_vm.is_file_loaded:
+            self.audio_player_vm.forward()
+
+    @Slot()
+    def _on_rewind_activated(self) -> None:
+        if self.audio_player_vm.is_file_loaded:
+            self.audio_player_vm.rewind()
+
+    @Slot()
+    def _on_toggle_play_activated(self) -> None:
+        if self.audio_player_vm.is_file_loaded:
+            self.audio_player_vm.toggle_play()
+
+    def undo_activated(self) -> None:
+        self.transcript_view.text_edit.undo()
+        self.undo_pressed.emit()
+
+    def redo_activated(self) -> None:
+        self.transcript_view.text_edit.redo()
+        self.redo_pressed.emit()
 
     def run_dev_restart(self) -> None:
         self._is_force_restarting = True

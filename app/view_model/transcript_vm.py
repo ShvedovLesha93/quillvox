@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from bisect import bisect_right
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,8 +29,8 @@ class TranscriptViewModel(QObject):
     segment_sent = Signal(STTSegment)
     populate_segment_finished = Signal()
     clear_requested = Signal()
-    block_index_changed = Signal(int)
-    hover_block_index_changed = Signal(int)
+    current_position_changed = Signal(float)
+    hover_position_changed = Signal(float)
     hover_block_reset = Signal()
 
     def __init__(
@@ -57,6 +56,7 @@ class TranscriptViewModel(QObject):
         self.main_vm.segment_stream_finished.connect(
             self.populate_segment_finished.emit
         )
+        self.replace_confirmed.connect(self.on_replace_confirmed)
 
     def on_selected_segment_changed(self, id: int, start: float, end: float) -> None:
         self.main_vm.waveform_vm.changed_selected_segment.emit(id, start, end)
@@ -72,15 +72,20 @@ class TranscriptViewModel(QObject):
 
     def save_file(self, suffix: str, path: Path, data: str) -> None:
         out_file = path.with_suffix(suffix)
+
         if out_file.exists():
+            self._pending_file = out_file
+            self._pending_data = data
             self.replace_request.emit(out_file.name)
-            self.replace_confirmed.connect(lambda: self._write_file(out_file, data))
             return
 
         self._write_file(out_file, data)
 
+    @Slot()
+    def on_replace_confirmed(self):
+        self._write_file(self._pending_file, self._pending_data)
+
     def _write_file(self, out_file: Path, data: str) -> None:
-        self.replace_confirmed.disconnect()
         try:
             with open(out_file, "w", encoding="utf-8") as f:
                 f.write(data)
@@ -92,14 +97,12 @@ class TranscriptViewModel(QObject):
     @Slot(int)
     def _on_position_changed(self, pos: int) -> None:
         pos_seconds = pos / 1000.0
-        idx = self.find_block_at_position(pos_seconds)
-        self.block_index_changed.emit(idx)
+        self.current_position_changed.emit(pos_seconds)
 
     @Slot(int)
     def _on_hover_position_changed(self, pos: int) -> None:
         pos_seconds = pos / 1000.0
-        idx = self.find_block_at_position(pos_seconds)
-        self.hover_block_index_changed.emit(idx)
+        self.hover_position_changed.emit(pos_seconds)
 
     @Slot()
     def _on_file_opened(self) -> None:
@@ -122,22 +125,6 @@ class TranscriptViewModel(QObject):
             self._clear_json()
         else:
             raise FileNotFoundError("Cannot find audio file")
-
-    def find_block_at_position(self, position: float) -> int:
-        """Find which block contains the given character position using binary search."""
-        idx = bisect_right(
-            self.transcript.segments, position, key=lambda seg: seg.start
-        )
-
-        if idx == 0:
-            return -1  # Position is before the first segment
-
-        # Check if position falls within the previous segment
-        seg = self.transcript.segments[idx - 1]
-        if seg.start <= position <= seg.end:
-            return idx - 1
-
-        return -1  # Position is in a gap between segments
 
     def _on_info(self, info: TranscriptionInfo) -> None:
         """Transcription information"""
