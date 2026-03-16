@@ -18,242 +18,207 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.8\n"
 
-#: app\views\audio_player_view.py:179
+#: app/views/audio_player_view.py:290
 msgid "No file opened"
 msgstr "Файл не открыт"
 
-#: app\views\menu_bar.py:35
+#: app/views/menu_bar.py:91
 msgid "File"
 msgstr "Файл"
 
-#: app\views\menu_bar.py:36
-msgid "Open Media"
-msgstr "Открыть медиа"
-
-#: app\views\menu_bar.py:37
+#: app/views/menu_bar.py:93
 msgid "Settings"
 msgstr "Настройки"
 
-#: app\views\transcript_controls_view.py:96
+#: app/views/transcript_controls_view.py:95
 msgid "Transcribe"
 msgstr "Транскрибировать"
 
-#: app\views\settings\general_settings_view.py:116
-#: app\views\settings\settings_view.py:195
+#: app/views/settings/general_settings_view.py:116
+#: app/views/settings/settings_view.py:194
 msgid "General"
 msgstr "Общие"
 
-#: app\views\settings\general_settings_view.py:115
+#: app/views/settings/general_settings_view.py:115
 msgid "Theme"
 msgstr "Тема"
 
-#: app\views\settings\settings_view.py:196
-#: app\views\settings\stt_settings_view.py:125
+#: app/views/settings/stt_settings_view.py:125
+#: app/views/settings/settings_view.py:195
 msgid "Transcription"
 msgstr "Транскрипция"
 
-#: app\view_model\file_selector_vm.py:50
+#: app/view_model/file_selector_vm.py:73
 msgid "Audio Files"
 msgstr "Аудио файлы"
 
-#: app\view_model\file_selector_vm.py:51
-msgid "Video Files"
-msgstr "Видео файлы"
-
-#: app\view_model\file_selector_vm.py:52
-msgid "All Media Files"
-msgstr "Все медиафайлы"
-
-#: app\view_model\file_selector_vm.py:61
-msgid "File not found"
-msgstr "Файл не найден"
-
-#: app\view_model\file_selector_vm.py:87
+#: app/view_model/file_selector_vm.py:111
 #, python-brace-format
 msgid "File '{file}' has been opened"
 msgstr "Файл '{file}' открыт"
 
-#: app\view_model\file_selector_vm.py:92
-msgid "No selected file"
-msgstr "Файл не выбран"
-
-#: app\views\main_window.py:235
+#: app/views/main_window.py:267
 msgid "Open media file"
 msgstr "Открыть медиафайл"
 
-#: app\stt_worker.py:166
+#: app/stt_worker.py:158
 #, python-brace-format
 msgid "Transcription completed in {duration}"
 msgstr "Транскрипция выполнена за {duration}"
 
-#: app\stt_worker.py:95
+#: app/stt_worker.py:81
 #, python-brace-format
 msgid "Starting load model: {model_name}"
 msgstr "Начинается загрузка модели: {model_name}"
 
-#: app\stt_worker.py:114
+#: app/stt_worker.py:100
 #, python-brace-format
 msgid "Successfully loaded {model_name}"
 msgstr "Модель {model_name} успешно загружена"
 
-#: app\stt_worker.py:148
+#: app/stt_worker.py:134
 msgid "Transcription in process..."
 msgstr "Транскрипция в процессе..."
 
-#: app\stt_worker.py:178
-msgid "Error occurred during transcription: "
-msgstr "Ошибка во время транскрипции: "
-
-#: app\views\main_window.py:38 app\views\main_window.py:250
-#: app\views\transcript_controls_view.py:119
+#: app/views/transcript_controls_view.py:120 app/views/main_window.py:45
+#: app/views/main_window.py:319 app/views/main_window.py:361
 msgid "Transcription in Progress"
 msgstr "Транскрипция в процессе"
 
-#: app\views\main_window.py:47
+#: app/views/main_window.py:54
 msgid "Terminating transcription process..."
 msgstr "Завершение процесса транскрипции..."
 
-#: app\views\main_window.py:138
+#: app/views/main_window.py:189
 msgid "See all notifications"
 msgstr "Посмотреть все уведомления"
 
-#: app\views\main_window.py:252
+#: app/views/main_window.py:363
 msgid "Transcription is currently running. Do you want to stop it and exit?"
 msgstr ""
 "В данный момент выполняется транскрипция. Вы хотите остановить её и выйти?"
 
-#: app\views\main_window.py:274 app\views\settings\settings_view.py:242
+#: app/views/main_window.py:386 app/views/settings/settings_view.py:260
 msgid "Exit Confirmation"
 msgstr "Подтверждение выхода"
 
-#: app\views\main_window.py:275
+#: app/views/main_window.py:387
 msgid "Are you sure you want to exit?"
 msgstr "Вы уверены, что хотите выйти?"
 
-#: app\views\notifications_view.py:107
+#: app/views/notifications_view.py:107
 msgid "Disable text wrapping"
 msgstr "Отключить перенос текста"
 
-#: app\views\notifications_view.py:109
+#: app/views/notifications_view.py:109
 msgid "Enable text wrapping"
 msgstr "Включить перенос текста"
 
-#: app\views\transcript_controls_view.py:102
+#: app/views/transcript_controls_view.py:103
 msgid "Transcript exists"
 msgstr "Транскрипция уже существует"
 
-#: app\views\transcript_controls_view.py:103
+#: app/views/transcript_controls_view.py:104
 msgid "Transcription is already exist. Do you want to rewrite it?"
 msgstr "Транскрипция уже существует. Вы хотите перезаписать её?"
 
-#: app\views\transcript_controls_view.py:120
+#: app/views/transcript_controls_view.py:121
 msgid "Transcription is currently running. Do you want to stop it?"
 msgstr "В данный момент выполняется транскрипция. Вы хотите остановить её?"
 
-#: app\view_model\file_selector_vm.py:65
+#: app/view_model/file_selector_vm.py:89
 #, python-brace-format
 msgid "File '{file}' already opened"
 msgstr "Файл '{file}' уже открыт"
 
-#: app\view_model\stt_worker_vm.py:180
+#: app/view_model/stt_worker_vm.py:201
 msgid "Transcription is terminated"
 msgstr "Транскрипция прервана"
 
-#: app\view_model\transcript_vm.py:133
+#: app/view_model/transcript_vm.py:183
 #, python-brace-format
 msgid "The JSON file is corrupted: {e}"
 msgstr "JSON-файл поврежден: {e}"
 
-#: app\view_model\transcript_vm.py:138
+#: app/view_model/transcript_vm.py:188
 #, python-brace-format
 msgid "Failed to load JSON file: {file}"
 msgstr "Не удалось загрузить JSON-файл: {file}"
 
-#: app\views\settings\general_settings_view.py:113
+#: app/views/settings/general_settings_view.py:113
 msgid "Interface language"
 msgstr "Язык интерфейса"
 
-#: app\views\settings\settings_view.py:38
+#: app/views/settings/settings_view.py:39
 msgid "Settings was changed"
 msgstr "Настройки изменены"
 
-#: app\views\settings\settings_view.py:197
+#: app/views/settings/settings_view.py:196
 msgid "Reset"
 msgstr "Сбросить"
 
-#: app\views\settings\settings_view.py:198
+#: app/views/settings/settings_view.py:197
 msgid "Apply"
 msgstr "Применить"
 
-#: app\views\settings\settings_view.py:199
+#: app/views/settings/settings_view.py:198
 msgid "Ok"
 msgstr "ОК"
 
-#: app\views\settings\settings_view.py:214
+#: app/views/settings/settings_view.py:213
 msgid "Reset all settings"
 msgstr "Сбросить все настройки"
 
-#: app\views\settings\settings_view.py:215
+#: app/views/settings/settings_view.py:214
 msgid "Are you sure you want to reset the changed settings?"
 msgstr "Вы уверены, что хотите сбросить измененные настройки?"
 
-#: app\views\settings\settings_view.py:243
+#: app/views/settings/settings_view.py:261
 msgid "Settings not saved. Save changes?"
 msgstr "Настройки не сохранены. Сохранить изменения?"
 
-#: app\views\settings\stt_settings_view.py:116
+#: app/views/settings/stt_settings_view.py:118
 msgid "Model"
 msgstr "Модель"
 
-#: app\views\settings\stt_settings_view.py:118
+#: app/views/settings/stt_settings_view.py:120
 msgid "Device"
 msgstr "Устройство"
 
-#: app\views\settings\stt_settings_view.py:120
+#: app/views/settings/stt_settings_view.py:122
 msgid "Compute type"
 msgstr "Тип вычислений"
 
-#: app\views\settings\stt_settings_view.py:122
-msgid "Batch size"
-msgstr "Размер пакета"
-
-#: app\views\settings\stt_settings_view.py:124
+#: app/views/settings/stt_settings_view.py:124
 msgid "Transcription language"
 msgstr "Язык транскрипции"
 
-#: app\views\settings\stt_settings_view.py:193
-#: app\views\settings\stt_settings_view.py:198
+#: app/views/settings/stt_settings_view.py:222
+#: app/views/settings/stt_settings_view.py:227
 msgid "Please wait… Transcription in progress"
 msgstr "Пожалуйста, подождите... Транскрипция в процессе"
 
-#: app\stt_worker.py:78
-msgid ""
-"Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
-msgstr ""
-"Невозможно использовать ускорение GPU. Пожалуйста, установите драйверы CUDA "
-"для видеокарт NVIDIA."
-
-#: main.py:97
+#: main.py:207
 msgid "QuillVox - Startup Error"
 msgstr "QuillVox - Ошибка запуска"
 
-#: main.py:98
+#: main.py:208
 msgid "QuillVox failed to start due to an unexpected error."
 msgstr "QuillVox не удалось запустить из-за непредвиденной ошибки."
 
-#: main.py:115
+#: main.py:225
 msgid "QuillVox crashed during startup:"
 msgstr "QuillVox аварийно завершил работу во время запуска:"
 
-#: main.py:117
+#: main.py:227
 msgid "Press Enter to exit..."
 msgstr "Нажмите Enter для выхода..."
 
-#: app\views\splash_screen.py:33
+#: app/views/splash_screen.py:46
 msgid "Starting..."
 msgstr "Запуск..."
 
-#: main.py:100
+#: main.py:210
 #, python-brace-format
 msgid ""
 "A crash log has been saved to:\n"
@@ -262,3 +227,224 @@ msgstr ""
 "Отчёт о сбое сохранён по пути:\n"
 "{log_path}"
 
+#: app/update_checker.py:43
+msgid "No version found in response"
+msgstr "В ответе не найдена ни одна версия"
+
+#: app/update_checker.py:53
+#, python-brace-format
+msgid "Network error: {e}"
+msgstr "Ошибка сети: {e}"
+
+#: app/update_checker.py:55
+#, python-brace-format
+msgid "Invalid JSON: {e}"
+msgstr "Недопустимый JSON: {e}"
+
+#: app/update_checker.py:57
+#, python-brace-format
+msgid "Unexpected error: {e}"
+msgstr "Неожиданная ошибка: {e}"
+
+#: app/update_checker.py:96
+#, python-brace-format
+msgid "Update available: {current} → {latest}"
+msgstr "Обновления доступны: {current} → {latest}"
+
+#: app/update_checker.py:107
+msgid "You're up to date!"
+msgstr "У вас новая версия."
+
+#: app/update_checker.py:112
+#, python-brace-format
+msgid "Update check failed: {error_msg}"
+msgstr "Проверка обновлений завершилась неудачно: {error_msg}"
+
+#: app/stt_worker.py:170
+#, python-brace-format
+msgid "Error occurred during transcription: {e}"
+msgstr "Во время транскрипции произошла ошибка: {e}"
+
+#: app/views/transcript_controls_view.py:96
+msgid "Start transcribing"
+msgstr "Начать транскрибирование"
+
+#: app/views/transcript_controls_view.py:97
+msgid "Stop transcription"
+msgstr "Остановить транскрипцию"
+
+#: app/views/main_window.py:303
+msgid "Update available"
+msgstr "Обновления доступны"
+
+#: app/views/main_window.py:304
+msgid "Download the update?"
+msgstr "Скачать обновление?"
+
+#: app/views/main_window.py:320
+#, python-brace-format
+msgid "The file '{file}' already exists, continue anyway?"
+msgstr "Файл '{file}' уже существует, продолжить?"
+
+#: app/views/main_window.py:338
+msgid "Unsaved changes"
+msgstr "Несохраненные изменения"
+
+#: app/views/main_window.py:339
+msgid "You have unsaved changes. Exit anyway?"
+msgstr "У вас есть несохраненные изменения. Все равно закрыть?"
+
+#: app/views/audio_player_view.py:292
+#, python-brace-format
+msgid "Play/Pause ({key})"
+msgstr "Воспроизвести/пауза ({key})"
+
+#: app/views/audio_player_view.py:295
+#, python-brace-format
+msgid "Rewind 5s ({key})"
+msgstr "Назад на 5 секунд ({key})"
+
+#: app/views/audio_player_view.py:298
+#, python-brace-format
+msgid "Forward 5s ({key})"
+msgstr "Вперед на 5 секунд ({key})"
+
+#: app/views/audio_player_view.py:300
+msgid "Stop playback"
+msgstr "Остановить воспроизведение"
+
+#: app/views/audio_player_view.py:301
+msgid "Volume"
+msgstr "Громкость"
+
+#: app/views/audio_player_view.py:302
+msgid "Reset playback speed"
+msgstr "Восстановить скорость воспроизведения"
+
+#: app/views/menu_bar.py:92
+msgid "Open Audio"
+msgstr "Открыть аудио"
+
+#: app/views/menu_bar.py:94
+msgid "Help"
+msgstr "Помощь"
+
+#: app/views/menu_bar.py:95
+msgid "Check for update"
+msgstr "Проверить наличие обновлений"
+
+#: app/views/menu_bar.py:96
+msgid "Export to SRT"
+msgstr "Экспорт в SRT"
+
+#: app/views/menu_bar.py:97
+msgid "Export to VTT"
+msgstr "Экспорт в VTT"
+
+#: app/views/menu_bar.py:98
+msgid "Export to TXT"
+msgstr "Экспорт в TXT"
+
+#: app/views/menu_bar.py:99
+msgid "Save"
+msgstr "Сохранить"
+
+#: app/views/menu_bar.py:101
+#, python-brace-format
+msgid "Save transcript to JSON file ({key})"
+msgstr "Сохранить транскрипт в файл JSON ({key})"
+
+#: app/view_model/file_selector_vm.py:84
+#, python-brace-format
+msgid "File '{file}' not found"
+msgstr "Файл '{file}' не найден"
+
+#: app/view_model/transcript_vm.py:101
+#, python-brace-format
+msgid "'{file}' saved"
+msgstr "'{file}' сохранен"
+
+#: app/views/settings/stt_settings_view.py:156
+msgid "Restart required"
+msgstr "Требуется перезапуск"
+
+#: app/views/settings/settings_view.py:241
+msgid "Speed Up Transcription"
+msgstr "Ускорить транскрипцию"
+
+#: app/views/settings/settings_view.py:243
+msgid ""
+"Your GPU can transcribe audio significantly faster than the CPU.\n"
+"\n"
+"This requires a one-time download of ~2.5 GB. Continue?"
+msgstr ""
+"Ваш графический процессор (GPU) может распознавать речь значительно быстрее, чем центральный процессор (CPU).\n"
+"\n"
+"Для этого потребуется однократная загрузка файла объемом около 2,5 ГБ. Продолжить?"
+
+#: app/views/settings/settings_view.py:281
+msgid "Setting up GPU acceleration…"
+msgstr "Настройка ускорения на GPU…"
+
+#: app/views/settings/settings_view.py:281
+msgid "Cancel"
+msgstr "Закрыть"
+
+#: app/views/settings/settings_view.py:283
+msgid "Downloading"
+msgstr "Загрузка"
+
+#: app/views/settings/settings_view.py:304
+msgid "Ready to go!"
+msgstr "Готово"
+
+#: app/views/settings/settings_view.py:306
+msgid ""
+"GPU support installed successfully.\n"
+"\n"
+"Please restart the app to apply changes."
+msgstr ""
+"Поддержка графического процессора установлена успешно.\n"
+"\n"
+"Для применения изменений перезапустите приложение."
+
+#: app/views/settings/settings_view.py:312
+msgid "Installation failed"
+msgstr "Сбой установки"
+
+#: app/views/settings/settings_view.py:314
+msgid ""
+"Something went wrong during the download.\n"
+"\n"
+"You can try again later or continue using CPU."
+msgstr ""
+"Во время загрузки произошла ошибка.\n"
+"\n"
+"Вы можете повторить попытку позже или продолжить работу с помощью процессора"
+
+#~ msgid "Open Media"
+#~ msgstr "Открыть медиа"
+
+#~ msgid "Video Files"
+#~ msgstr "Видео файлы"
+
+#~ msgid "All Media Files"
+#~ msgstr "Все медиафайлы"
+
+#~ msgid "File not found"
+#~ msgstr "Файл не найден"
+
+#~ msgid "No selected file"
+#~ msgstr "Файл не выбран"
+
+#~ msgid "Error occurred during transcription: "
+#~ msgstr "Ошибка во время транскрипции: "
+
+#~ msgid "Batch size"
+#~ msgstr "Размер пакета"
+
+#~ msgid ""
+#~ "Unable to use GPU acceleration. Please install CUDA drivers for NVIDIA GPUs."
+#~ msgstr ""
+#~ "Невозможно использовать ускорение GPU. Пожалуйста, установите драйверы CUDA "
+#~ "для видеокарт NVIDIA."
