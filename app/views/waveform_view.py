@@ -371,8 +371,14 @@ class WaveformView(QWidget):
         start_sec = ((start_sample / self.original_length) * self.duration) / 1000
         end_sec = ((end_sample / self.original_length) * self.duration) / 1000
 
-        self.vm.start_selection_changed.emit(self.current_segment_id, start_sec)
-        self.vm.end_selection_changed.emit(self.current_segment_id, end_sec)
+        # fmt: off
+        self.vm.start_selection_changed.emit(
+            self.current_segment_id, round(start_sec, 2)
+        )
+        self.vm.end_selection_changed.emit(
+            self.current_segment_id, round(end_sec, 2)
+        )
+        # fmt: on
 
     def _on_mouse_press(self, event) -> None:
         """Determine drag mode on mouse button press."""

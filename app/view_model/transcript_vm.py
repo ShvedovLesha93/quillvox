@@ -32,6 +32,7 @@ class TranscriptViewModel(QObject):
     current_position_changed = Signal(float)
     hover_position_changed = Signal(float)
     hover_block_reset = Signal()
+    save_transcript_requested = Signal(list)
 
     def __init__(
         self, main_vm: MainViewModel, transcript: Transcript, stt_config: STTConfig
@@ -57,6 +58,14 @@ class TranscriptViewModel(QObject):
             self.populate_segment_finished.emit
         )
         self.replace_confirmed.connect(self.on_replace_confirmed)
+        self.save_transcript_requested.connect(self.update_transcript)
+
+    @Slot(list)
+    def update_transcript(self, segments: list[STTSegment]) -> None:
+        self.transcript.clear_all()
+        for seg in segments:
+            self.transcript.segments.append(seg)
+        self._save_to_json()
 
     def on_selected_segment_changed(self, id: int, start: float, end: float) -> None:
         self.main_vm.waveform_vm.changed_selected_segment.emit(id, start, end)

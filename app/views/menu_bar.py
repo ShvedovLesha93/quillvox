@@ -31,6 +31,14 @@ class MenuBar(QObject):
         self.open_audio.triggered.connect(self.main_window.open_file_dialog)
 
         self.f_menu.addSeparator()
+
+        # Save
+        self.save = QAction()
+        self.f_menu.addAction(self.save)
+        self.save.triggered.connect(self.main_window.save_transcript_request.emit)
+
+        self.f_menu.addSeparator()
+
         # Export actions
         self.export_actions: list[QAction] = []
         # SRT
@@ -71,6 +79,10 @@ class MenuBar(QObject):
         )
 
     @Slot(bool)
+    def enable_save(self, state: bool) -> None:
+        self.save.setEnabled(state)
+
+    @Slot(bool)
     def enable_export(self, state: bool) -> None:
         for act in self.export_actions:
             act.setEnabled(state)
@@ -84,3 +96,9 @@ class MenuBar(QObject):
         self.export_srt.setText(_("Export to SRT"))
         self.export_vtt.setText(_("Export to VTT"))
         self.export_txt.setText(_("Export to TXT"))
+        self.save.setText(_("Save"))
+        self.save.setStatusTip(
+            _("Save transcript to JSON file ({key})").format(
+                key=self.main_window.shortcut.save
+            )
+        )

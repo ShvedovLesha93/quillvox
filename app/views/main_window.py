@@ -61,6 +61,7 @@ class TerminationDialog(QDialog):
 class MainWindow(QMainWindow):
     undo_pressed = Signal()
     redo_pressed = Signal()
+    save_transcript_request = Signal()
 
     def __init__(
         self,
@@ -77,6 +78,7 @@ class MainWindow(QMainWindow):
         self.shortcut = self.main_vm.general_config.shortcuts
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
+        self.is_doc_changed = False
 
         self.is_process_alive = False
         self._skip_exit_confirmation = False
@@ -164,6 +166,7 @@ class MainWindow(QMainWindow):
         status_bar.addWidget(self.status_stack, 1)
 
     def _setup_ui(self) -> None:
+        self.setWindowTitle("QuillVox [*]")
         central_widget = QWidget()
 
         self.setCentralWidget(central_widget)
@@ -237,6 +240,7 @@ class MainWindow(QMainWindow):
         self.transcript_controls.start_transcript_btn.start_spinner()
         self.transcript_controls.stop_transcript_btn.setEnabled(True)
         self.transcript_view.text_edit.setReadOnly(True)
+        self.menu_bar.save.setEnabled(False)
         self.settings.stt_settings.set_enabled(False)
         self.menu_bar.open_audio.setEnabled(False)
         self.menu_bar.enable_export(False)
@@ -288,6 +292,10 @@ class MainWindow(QMainWindow):
         for child in widget.findChildren(QWidget):
             self._set_no_focus_recursive(child)
 
+    @Slot(bool)
+    def on_modification_changed(self, state: bool) -> None:
+        self.setWindowModified(state)
+
     @Slot(str)
     def confirm_update(self, latest_version: str) -> None:
         reply = QMessageBox.question(
@@ -324,6 +332,28 @@ class MainWindow(QMainWindow):
             event.accept()
             return
 
+        if not self.is_process_alive and self.is_doc_changed:
+            reply = QMessageBox.question(
+                self,
+                _("Unsaved changes"),
+                _("You have unsaved changes. Exit anyway?"),
+                QMessageBox.StandardButton.Save
+                | QMessageBox.StandardButton.Discard
+                | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Save,  # default button
+            )
+
+            if reply == QMessageBox.StandardButton.Save:
+                self.transcript_view.save_transcript()
+                event.accept()
+                return
+            elif reply == QMessageBox.StandardButton.Cancel:
+                event.ignore()
+                return
+            else:
+                event.accept()
+                return
+
         # If transcription is running, prevent immediate close
         if self.is_process_alive:
             reply = QMessageBox.question(
@@ -343,6 +373,7 @@ class MainWindow(QMainWindow):
                 event.ignore()  # Temporarily ignore until process actually stops
             else:
                 event.ignore()
+                return
 
         else:
             if self._skip_exit_confirmation:
@@ -367,6 +398,9 @@ class MainWindow(QMainWindow):
         restart = QShortcut(QKeySequence("Ctrl+R"), self)
         restart.activated.connect(self.run_dev_restart)
 
+        save = QShortcut(QKeySequence(self.shortcut.save), self)
+        save.activated.connect(self.save_transcript_request.emit)
+
         undo = QShortcut(QKeySequence.StandardKey.Undo, self)  # Ctrl+Z
         undo.activated.connect(self.undo_activated)
 
@@ -375,7 +409,6 @@ class MainWindow(QMainWindow):
 
         toggle_play = QShortcut(QKeySequence(self.shortcut.play_payse), self)
         toggle_play.activated.connect(self._on_toggle_play_activated)
-
         forward = QShortcut(QKeySequence(self.shortcut.forward), self)
         forward.activated.connect(self._on_forward_activated)
         rewind = QShortcut(QKeySequence(self.shortcut.rewind), self)

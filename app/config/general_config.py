@@ -16,6 +16,7 @@ class Shortcuts:
     forward = "Ctrl+."
     rewind = "Ctrl+,"
     play_payse = "Ctrl+Space"
+    save = "Ctrl+s"
 
 
 @dataclass

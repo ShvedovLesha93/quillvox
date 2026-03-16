@@ -108,6 +108,7 @@ class TranscriptTextEdit(QPlainTextEdit):
         cursor.endEditBlock()
         self.document().setUndoRedoEnabled(True)
         self.document().clearUndoRedoStacks()
+        self.document().setModified(False)
 
     def block_get_times(self, block: QTextBlock) -> tuple[float, float]:
         it = block.begin()
@@ -263,10 +264,6 @@ class TranscriptView(QWidget):
         scrollbar = MarkerScrollBar(Qt.Orientation.Vertical)
         self.text_edit.setVerticalScrollBar(scrollbar)
         self.scrollbar = scrollbar
-        self.save_btn = QPushButton("Save")
-        layout.addWidget(self.save_btn)
-        self.save_btn.clicked.connect(self.save_transcript)
-        self.save_btn.setEnabled(False)
 
     def update_scroll_marker(self):
         block_count = self.text_edit.blockCount()
@@ -304,11 +301,23 @@ class TranscriptView(QWidget):
         self.theme_manager.theme_changed.connect(self.update_theme)
         self.vm.populate_segment_finished.connect(self._on_populate_segment_finished)
         self.text_edit.cursorPositionChanged.connect(self._on_cursor_position_changed)
-        self.text_edit.document().modificationChanged.connect(self.save_btn.setEnabled)
+        self.text_edit.document().modificationChanged.connect(self._on_doc_changed)
         self.vm.current_position_changed.connect(self._on_position_changed)
         self.vm.hover_position_changed.connect(self._on_hover_position_changed)
         self.main_window.undo_pressed.connect(self._on_cursor_position_changed)
         self.main_window.redo_pressed.connect(self._on_cursor_position_changed)
+        self.main_window.save_transcript_request.connect(self.save_transcript)
+
+    @Slot(bool)
+    def _on_doc_changed(self, state: bool) -> None:
+        if self.main_window.is_process_alive:
+            self.main_window.menu_bar.save.setEnabled(False)
+            self.main_window.is_doc_changed = False
+            self.main_window.on_modification_changed(False)
+        else:
+            self.main_window.menu_bar.save.setEnabled(state)
+            self.main_window.is_doc_changed = state
+            self.main_window.on_modification_changed(state)
 
     def _on_populate_segment_finished(self) -> None:
         self.text_edit.first_block = True
@@ -354,7 +363,6 @@ class TranscriptView(QWidget):
     @Slot(STTSegment)
     def _populate_transcript(self, seg: STTSegment) -> None:
         self.text_edit.append_segment(seg)
-        self.text_edit.document().setModified(False)
 
     def find_block_at_position(self, position: float) -> int:
         """Find which block contains the given character position using binary search."""
@@ -380,7 +388,7 @@ class TranscriptView(QWidget):
         idx = self.find_block_at_position(pos)
         self.set_hover_block(idx)
 
+    @Slot()
     def save_transcript(self) -> None:
-        self.vm.transcript.clear_all()
-        for seg in self.text_edit.segments:
-            self.vm.transcript.segments.append(seg)
+        self.vm.save_transcript_requested.emit(self.text_edit.segments)
+        self.text_edit.document().setModified(False)
