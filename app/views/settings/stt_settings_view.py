@@ -95,7 +95,6 @@ class STTSettingsView(QWidget):
         self.add_option_row(1, STTSettingCategory.MODEL)
         self.add_option_row(2, STTSettingCategory.DEVICE)
         self.add_option_row(3, STTSettingCategory.COMPUTE_TYPE)
-        self.add_option_row(4, STTSettingCategory.BATCH_SIZE)
         self.add_option_row(5, STTSettingCategory.LANGUAGE)
 
         device_combo: QComboBox = self._row_options.combo[STTSettingCategory.DEVICE]
@@ -121,8 +120,6 @@ class STTSettingsView(QWidget):
                     label.setText(_("Device"))
                 case STTSettingCategory.COMPUTE_TYPE:
                     label.setText(_("Compute type"))
-                case STTSettingCategory.BATCH_SIZE:
-                    label.setText(_("Batch size"))
                 case STTSettingCategory.LANGUAGE:
                     label.setText(_("Transcription language"))
         self.title.setTitle(_("Transcription"))

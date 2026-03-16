@@ -28,7 +28,6 @@ ComputeTypeKey = Literal[
     "int8_float16",
 ]
 
-BatchSizeKey = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 
 LanguageKey = Literal[
     "auto",
@@ -71,7 +70,6 @@ class STTConfig:
     model: ModelKey = "base"
     device: DeviceKey = "cpu"
     compute_type: ComputeTypeKey = "int8"
-    batch_size: BatchSizeKey = 2
     language: LanguageKey = "auto"
     vad_filter: VadFilterKey = False
     is_cuda_supported: bool = field(
@@ -90,7 +88,6 @@ class STTConfig:
             "model": self.model,
             "device": self.device,
             "compute_type": self.compute_type,
-            "batch_size": self.batch_size,
             "language": self.language,
         }
 
@@ -116,12 +113,6 @@ class STTConfig:
                     f"Invalid 'compute_type' value: {compute_type!r}. Expected one of {get_args(ComputeTypeKey)}"
                 )
 
-            batch_size = data.get("batch_size", 2)
-            if batch_size not in get_args(BatchSizeKey):
-                raise ValueError(
-                    f"Invalid 'batch_size' value: {batch_size!r}. Expected one of {get_args(BatchSizeKey)}"
-                )
-
             language = data.get("language", "auto")
             if language not in get_args(LanguageKey):
                 raise ValueError(
@@ -132,7 +123,6 @@ class STTConfig:
                 model=model,
                 device=device,
                 compute_type=compute_type,
-                batch_size=batch_size,
                 language=language,
             )
         except ValueError as e:

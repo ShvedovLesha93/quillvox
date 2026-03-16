@@ -10,7 +10,6 @@ from app.config.stt_config import (
     ModelKey,
     DeviceKey,
     ComputeTypeKey,
-    BatchSizeKey,
     LanguageKey,
 )
 
@@ -27,7 +26,6 @@ class STTSettingCategory(Enum):
     MODEL = "model"
     DEVICE = "device"
     COMPUTE_TYPE = "compute_type"
-    BATCH_SIZE = "batch_size"
     LANGUAGE = "language"
 
 
@@ -52,25 +50,6 @@ COMPUTE_TYPE_LABELS: Dict[ComputeTypeKey, str] = {
     "int8_float16": "Int8 Float16",
 }
 
-BATCH_SIZE_LABELS: Dict[BatchSizeKey, str] = {
-    1: "1",
-    2: "2",
-    3: "3",
-    4: "4",
-    5: "5",
-    6: "6",
-    7: "7",
-    8: "8",
-    9: "9",
-    10: "10",
-    11: "11",
-    12: "12",
-    13: "13",
-    14: "14",
-    15: "15",
-    16: "16",
-    17: "17",
-}
 
 LANGUAGE_LABELS: Dict[LanguageKey, str] = {
     "auto": "Auto",
@@ -165,9 +144,6 @@ class STTSettingsViewModel(QObject):
             ),
             STTSettingCategory.COMPUTE_TYPE: CategoryConfig(
                 atr_name="compute_type", labels=COMPUTE_TYPE_LABELS
-            ),
-            STTSettingCategory.BATCH_SIZE: CategoryConfig(
-                atr_name="batch_size", labels=BATCH_SIZE_LABELS
             ),
             STTSettingCategory.LANGUAGE: CategoryConfig(
                 atr_name="language", labels=LANGUAGE_LABELS

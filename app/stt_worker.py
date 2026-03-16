@@ -54,7 +54,6 @@ def stt_worker(
     model: WhisperModel | None = None
     model_name = cfg.model
     device = cfg.device
-    batch_size = cfg.batch_size
     compute_type = cfg.compute_type
     language = cfg.language
 
