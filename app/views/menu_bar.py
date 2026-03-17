@@ -36,6 +36,7 @@ class MenuBar(QObject):
         self.save = QAction()
         self.f_menu.addAction(self.save)
         self.save.triggered.connect(self.main_window.save_transcript_request.emit)
+        self.save.setEnabled(False)
 
         self.f_menu.addSeparator()
 

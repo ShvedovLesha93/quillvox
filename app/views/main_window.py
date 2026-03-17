@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         self.app = app
         self.theme_manager = theme_manager
         self.main_vm = main_vm
+        self.dev_restart = dev_restart
         self.shortcut = self.main_vm.general_config.shortcuts
         self.file_selector_vm = self.main_vm.file_selector_vm
         self.audio_player_vm = self.main_vm.audio_player_vm
@@ -119,8 +120,7 @@ class MainWindow(QMainWindow):
         self.retranslate()
         language_manager.language_changed.connect(self.retranslate)
 
-        if dev_restart:
-            self.setup_shortcuts()
+        self.setup_shortcuts()
 
     def _connect_signals(self) -> None:
         user_msg.message.connect(self.set_status_message)
@@ -395,8 +395,9 @@ class MainWindow(QMainWindow):
                 event.ignore()
 
     def setup_shortcuts(self) -> None:
-        restart = QShortcut(QKeySequence("Ctrl+R"), self)
-        restart.activated.connect(self.run_dev_restart)
+        if self.dev_restart:
+            restart = QShortcut(QKeySequence("Ctrl+R"), self)
+            restart.activated.connect(self.run_dev_restart)
 
         save = QShortcut(QKeySequence(self.shortcut.save), self)
         save.activated.connect(self.save_transcript_request.emit)

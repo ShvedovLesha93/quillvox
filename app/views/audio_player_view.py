@@ -235,6 +235,8 @@ class AudioPlayer(QWidget):
 
         self.rewind_btn = IconButton(name="chevron_backward")
         self.forward_btn = IconButton(name="chevron_right")
+        self.rewind_btn.setEnabled(False)
+        self.forward_btn.setEnabled(False)
 
         timeline_layout.addWidget(self.rewind_btn)
         timeline_layout.addWidget(self.current_time_label)
@@ -393,6 +395,8 @@ class AudioPlayer(QWidget):
         self.timeline_slider.setMouseTracking(True)
         self.file_name.setText(file)
         self.play_btn.setEnabled(True)
+        self.forward_btn.setEnabled(True)
+        self.rewind_btn.setEnabled(True)
 
     def _on_speed_reset_btn_clicked(self) -> None:
         self.speed_slider.setValue(100)
