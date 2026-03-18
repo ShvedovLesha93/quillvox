@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
             lambda: self.menu_bar.enable_export(True)
         )
         self.main_vm.update_request.connect(self.confirm_update)
+        self.audio_player_vm.ffmpeg_request.connect(self.confirm_ffmpeg_install)
 
     def _setup_status_bar(self) -> None:
         status_bar = self.statusBar()
@@ -326,6 +327,27 @@ class MainWindow(QMainWindow):
             self.main_vm.transcript_vm.replace_confirmed.emit()
         else:
             return
+
+    @Slot()
+    def confirm_ffmpeg_install(self) -> None:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setWindowTitle(_("ffmpeg Not Found"))
+        msg.setText(
+            _(
+                "ffmpeg and/or ffprobe are not installed on your system.\n"
+                "Waveform visualisation cannot work."
+            )
+        )
+        msg.setInformativeText(
+            _(
+                "Please install ffmpeg to continue:\n\n"
+                "  Ubuntu:  sudo apt install ffmpeg\n"
+                "  Windows: https://ffmpeg.org/download.html"
+            )
+        )
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
 
     def closeEvent(self, event):
         if self._is_force_restarting:

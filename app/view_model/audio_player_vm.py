@@ -23,6 +23,7 @@ class AudioPlayerViewModel(QObject):
     str_current_time_changed = Signal(str)
     str_total_time_changed = Signal(str)
     int_volume_changed = Signal(int)
+    ffmpeg_request = Signal()
 
     def __init__(self, waveform_vm: WaveformViewModel, parent=None):
         super().__init__(parent)
@@ -45,7 +46,9 @@ class AudioPlayerViewModel(QObject):
 
     def load(self, audio: Path):
         self.player.setSource(QUrl.fromLocalFile(audio))
-        self.waveform_vm.load_waveform_file(audio)
+        if not self.waveform_vm.load_waveform_file(audio):
+            self.ffmpeg_request.emit()
+
         self.file_loaded.emit(audio.name)
         self.is_file_loaded = True
 
