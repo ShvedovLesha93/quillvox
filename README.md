@@ -3,6 +3,8 @@
 A user-friendly desktop application for transcribing audio files with automatic format conversion.
 Built with PySide6 and powered by faster-whisper for accurate speech-to-text transcription.
 
+https://github.com/user-attachments/assets/28d7c3d5-5f2f-4d0f-a0ba-cd59ed6a6ca3
+
 ## Features
 
 - 🎯 Accurate audio transcription using faster-whisper
