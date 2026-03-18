@@ -10,16 +10,32 @@ Built with PySide6 and powered by faster-whisper for accurate speech-to-text tra
 - 🖥️ Clean and intuitive desktop interface
 - ⚡ Fast processing with local inference
 - 🔄 Support for multiple audio formats
+- ✏️ Edit transcripts and adjust timestamps manually
+
+## Requirements
+
+- `ffmpeg` and `ffprobe` must be installed on your system
+  - **Windows**: Download from [ffmpeg.org](https://ffmpeg.org/download.html) and add to PATH
+  - **Linux**: Install via package manager (`sudo apt install ffmpeg` on Ubuntu/Debian)
+
+## Installation
+
+> ℹ️ Note: The program is currently available as a portable version;
+> an installer will be released in the future.
+
+1. Download the latest archive from the [Releases](https://github.com/ShvedovLesha93/quillvox/releases) page
+2. Extract the archive to your preferred location
+3. Run `QuillVox.exe` (Windows) or `QuillVox` (Linux)
 
 ## Usage
 
 1. Launch the application
 2. Select your audio file
-3. Click transcribe
+3. Click "Transcribe"
 4. The transcript will be automatically saved as a JSON file
+5. Edit the transcript or adjust timestamps manually if needed
 
-> ⚠️ Note: Downloaded models are stored in the `.cache` folder in your home directory.
-> You should delete them manually if they are no longer needed to free up disk space.
+> ℹ️ Note: Downloaded models are stored in the `.models` folder next to `QuillVox.exe`.
 
 ## For Developers
 
@@ -71,7 +87,7 @@ uv sync --extra cuda --active
 uv run --active main.py
 ```
 
-On Linux/macOS:
+On Linux:
 
 ```bash
 uv venv .venv-cuda
