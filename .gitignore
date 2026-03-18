@@ -11,6 +11,7 @@ uv
 uv.exe
 user_config.json
 release/
+models/
 
 # Virtual environments
 .venv

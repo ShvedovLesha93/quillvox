@@ -89,6 +89,7 @@ def stt_worker(
             model_size_or_path=model_name,
             device=device,
             compute_type=compute_type,
+            download_root="./models",
         )
 
         end_load = time.perf_counter()
